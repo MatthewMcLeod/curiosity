@@ -12,8 +12,6 @@ function main()
         "--numworkers"
         arg_type=Int
         default=4
-        "--numjobs"
-        action=:store_true
     end
     parsed = parse_args(as)
     

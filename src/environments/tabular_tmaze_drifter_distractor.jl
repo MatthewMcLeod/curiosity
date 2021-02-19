@@ -1,6 +1,14 @@
-using Distributions
 
-mutable struct TabularTMazeDrifterDistractor <: CumulantSchedule
+module TabularTMazeCumulantSchedules
+
+using Distributions
+import ..TabularTMaze
+import ..CumulantSchedule
+import ..Curiosity: get_cumulants, update!
+
+# export get_cumulants, update!
+
+mutable struct DrifterDistractor <: CumulantSchedule
     constants::Float64
     drifter_std::Float64
     drifter_mean::Float64
@@ -8,7 +16,7 @@ mutable struct TabularTMazeDrifterDistractor <: CumulantSchedule
     distractor_std::Float64
 end
 
-function get_cumulants(env::TabularTMaze, self::TabularTMazeDrifterDistractor, pos)
+function get_cumulants(env::TabularTMaze, self::DrifterDistractor, pos)
     num_cumulants = 4
     cumulants = zeros(num_cumulants)
     if env.world[pos[1]][pos[2]] == "G1"
@@ -23,6 +31,10 @@ function get_cumulants(env::TabularTMaze, self::TabularTMazeDrifterDistractor, p
     return cumulants
 end
 
-function update!(env::TabularTMaze, self::TabularTMazeDrifterDistractor, pos)
+function update!(env::TabularTMaze, self::DrifterDistractor, pos)
     self.drifter_mean += rand(Normal(0, self.drifter_std))
+end
+
+
+
 end

@@ -10,7 +10,10 @@ export TabularRoundRobin, update!
 include("agent/agent.jl")
 export Agent, agent_end!, step!
 
-abstract type CumulantSchedule end 
+abstract type CumulantSchedule end
+function update! end
+function get_cumulants end
+
 include("environments/tabular_tmaze.jl")
 export TabularTMaze, env_step!, env_start!
 
@@ -18,5 +21,8 @@ export TabularTMaze, env_step!, env_start!
 include("environments/tabular_tmaze_drifter_distractor.jl")
 export TabularTMazeDrifterDistractor, get_cumulants, update!
 
+
+#utils
+include("utils/tmaze.jl")
 
 end # module

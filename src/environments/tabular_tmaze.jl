@@ -43,7 +43,8 @@ mutable struct TabularTMaze
     end
 end
 
-Base.size(e::TabularTMaze) = e.num_states
+Base.size(e::TabularTMaze) = e.feature_size
+
 
 function generate_obs(state::Array{Int64})
     obs = zeros(Int64, 9, 7)
