@@ -1,4 +1,4 @@
-module TabularDrifterDistractorExperiment
+module TabularTMazeExperiment
 
 using GVFHordes
 using Curiosity
