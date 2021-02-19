@@ -1,26 +1,26 @@
 module Curiosity
 
 abstract type Learner end
-include("learners/TB.jl")
+
 export TB, update!
+include("learners/TB.jl")
 
-include("learners/TabularRoundRobin.jl")
+
 export TabularRoundRobin, update!
+include("learners/TabularRoundRobin.jl")
 
-include("agent/agent.jl")
+
 export Agent, agent_end!, step!
+include("agent/agent.jl")
+
 
 abstract type CumulantSchedule end
 function update! end
 function get_cumulants end
 
-include("environments/tabular_tmaze.jl")
 export TabularTMaze, env_step!, env_start!
-
-# abstract type CumulantSchedule end
-include("environments/tabular_tmaze_drifter_distractor.jl")
-export TabularTMazeDrifterDistractor, get_cumulants, update!
-
+    # TabularMazeCumulantSchedules, get_cumulants, update!
+include("environments/tabular_tmaze.jl")
 
 #utils
 include("utils/tmaze.jl")

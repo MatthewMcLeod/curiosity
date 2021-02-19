@@ -48,7 +48,7 @@ function get_horde(parsed)
     return horde
 end
 
-function main_experiment(parsed::Dict; progress=false, working=false)
+function main_experiment(parsed=default_args(); progress=false, working=false)
 
     num_steps = parsed["steps"]
     seed = parsed["seed"]

@@ -35,6 +35,4 @@ function update!(env::TabularTMaze, self::DrifterDistractor, pos)
     self.drifter_mean += rand(Normal(0, self.drifter_std))
 end
 
-
-
 end

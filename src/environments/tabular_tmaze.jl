@@ -136,4 +136,5 @@ function env_step!(environment::TabularTMaze, action)
     return vcat(obs,cumulants), reward, terminal
 end
 
-# include("./tabular_tmaze_drifter_distractor.jl")
+include("tabular_tmaze_cumulants.jl")
+
