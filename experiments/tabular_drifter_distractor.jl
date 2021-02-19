@@ -3,15 +3,6 @@ using GVFHordes
 using Revise
 using Curiosity
 
-
-# abstract type Learner end
-# abstract type CumulantSchedule end
-
-# include("../src/environments/tabular_tmaze.jl")
-# include("../src/agent/agent.jl")
-# include("../src/learners/TB.jl")
-# include("../src/learners/TabularRoundRobin.jl")
-
 function construct_agent(parsed)
 
     feature_size = 21
@@ -79,5 +70,3 @@ function main_experiment(parsed::Dict; progress=false, working=false)
 end
 
 end
-
-TabularDrifterDistractorExperiment.main_experiment(Dict())
