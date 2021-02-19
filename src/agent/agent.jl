@@ -1,6 +1,7 @@
 using SparseArrays
 using Distributions
 using StatsBase
+using GVFHordes
 
 mutable struct Agent
     demons::Horde

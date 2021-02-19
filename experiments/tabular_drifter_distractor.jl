@@ -1,16 +1,16 @@
 module TabularDrifterDistractorExperiment
 using GVFHordes
 using Revise
-# using curiosity
+using Curiosity
 
 
-abstract type Learner end
-abstract type CumulantSchedule end
+# abstract type Learner end
+# abstract type CumulantSchedule end
 
-include("../src/environments/tabular_tmaze.jl")
-include("../src/agent/agent.jl")
-include("../src/learners/TB.jl")
-include("../src/learners/TabularRoundRobin.jl")
+# include("../src/environments/tabular_tmaze.jl")
+# include("../src/agent/agent.jl")
+# include("../src/learners/TB.jl")
+# include("../src/learners/TabularRoundRobin.jl")
 
 function construct_agent(parsed)
 
