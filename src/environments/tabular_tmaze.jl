@@ -43,7 +43,8 @@ mutable struct TabularTMaze
     end
 end
 
-Base.size(e::TabularTMaze) = e.num_states
+Base.size(e::TabularTMaze) = e.feature_size
+
 
 function generate_obs(state::Array{Int64})
     obs = zeros(Int64, 9, 7)
@@ -135,4 +136,5 @@ function env_step!(environment::TabularTMaze, action)
     return vcat(obs,cumulants), reward, terminal
 end
 
-include("./tabular_tmaze_drifter_distractor.jl")
+include("tabular_tmaze_cumulants.jl")
+

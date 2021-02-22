@@ -1,16 +1,23 @@
-module TabularDrifterDistractorExperiment
+module TabularTMazeExperiment
+
 using GVFHordes
-using Revise
-# using curiosity
+using Curiosity
 
+const TTMU = Curiosity.TabularTMazeUtils
 
-abstract type Learner end
-abstract type CumulantSchedule end
+default_args() =
+    Dict(
+        "lambda" => 0.9,
+        "demon_alpha" => 0.5,
+        "steps" => 15000,
+        "seed" => 1,
+        "cumulant_schedule" => "DrifterDistractor",
+        "drifter" => (1.0, sqrt(0.01)),
+        "distractor" => (1.0, 1.0),
+        "constant_target"=> 1.0,
+        "exploring_starts"=>true,
+    )
 
-include("../src/environments/tabular_tmaze.jl")
-include("../src/agent/agent.jl")
-include("../src/learners/TB.jl")
-include("../src/learners/TabularRoundRobin.jl")
 
 function construct_agent(parsed)
 
@@ -41,22 +48,14 @@ function get_horde(parsed)
     return horde
 end
 
-function main_experiment(parsed::Dict; progress=false, working=false)
+function main_experiment(parsed=default_args(); progress=false, working=false)
 
-    num_steps = 15000
-    seed = 1
-    progress = get(parsed, "progress", progress)
-    working = get(parsed, "working", working)
+    num_steps = parsed["steps"]
+    seed = parsed["seed"]
 
-    # CUMULANT Settings
-    constant_target = 1.0
-    drifter_init = 1.0
-    drifter_std = sqrt(0.01)
-    distractor_mean = 1.0
-    distractor_std = sqrt(1.0)
+    cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
 
-    cumulant_schedule = TabularTMazeDrifterDistractor(constant_target,drifter_init,drifter_std,distractor_mean,distractor_std)
-    exploring_starts = true
+    exploring_starts = parsed["exploring_starts"]
     env = TabularTMaze(exploring_starts, cumulant_schedule)
 
     agent = construct_agent(parsed)
@@ -79,5 +78,3 @@ function main_experiment(parsed::Dict; progress=false, working=false)
 end
 
 end
-
-TabularDrifterDistractorExperiment.main_experiment(Dict())

@@ -1,4 +1,4 @@
-name = "curiosity"
+name = "Curiosity"
 uuid = "2bc19b19-6d1e-4a51-84eb-b280a1d09685"
 authors = ["matthewmcleod <mkmmcleod@gmail.com>"]
 version = "0.1.0"
@@ -6,5 +6,8 @@ version = "0.1.0"
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GVFHordes = "f93fb47c-41e6-11e9-1959-65f988fdca41"
-Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Reproduce = "560a9c3a-0b8c-11e9-0329-d39dfcb85ed2"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
