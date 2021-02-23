@@ -36,7 +36,7 @@ mutable struct Agent <: AbstractAgent
 end
 
 function proc_input(agent, obs)
-    #TODO: HOW TO DEFINE WHAT IS USED FOR VALUE ESTIMATION?
+    #TODO: How to define what is used for value estimation as in this formulation, we don't use some values of the observation space
     # This is currently only works for tabular tmaze.
     s = spzeros(agent.behaviour_feature_size)
     s[convert(Int64,obs[1])] = 1
@@ -52,18 +52,6 @@ end
 function assign_horde!(agent, horde)
     agent.demons = horde
 end
-
-# function step!(agent, obs, reward, is_terminal)
-#     next_state = proc_input(agent, obs)
-#     next_action, next_action_probs = get_action(agent, next_state, obs)
-#
-#     update_demons!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal)
-#
-#     agent.last_state = next_state
-#     agent.last_action = next_action
-#     agent.last_obs = obs
-#     return next_action
-# end
 
 function MinimalRLCore.end!(agent, obs, reward, is_terminal)
     return step!(agent, obs, reward, is_terminal)
@@ -97,18 +85,12 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
 
     return next_action
 end
-# function end!(agent::Agent, state, r, args...)
-# end
-# function start!(agent::Agent, state, r, args...)
-# end
-# function step!(agent::Agent, state, r, args...)
-#
-# end
 
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
     preds = ones(length(obs))
 
     #TODO: Fix how to get target policy probabilities for all actions as this is needed for off-policy learning algos
+    # This is very ugly and I don't like passing all the target_pis through to demons...
     target_pis = zeros(length(agent.demons), agent.num_actions)
     for (i,a) in enumerate(1:agent.num_actions)
         _, _, pi = get(agent.demons, obs, a, next_obs, next_action)
@@ -118,12 +100,6 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
     for (i,a) in enumerate(1:agent.num_actions)
         _, _, pi = get(agent.demons, next_obs, a, next_obs, next_action)
         next_target_pis[:,i] = pi
-    end
-
-    if sum(target_pis) == 0
-        x=1
-        println("STATE: ", state)
-        println(target_pis)
     end
 
     # TODO: Domain is most easily understood with pseudoterm being applied to S in the S,A,S' action state... Is that a problem?

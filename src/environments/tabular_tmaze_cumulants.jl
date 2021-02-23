@@ -6,8 +6,6 @@ import ..TabularTMaze
 import ..CumulantSchedule
 import ..Curiosity: get_cumulants, update!
 
-# export get_cumulants, update!
-
 mutable struct DrifterDistractor <: CumulantSchedule
     constants::Float64
     drifter_std::Float64

@@ -108,52 +108,11 @@ function MinimalRLCore.reset!(environment::TabularTMaze, args...)
     end
 end
 
-function env_start!(environment::TabularTMaze)
-    if environment.exploring_starts == false
-        environment.current_state = environment.start_state
-    elseif environment.exploring_starts == true
-        possible_start_states = findall(x -> x == "1", hcat(environment.world...))
-        start_state = possible_start_states[rand(1:length(possible_start_states))]
-        # The start states are flipped since hcat "transposes" a list of list when converting it to a matrix
-        environment.current_state = [start_state[2],start_state[1]]
-    end
-    obs = generate_obs(environment.current_state)
-    cumulants = get_cumulants(environment, environment.cumulant_schedule, environment.current_state)
-
-    return vcat(obs,cumulants), 0, false
-end
-
 function env_start!(environment::TabularTMaze, start_state)
     throw("Implement env_start with a start_state")
 end
 
-# function MinimalRLCore.environment_step!(env::TabularTMaze,
-#                                    action,
-#                                    rng; kwargs...)
-#     _,_,_ = env_step!(env, action)
-# end
-function MinimalRLCore.environment_step!(env::TabularTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)
-    _,_,_ = env_step!(env, action)
-end
-
-function MinimalRLCore.get_reward(env::TabularTMaze)
-    return 0.0
-end
-
-
-function MinimalRLCore.is_terminal(env::TabularTMaze) # -> determines if the agent_state is terminal
-    return is_terminal(env, env.current_state)
-end
-
-
-function MinimalRLCore.get_state(env::TabularTMaze)
-    obs = generate_obs(env.current_state)
-    cumulants = get_cumulants(env, env.cumulant_schedule, env.current_state)
-
-    return vcat(obs,cumulants)
-end
-
-function env_step!(environment::TabularTMaze, action)
+function MinimalRLCore.environment_step!(environment::TabularTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)
     actions = [(-1, 0), (0, 1), (1, 0), (0, -1)] # up, right, down, left
     reward = 0.0
     terminal = false
@@ -168,10 +127,21 @@ function env_step!(environment::TabularTMaze, action)
         environment.current_state = potential_state
         terminal = true
     end
-    obs = generate_obs(environment.current_state)
-    cumulants = get_cumulants(environment, environment.cumulant_schedule, environment.current_state)
-
-    return vcat(obs,cumulants), reward, terminal
 end
 
-include("tabular_tmaze_cumulants.jl")
+function MinimalRLCore.get_reward(env::TabularTMaze)
+    return 0.0
+end
+
+function MinimalRLCore.is_terminal(env::TabularTMaze) # -> determines if the agent_state is terminal
+    return is_terminal(env, env.current_state)
+end
+
+function MinimalRLCore.get_state(env::TabularTMaze)
+    obs = generate_obs(env.current_state)
+    cumulants = get_cumulants(env, env.cumulant_schedule, env.current_state)
+
+    return vcat(obs,cumulants)
+end
+
+include("./tabular_tmaze_cumulants.jl")
