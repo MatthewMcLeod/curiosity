@@ -10,6 +10,7 @@ default_args() =
     Dict(
         "lambda" => 0.9,
         "demon_alpha" => 0.1,
+        "demon_policy_type" => "greedy_to_cumulant",
         "steps" => 2000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
@@ -97,11 +98,13 @@ function get_horde(parsed)
         return action_prob
     end
 
-    # For random uniform demon policies
-    # horde = Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 2:5])
-
-    # For demon policies that greedily go to their cumulant
-    horde = Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> demon_target_policy(i-1,obs,a))) for i in 2:5])
+    horde = if parsed["demon_policy_type"] == "greedy_to_cumulant"
+        Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> demon_target_policy(i-1,obs,a))) for i in 2:5])
+    elseif parsed["demon_policy_type"] == "random"
+        Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 2:5])
+    else
+        throw(ArgumentError("Not a valid policy type for demons"))
+    end
     return horde
 end
 
