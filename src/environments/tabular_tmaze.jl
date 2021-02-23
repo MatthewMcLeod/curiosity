@@ -2,9 +2,10 @@ using Random
 using Distributions
 using Statistics
 using SparseArrays
+using MinimalRLCore
 
 
-mutable struct TabularTMaze
+mutable struct TabularTMaze <: MinimalRLCore.AbstractEnvironment
     world::Array{Array{String}}
     start_state::Array{Int64}
     current_state::Array{Int64}
@@ -96,6 +97,17 @@ function is_terminal(env::TabularTMaze, pos)
     return env.world[pos[1]][pos[2]] in env.goal_states
 end
 
+function MinimalRLCore.reset!(environment::TabularTMaze, args...)
+    if environment.exploring_starts == false
+        environment.current_state = environment.start_state
+    elseif environment.exploring_starts == true
+        possible_start_states = findall(x -> x == "1", hcat(environment.world...))
+        start_state = possible_start_states[rand(1:length(possible_start_states))]
+        # The start states are flipped since hcat "transposes" a list of list when converting it to a matrix
+        environment.current_state = [start_state[2],start_state[1]]
+    end
+end
+
 function env_start!(environment::TabularTMaze)
     if environment.exploring_starts == false
         environment.current_state = environment.start_state
@@ -113,6 +125,32 @@ end
 
 function env_start!(environment::TabularTMaze, start_state)
     throw("Implement env_start with a start_state")
+end
+
+# function MinimalRLCore.environment_step!(env::TabularTMaze,
+#                                    action,
+#                                    rng; kwargs...)
+#     _,_,_ = env_step!(env, action)
+# end
+function MinimalRLCore.environment_step!(env::TabularTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)
+    _,_,_ = env_step!(env, action)
+end
+
+function MinimalRLCore.get_reward(env::TabularTMaze)
+    return 0.0
+end
+
+
+function MinimalRLCore.is_terminal(env::TabularTMaze) # -> determines if the agent_state is terminal
+    return is_terminal(env, env.current_state)
+end
+
+
+function MinimalRLCore.get_state(env::TabularTMaze)
+    obs = generate_obs(env.current_state)
+    cumulants = get_cumulants(env, env.cumulant_schedule, env.current_state)
+
+    return vcat(obs,cumulants)
 end
 
 function env_step!(environment::TabularTMaze, action)
@@ -137,4 +175,3 @@ function env_step!(environment::TabularTMaze, action)
 end
 
 include("tabular_tmaze_cumulants.jl")
-

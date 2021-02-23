@@ -50,6 +50,12 @@ git-tree-sha1 = "ded953804d019afa9a3f98981d99b33e3db7b6da"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.0"
 
+[[CommonRLInterface]]
+deps = ["MacroTools"]
+git-tree-sha1 = "21de56ebf28c262651e682f7fe614d44623dc087"
+uuid = "d842c3ba-07a1-494f-bbec-f5741b0a3e98"
+version = "0.3.1"
+
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
 git-tree-sha1 = "919c7f3151e79ff196add81d7f4e45d91bbf420b"
@@ -227,6 +233,14 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "0eef589dd1c26a3ac9d753fe1a8bcad63f956fa6"
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.16.8+1"
+
+[[MinimalRLCore]]
+deps = ["CommonRLInterface", "Lazy", "LinearAlgebra", "Random", "StatsBase"]
+git-tree-sha1 = "0e13b3968a1247f5578d104f44c74545678c108a"
+repo-rev = "master"
+repo-url = "git@github.com:mkschleg/MinimalRLCore.jl.git"
+uuid = "4557a151-568a-41c4-844f-9d8069264cea"
+version = "0.2.1"
 
 [[Missings]]
 deps = ["DataAPI"]

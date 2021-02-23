@@ -25,6 +25,8 @@ function update!(learner::TB, weights, C, discounts, target_pi, state, action, n
     learner.e[inds,:] .+= state'
 
 
+
+
     pred = weights * next_state
     #TODO: FIX assumption that all pseudoterminations occur at the same time.
     target = if discounts[1] != 0
@@ -42,6 +44,17 @@ function update!(learner::TB, weights, C, discounts, target_pi, state, action, n
 
     # How to efficiently apply gradients back into weights? Should we move linear regression to Flux/Autograd?
     # TODO: Seperate optimizer and learning algo
+
+    # if C[2] == 1.0
+    #     println("End with discount: ", discounts[2])
+    #     println("state: ", state, " action: ", action)
+    #     println("Esimate: ", weights[7,3:5])
+    #     asdf=1
+    # end
     weights .= weights + learner.alpha * (learner.e .* td_err_across_demons)
 
+end
+
+function zero_eligibility_traces!(learner::TB)
+    learner.e .= 0
 end

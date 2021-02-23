@@ -2,8 +2,9 @@ using SparseArrays
 using Distributions
 using StatsBase
 using GVFHordes
+using MinimalRLCore
 
-mutable struct Agent
+mutable struct Agent <: AbstractAgent
     demons::Horde
     demon_weights::Array{Float64,2}
     behaviour_weights::Array{Float64,1}
@@ -52,7 +53,24 @@ function assign_horde!(agent, horde)
     agent.demons = horde
 end
 
-function step!(agent, obs, reward, is_terminal)
+# function step!(agent, obs, reward, is_terminal)
+#     next_state = proc_input(agent, obs)
+#     next_action, next_action_probs = get_action(agent, next_state, obs)
+#
+#     update_demons!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal)
+#
+#     agent.last_state = next_state
+#     agent.last_action = next_action
+#     agent.last_obs = obs
+#     return next_action
+# end
+
+function MinimalRLCore.end!(agent, obs, reward, is_terminal)
+    return step!(agent, obs, reward, is_terminal)
+end
+
+
+function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     next_state = proc_input(agent, obs)
     next_action, next_action_probs = get_action(agent, next_state, obs)
 
@@ -64,9 +82,24 @@ function step!(agent, obs, reward, is_terminal)
     return next_action
 end
 
-function agent_end!(agent, obs, reward, is_terminal)
-    return step!(agent, obs, reward, is_terminal)
+function MinimalRLCore.start!(agent::Agent, obs, args...)
+    next_state = proc_input(agent, obs)
+    #Always exploring starts
+    next_action = sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
+    agent.last_state = next_state
+    agent.last_action = next_action
+    agent.last_obs = obs
+    zero_eligibility_traces!(agent.demon_learner)
+
+    return next_action
 end
+# function end!(agent::Agent, state, r, args...)
+# end
+# function start!(agent::Agent, state, r, args...)
+# end
+# function step!(agent::Agent, state, r, args...)
+#
+# end
 
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
     preds = ones(length(obs))
