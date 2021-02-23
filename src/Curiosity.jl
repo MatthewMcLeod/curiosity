@@ -18,7 +18,7 @@ abstract type CumulantSchedule end
 function update! end
 function get_cumulants end
 
-export TabularTMaze, env_step!, env_start!
+export TabularTMaze, env_step!, env_start!, valid_state_mask
     # TabularMazeCumulantSchedules, get_cumulants, update!
 include("environments/tabular_tmaze.jl")
 

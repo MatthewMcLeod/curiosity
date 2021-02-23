@@ -86,10 +86,14 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     next_state = proc_input(agent, obs)
     #Always exploring starts
     next_action = sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
+
+    _, discounts, _ = get(agent.demons, obs, next_action, obs, next_action)
     agent.last_state = next_state
     agent.last_action = next_action
     agent.last_obs = obs
     zero_eligibility_traces!(agent.demon_learner)
+
+    agent.prev_discounts = deepcopy(discounts)
 
     return next_action
 end
@@ -107,14 +111,25 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
     #TODO: Fix how to get target policy probabilities for all actions as this is needed for off-policy learning algos
     target_pis = zeros(length(agent.demons), agent.num_actions)
     for (i,a) in enumerate(1:agent.num_actions)
-        _, _, pi = get(agent.demons, obs, action, next_obs, next_action)
-        target_pis[i,:] = pi
+        _, _, pi = get(agent.demons, obs, a, next_obs, next_action)
+        target_pis[:,i] = pi
+    end
+    next_target_pis = zeros(length(agent.demons), agent.num_actions)
+    for (i,a) in enumerate(1:agent.num_actions)
+        _, _, pi = get(agent.demons, next_obs, a, next_obs, next_action)
+        next_target_pis[:,i] = pi
+    end
+
+    if sum(target_pis) == 0
+        x=1
+        println("STATE: ", state)
+        println(target_pis)
     end
 
     # TODO: Domain is most easily understood with pseudoterm being applied to S in the S,A,S' action state... Is that a problem?
     #TODO: Because of this, NOTE the agent.prev_discounts being passed into update!
     C, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
-    update!(agent.demon_learner, agent.demon_weights, C, agent.prev_discounts, target_pis, state, action, next_state, next_action)
+    update!(agent.demon_learner, agent.demon_weights, C, agent.prev_discounts, state, action, target_pis, next_state, next_action, next_target_pis)
     agent.prev_discounts = deepcopy(discounts)
 end
 

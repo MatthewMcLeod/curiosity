@@ -10,7 +10,7 @@ default_args() =
     Dict(
         "lambda" => 0.9,
         "demon_alpha" => 0.5,
-        "steps" => 1000,
+        "steps" => 2000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
         "drifter" => (1.0, sqrt(0.01)),
@@ -45,7 +45,63 @@ function get_horde(parsed)
         end
         return term
     end
-    horde = Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 2:5])
+
+    function demon_target_policy(gvf_i, observation, action)
+        state = convert(Int,observation[1])
+
+        policy_1 =  [1 0 0 0 0 0 3;
+                     1 0 0 0 0 0 3;
+                     1 4 4 4 4 4 4;
+                     1 0 0 1 0 0 1;
+                     1 0 0 1 0 0 1;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0]
+
+        policy_2  = [3 0 0 0 0 0 3;
+                     3 0 0 0 0 0 3;
+                     3 4 4 4 4 4 4;
+                     3 0 0 1 0 0 1;
+                     3 0 0 1 0 0 1;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0]
+        policy_3 = [3 0 0 0 0 0 1;
+                     3 0 0 0 0 0 1;
+                     2 2 2 2 2 2 1;
+                     1 0 0 1 0 0 1;
+                     1 0 0 1 0 0 1;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0]
+        policy_4 = [3 0 0 0 0 0 3;
+                     3 0 0 0 0 0 3;
+                     2 2 2 2 2 2 3;
+                     1 0 0 1 0 0 3;
+                     1 0 0 1 0 0 3;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0;
+                     0 0 0 1 0 0 0]
+        gvfs = [policy_1,policy_2,policy_3, policy_4]
+        mask = valid_state_mask()
+
+        action_prob = if gvfs[gvf_i][mask][state] == action
+            1.0
+        else
+            0.0
+        end
+        return action_prob
+    end
+
+    # For random uniform demon policies
+    # horde = Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 2:5])
+
+    # For demon policies that greedily go to their cumulant
+    horde = Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> demon_target_policy(i-1,obs,a))) for i in 2:5])
     return horde
 end
 
