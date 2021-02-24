@@ -26,6 +26,5 @@ include("environments/tabular_tmaze.jl")
 #utils
 include("utils/tmaze.jl")
 include("utils/learners.jl")
-include("utils/experiment.jl")
 
 end # module
