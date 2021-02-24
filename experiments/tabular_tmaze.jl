@@ -10,7 +10,9 @@ default_args() =
     Dict(
         "lambda" => 0.9,
         "demon_alpha" => 0.1,
+        "demon_alpha_init" => 1.0,
         "demon_policy_type" => "greedy_to_cumulant",
+        "demon_learner" => "TBAuto",
         "steps" => 2000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
@@ -27,11 +29,20 @@ function construct_agent(parsed)
     action_space = 4
     lambda = parsed["lambda"]
     demon_alpha = parsed["demon_alpha"]
+    demon_alpha_init = parsed["demon_alpha_init"]
+    demon_learner = parsed["demon_learner"]
 
     demons = get_horde(parsed)
-    demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
-    behaviour_learner = TabularRoundRobin()
 
+    if demon_learner == "TB"
+        demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
+    elseif demon_learner == "TBAuto"
+        demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
+    else
+        throw(ArgumentError("Not a valid demon learner"))
+    end
+
+    behaviour_learner = TabularRoundRobin()
     agent = Agent(demons, feature_size, feature_size, action_space, demon_learner, behaviour_learner)
 end
 

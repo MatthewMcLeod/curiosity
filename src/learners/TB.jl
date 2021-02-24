@@ -9,13 +9,9 @@ mutable struct TB <: Learner
     end
 end
 
-function row_order_reshape(A, reshape_dims)
-    #I dont think Julia natively supports row based reshape
-    # https://github.com/JuliaLang/julia/issues/20311
-    return transpose(reshape(transpose(A), reshape_dims...))
-end
 
-function update!(learner::TB, weights, C, discounts, state, action, target_pis, next_state, next_action, next_target_pis)
+
+function update!(learner::TB, weights, C, state, action, target_pis, discounts, next_state, next_action, next_target_pis, next_discounts)
     # Update eligibility trace
     #Broadcast the policy and pseudotermination of each demon across the actions
     learner.e .*= learner.lambda * repeat(discounts, inner = learner.num_actions) .* repeat(target_pis[:,action], inner = learner.num_actions)
@@ -26,12 +22,12 @@ function update!(learner::TB, weights, C, discounts, state, action, target_pis, 
 
     pred = weights * next_state
     #TODO: FIX assumption that all pseudoterminations occur at the same time.
-    target = if discounts[1] != 0
+    target = if next_discounts[1] != 0
         # expected sarsa backup for TB
         Qs = row_order_reshape(pred, (learner.num_demons, learner.num_actions))
         # Target Pi is num_demons  x num_actions
         backup_est_per_demon = vec(sum((Qs .* next_target_pis ), dims = 2))
-        C + discounts .* backup_est_per_demon
+        C + next_discounts .* backup_est_per_demon
      else
          C
      end

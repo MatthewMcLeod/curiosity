@@ -101,11 +101,9 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
         _, _, pi = get(agent.demons, next_obs, a, next_obs, next_action)
         next_target_pis[:,i] = pi
     end
-
-    # TODO: Domain is most easily understood with pseudoterm being applied to S in the S,A,S' action state... Is that a problem?
-    #TODO: Because of this, NOTE the agent.prev_discounts being passed into update!
     C, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
-    update!(agent.demon_learner, agent.demon_weights, C, agent.prev_discounts, state, action, target_pis, next_state, next_action, next_target_pis)
+    #TODO: Passing in all of this information is ugly.
+    update!(agent.demon_learner, agent.demon_weights, C, state, action, target_pis, agent.prev_discounts, next_state, next_action, next_target_pis, discounts)
     agent.prev_discounts = deepcopy(discounts)
 end
 

@@ -2,8 +2,9 @@ module Curiosity
 
 abstract type Learner end
 
-export TB, update!
+export TB, TBAuto, update!
 include("learners/TB.jl")
+include("learners/TB_Auto.jl")
 
 
 export TabularRoundRobin, update!
@@ -24,5 +25,7 @@ include("environments/tabular_tmaze.jl")
 
 #utils
 include("utils/tmaze.jl")
+include("utils/learners.jl")
+include("utils/experiment.jl")
 
 end # module
