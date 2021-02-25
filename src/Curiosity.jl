@@ -4,6 +4,10 @@ abstract type Learner end
 
 @reexport using MinimalRLCore
 
+
+export Auto
+include("optimizers/Auto.jl")
+
 export TB, TBAuto, update!
 include("learners/TB.jl")
 include("learners/TB_Auto.jl")
