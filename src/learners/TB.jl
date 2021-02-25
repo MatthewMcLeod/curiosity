@@ -43,3 +43,4 @@ end
 function zero_eligibility_traces!(learner::TB)
     learner.e .= 0
 end
+
