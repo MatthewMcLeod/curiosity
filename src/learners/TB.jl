@@ -44,6 +44,9 @@ function zero_eligibility_traces!(learner::TB)
     learner.e .= 0
 end
 
+<<<<<<< HEAD
 function get_weights(learner::TB, weights)
     return weights
 end
+=======
+>>>>>>> 1b53e536204cc23d03c734e0f3fccbc6199a85dc

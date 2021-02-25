@@ -5,7 +5,7 @@ mutable struct TBAuto <: Learner
     alpha::Array{Float64,2}
     h::Array{Float64,2}
     n::Array{Float64,2}
-    z::Array{Float64, 2}
+    z::Array{Float64,2}
     num_demons::Int
     num_actions::Int
     tau::Int
@@ -26,7 +26,18 @@ mutable struct TBAuto <: Learner
     end
 end
 
-function update!(learner::TBAuto, weights, C, state, action, target_pis, discounts, next_state, next_action, next_target_pis, next_discounts)
+function update!(learner::TBAuto,
+                 weights,
+                 C,
+                 state,
+                 action,
+                 target_pis,
+                 discounts,
+                 next_state,
+                 next_action,
+                 next_target_pis,
+                 next_discounts)
+    
     # Update eligibility trace
     #Broadcast the policy and pseudotermination of each demon across the actions
     learner.e .*= learner.lambda * repeat(discounts, inner = learner.num_actions) .* repeat(target_pis[:,action], inner = learner.num_actions)
@@ -92,6 +103,9 @@ function zero_eligibility_traces!(learner::TBAuto)
     learner.e .= 0
 end
 
+<<<<<<< HEAD
 function get_weights(learner::TBAuto, weights)
     return weights
 end
+=======
+>>>>>>> 1b53e536204cc23d03c734e0f3fccbc6199a85dc
