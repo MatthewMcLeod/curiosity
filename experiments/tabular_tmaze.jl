@@ -132,12 +132,13 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     agent = construct_agent(parsed)
 
-    println(working)
-    Curiosity.experiment_wrapper(parsed, working) do (parsed, logger)
+    goal_visitations = ones(4)
+
+    Curiosity.experiment_wrapper(parsed, working) do parsed, logger
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
-        goal_visitations = ones(4)
+        
         while sum(steps) < max_num_steps
             cur_step = 0
             tr, stp =

@@ -42,7 +42,6 @@ function experiment_wrapper(exp_func::Function, parsed, working)
     end
     logger = Logger(parsed, save_file)
 
-    println(typeof(exp_func))
     ret = exp_func(parsed, logger)
     
     if working
