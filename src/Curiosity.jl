@@ -23,8 +23,14 @@ export TabularTMaze, env_step!, env_start!, valid_state_mask
     # TabularMazeCumulantSchedules, get_cumulants, update!
 include("environments/tabular_tmaze.jl")
 
+# logger
+export Logger, logger_step!
+include("logger/logger.jl")
+
 #utils
 include("utils/tmaze.jl")
 include("utils/learners.jl")
+
+include("utils/experiment.jl")
 
 end # module

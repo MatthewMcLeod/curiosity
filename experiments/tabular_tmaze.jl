@@ -20,6 +20,7 @@ default_args() =
         "distractor" => (1.0, 1.0),
         "constant_target"=> 1.0,
         "exploring_starts"=>true,
+        "save_dir" => "TabularTMazeExperiment",
     )
 
 
@@ -131,26 +132,33 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     agent = construct_agent(parsed)
 
-    eps = 1
-    max_num_steps = num_steps
-    steps = Int[]
-    goal_visitations = ones(4)
-    while sum(steps) < max_num_steps
-        cur_step = 0
-        tr, stp =
-            run_episode!(env, agent) do (s, a, s_next, r)
-                #This is a callback for every timestep where logger can go
-                # agent is accesible in this scope
-                cur_step+=1
-                C,_,_ = get(agent.demons, s, a, s_next)
-                if sum(C) != 0
-                    gvf_i = findfirst(!iszero,C)
-                    goal_visitations[gvf_i] += 1
+    println(working)
+    Curiosity.experiment_wrapper(parsed, working) do (parsed, logger)
+        eps = 1
+        max_num_steps = num_steps
+        steps = Int[]
+        goal_visitations = ones(4)
+        while sum(steps) < max_num_steps
+            cur_step = 0
+            tr, stp =
+                run_episode!(env, agent) do (s, a, s_next, r)
+                    #This is a callback for every timestep where logger can go
+                    # agent is accesible in this scope
+
+                    logger_step!(logger, env, agent, s, a, s_next, r)
+                    
+                    cur_step+=1
+                    C,_,_ = get(agent.demons, s, a, s_next)
+                    if sum(C) != 0
+                        gvf_i = findfirst(!iszero,C)
+                        goal_visitations[gvf_i] += 1
+                    end
                 end
-            end
-        push!(steps, stp)
-        eps += 1
+            push!(steps, stp)
+            eps += 1
+        end
     end
+    
     println("Took place over ", eps, " episodes")
     println("Goal Visitation Frequency")
     per = [goal_visitations[i] / sum(goal_visitations) for i in 1:4]
