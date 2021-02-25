@@ -17,7 +17,7 @@ function update!(learner::TB, weights, C, state, action, target_pis, discounts, 
     learner.e .*= learner.lambda * repeat(discounts, inner = learner.num_actions) .* repeat(target_pis[:,action], inner = learner.num_actions)
 
     # the eligibility trace is for state-action so need to find the exact state action pair per demon and not just the state
-    inds = [action + (i-1)*learner.num_actions for i in 1:learner.num_actions]
+    inds = [action + (i-1)*learner.num_actions for i in 1:learner.num_demons]
     learner.e[inds,:] .+= state'
 
     pred = weights * next_state
@@ -42,4 +42,8 @@ end
 
 function zero_eligibility_traces!(learner::TB)
     learner.e .= 0
+end
+
+function get_weights(learner::TB, weights)
+    return weights
 end

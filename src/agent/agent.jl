@@ -7,7 +7,7 @@ using MinimalRLCore
 mutable struct Agent <: AbstractAgent
     demons::Horde
     demon_weights::Array{Float64,2}
-    behaviour_weights::Array{Float64,1}
+    behaviour_weights::Array{Float64,2}
     demon_learner::Learner
     behaviour_learner::Learner
     last_state::Any
@@ -17,11 +17,20 @@ mutable struct Agent <: AbstractAgent
     behaviour_feature_size::Int
     last_obs::Any
     prev_discounts::Array{Float64,1}
+    intrinsic_reward::IntrinsicReward
 
-    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, num_actions::Int, demon_learner, behaviour_learner)
+    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type)
+        intrinsic_reward = if intrinsic_reward_type == "weight_change"
+            #TODO: The intrinsic reward is defined by how the components of the agent are put together. For example, an intrinsic reward
+            # could be the model error, which would then require different components that are assembled in the agent
+            # Not sure how the construction of intrinisic reward could be abstracted out of this constructor
+            WeightChange(zeros(length(horde) * num_actions, demon_feature_size))
+        else
+            throw(ArgumentError("Not a valid intrinsic reward"))
+        end
         new(horde,
             zeros(length(horde) * num_actions, demon_feature_size),
-            zeros(behaviour_feature_size),
+            zeros(1 * num_actions, behaviour_feature_size),
             demon_learner,
             behaviour_learner,
             zeros(behaviour_feature_size),
@@ -30,7 +39,8 @@ mutable struct Agent <: AbstractAgent
             demon_feature_size,
             behaviour_feature_size,
             zeros(5),
-            ones(4)*0.9
+            ones(4)*0.9,
+            intrinsic_reward
             )
     end
 end
@@ -44,7 +54,7 @@ function proc_input(agent, obs)
 end
 
 function get_action(agent, state, obs)
-    action_probs = get_action_probs(agent.behaviour_learner, state, obs)
+    action_probs = get_action_probs(agent.behaviour_learner, state, obs, agent.behaviour_weights)
     action = sample(1:agent.num_actions, Weights(action_probs))
     return action, action_probs
 end
@@ -57,12 +67,15 @@ function MinimalRLCore.end!(agent, obs, reward, is_terminal)
     return step!(agent, obs, reward, is_terminal)
 end
 
-
 function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     next_state = proc_input(agent, obs)
     next_action, next_action_probs = get_action(agent, next_state, obs)
 
     update_demons!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal)
+    #get intrinssic reward
+    r_int = update_reward!(agent.intrinsic_reward, agent)
+    total_reward = r_int + r
+    update_behaviour!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal, total_reward)
 
     agent.last_state = next_state
     agent.last_action = next_action
@@ -107,5 +120,10 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
     agent.prev_discounts = deepcopy(discounts)
 end
 
-function update_behaviour!(agent,observation)
+function update_behaviour!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal, reward)
+
+    _, behaviour_pis = get_action(agent, state, obs)
+    _, next_behaviour_pis = get_action(agent, next_state, next_obs)
+
+    update!(agent.behaviour_learner, agent.behaviour_weights, [reward], state, action, next_state, next_action, next_behaviour_pis, [!is_terminal*0.9])
 end

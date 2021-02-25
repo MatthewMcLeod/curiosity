@@ -10,10 +10,13 @@ default_args() =
     Dict(
         "lambda" => 0.9,
         "demon_alpha" => 0.1,
-        "demon_alpha_init" => 1.0,
+        "demon_alpha_init" => 0.1,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "TB",
-        "steps" => 2000,
+        "demon_learner" => "TBAuto",
+        "behaviour_learner" => "ESARSA",
+        "behaviour_alpha" => 0.2,
+        "intrinsic_reward" => "weight_change",
+        "steps" => 20000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
         "drifter" => (1.0, sqrt(0.01)),
@@ -31,6 +34,9 @@ function construct_agent(parsed)
     demon_alpha = parsed["demon_alpha"]
     demon_alpha_init = parsed["demon_alpha_init"]
     demon_learner = parsed["demon_learner"]
+    behaviour_learner = parsed["behaviour_learner"]
+    behaviour_alpha = parsed["behaviour_alpha"]
+    intrinsic_reward_type = parsed["intrinsic_reward"]
 
     demons = get_horde(parsed)
 
@@ -42,8 +48,15 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid demon learner"))
     end
 
-    behaviour_learner = TabularRoundRobin()
-    agent = Agent(demons, feature_size, feature_size, action_space, demon_learner, behaviour_learner)
+    if behaviour_learner == "RoundRobin"
+        behaviour_learner = TabularRoundRobin()
+    elseif behaviour_learner == "ESARSA"
+        behaviour_learner = ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha)
+    else
+        throw(ArgumentError("Not a valid behaviour learner"))
+    end
+
+    agent = Agent(demons, feature_size, feature_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type)
 end
 
 function get_horde(parsed)

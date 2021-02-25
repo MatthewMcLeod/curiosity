@@ -1,16 +1,6 @@
 # include("../utils/env_utils.jl")
 mutable struct TabularRoundRobin <: Learner
 end
-
-# function init!(self::RoundRobinTMaze, feature_size, num_actions, w_init, alpha, lambda, gamma, exploration_strategy, demon_policies, round_robin_scheduler)
-# # function init!(self::RoundRobin, feature_size=1, num_actions=1, w_init=0.0,args...)
-#     self.demon_policies = demon_policies
-#     self.active_gvf = 1
-#     self.RoundRobinScheduler = round_robin_scheduler
-#     self.exploration_strategy = exploration_strategy
-#     self.w = zeros(feature_size, num_actions)
-# end
-
 function update!(self::TabularRoundRobin, reward, action, next_action, state, next_state, agent)
 end
 function get_action_probs(self::TabularRoundRobin, state, observation)

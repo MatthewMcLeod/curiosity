@@ -91,3 +91,7 @@ end
 function zero_eligibility_traces!(learner::TBAuto)
     learner.e .= 0
 end
+
+function get_weights(learner::TBAuto, weights)
+    return weights
+end
