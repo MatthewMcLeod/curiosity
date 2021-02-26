@@ -45,4 +45,6 @@ include("utils/learners.jl")
 
 include("utils/experiment.jl")
 
+include("monte_carlo.jl")
+
 end # module
