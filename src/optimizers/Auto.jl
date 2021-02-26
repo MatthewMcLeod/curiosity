@@ -33,7 +33,7 @@ function apply!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z) where {F<:AbstractFl
     if dot(α, z) > 1
         z_nz_idx = z .!= 0.0
         α_z_nz = @view α[z_nz_idx]
-        α_z_nz .= min.(α_z_nz, 1 ./abs(@view z[z_nz_idx]))
+        α_z_nz .= min.(α_z_nz, 1.0 ./abs(@view z[z_nz_idx]))
     end
 
     θ .+= α.*δϕ

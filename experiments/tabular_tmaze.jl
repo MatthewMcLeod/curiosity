@@ -24,6 +24,7 @@ default_args() =
         "constant_target"=> 1.0,
         "exploring_starts"=>true,
         "save_dir" => "TabularTMazeExperiment",
+        "logger_keys" => [LoggerKey.GOAL_VISITATION],
     )
 
 
