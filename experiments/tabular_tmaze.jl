@@ -12,8 +12,8 @@ default_args() =
         "demon_alpha" => 0.1,
         "demon_alpha_init" => 0.1,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "TBAuto",
-        "behaviour_learner" => "ESARSA",
+        "demon_learner" => "TB",
+        "behaviour_learner" => "RoundRobin",
         "behaviour_alpha" => 0.2,
         "intrinsic_reward" => "weight_change",
         "steps" => 20000,
@@ -151,7 +151,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
-        
+
         while sum(steps) < max_num_steps
             cur_step = 0
             tr, stp =
@@ -160,7 +160,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     # agent is accesible in this scope
 
                     logger_step!(logger, env, agent, s, a, s_next, r)
-                    
+
                     cur_step+=1
                     C,_,_ = get(agent.demons, s, a, s_next)
                     if sum(C) != 0
@@ -172,7 +172,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             eps += 1
         end
     end
-    
+
     println("Took place over ", eps, " episodes")
     println("Goal Visitation Frequency")
     per = [goal_visitations[i] / sum(goal_visitations) for i in 1:4]

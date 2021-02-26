@@ -1,9 +1,9 @@
 # include("../utils/env_utils.jl")
 mutable struct TabularRoundRobin <: Learner
 end
-function update!(self::TabularRoundRobin, reward, action, next_action, state, next_state, agent)
+function update!(self::TabularRoundRobin, reward, action, next_action, state, next_state, args...)
 end
-function get_action_probs(self::TabularRoundRobin, state, observation)
+function get_action_probs(self::TabularRoundRobin, state, observation, args...)
     action_probs = zeros(4)
     UP = 1
     RIGHT = 2
