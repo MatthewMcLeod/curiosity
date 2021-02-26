@@ -7,7 +7,7 @@ mutable struct GoalVisitation <: LoggerKeyData
     end
 end
 
-function step!(self::GoalVisitation, logger::Logger, env, agent, s, a, s_next, r)
+function step!(self::GoalVisitation, env, agent, s, a, s_next, r)
     C,_,_ = get(agent.demons, s, a, s_next)
     if sum(C) != 0
         gvf_i = findfirst(!iszero,C)
@@ -15,8 +15,8 @@ function step!(self::GoalVisitation, logger::Logger, env, agent, s, a, s_next, r
     end
 end
 
-function save(self::GoalVisitation, save_dict::Dict)
-    per = [self.goal_visitations[i] / sum(goal_visitations) for i in 1:4]
+function save_log(self::GoalVisitation, save_dict::Dict)
+    per = [self.goal_visitations[i] / sum(self.goal_visitations) for i in 1:4]
     println(self.goal_visitations)
     save_dict[:goal_visitation] = per
 end

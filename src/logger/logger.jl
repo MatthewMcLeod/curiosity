@@ -1,5 +1,9 @@
 import Reproduce
 
+abstract type LoggerKeyData end
+
+include("goal_visitation.jl")
+
 # Module for scoping key names
 module LoggerKey
     const GOAL_VISITATION = :goal_visitation
@@ -37,14 +41,14 @@ end
 
 function logger_step!(self::Logger, env, agent, s, a, s_next, r)
     for data in self.logger_key_data
-        step!(data, logger,  env, agent, s, a, s_next, r)
+        step!(data, env, agent, s, a, s_next, r)
     end
 end
 
 function logger_save(self::Logger)
     save_dict = Dict()
     for data in self.logger_key_data
-        save(data, save_dict)
+        save_log(data, save_dict)
     end
-    save_results(self.save_file, self.save_results)
+    save_results(self.save_file, save_dict)
 end
