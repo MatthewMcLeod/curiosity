@@ -38,6 +38,7 @@ end
 function experiment_wrapper(exp_func::Function, parsed, working)
     save_file = save_setup(parsed)
     if isfile(save_file) && Curiosity.check_save_file_loadable(save_file)
+        println("Experiment Already Done. Skipping.")
         return
     end
     logger = Logger(parsed, save_file)

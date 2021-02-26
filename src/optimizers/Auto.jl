@@ -28,12 +28,20 @@ function apply!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z) where {F<:AbstractFl
     α_ϕ_nz = @view α[ϕ_nz_idx]
 
     Δβ = sign.(hδϕ_ϕ_nz) .* min.(abs.(hδϕ_ϕ_nz./n_ϕ_nz), M_Δ)
+<<<<<<< HEAD:src/optimizers/Auto.jl
     α_ϕ_nz .= min.(α_ϕ_nz .* exp.(μ * Δβ), 1.0 ./(abs_ϕ[ϕ_nz]))
+=======
+    α_ϕ_nz .= min.(α_ϕ_nz .* exp.(μ * Δβ), 1. /(abs_ϕ[ϕ_nz]))
+>>>>>>> temp-branch:src/optimizers/auto.jl
 
     if dot(α, z) > 1
         z_nz_idx = z .!= 0.0
         α_z_nz = @view α[z_nz_idx]
+<<<<<<< HEAD:src/optimizers/Auto.jl
         α_z_nz .= min.(α_z_nz, 1 ./abs(@view z[z_nz_idx]))
+=======
+        α_z_nz .= min.(α_z_nz, 1. /abs(@view z[z_nz_idx]))
+>>>>>>> temp-branch:src/optimizers/auto.jl
     end
 
     θ .+= α.*δϕ
