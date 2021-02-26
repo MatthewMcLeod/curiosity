@@ -1,4 +1,7 @@
+
 module Curiosity
+
+using Reexport
 
 abstract type Learner end
 
@@ -27,7 +30,7 @@ include("environments/tabular_tmaze.jl")
 include("environments/mountain_car.jl")
 
 # logger
-export Logger, logger_step!
+export Logger, logger_step!, LoggerKey
 include("logger/logger.jl")
 
 #utils
