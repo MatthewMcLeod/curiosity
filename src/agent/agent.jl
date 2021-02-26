@@ -18,8 +18,9 @@ mutable struct Agent <: AbstractAgent
     last_obs::Any
     prev_discounts::Array{Float64,1}
     intrinsic_reward::IntrinsicReward
+    state_constructor::Any
 
-    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type)
+    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, observation_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type, state_constructor)
         intrinsic_reward = if intrinsic_reward_type == "weight_change"
             #TODO: The intrinsic reward is defined by how the components of the agent are put together. For example, an intrinsic reward
             # could be the model error, which would then require different components that are assembled in the agent
@@ -38,19 +39,16 @@ mutable struct Agent <: AbstractAgent
             num_actions,
             demon_feature_size,
             behaviour_feature_size,
-            zeros(5),
-            ones(4)*0.9,
-            intrinsic_reward
+            Array{Float64,1}(undef,observation_size),
+            Array{Float64,1}(undef,length(horde)),
+            intrinsic_reward,
+            state_constructor
             )
     end
 end
 
 function proc_input(agent, obs)
-    #TODO: How to define what is used for value estimation as in this formulation, we don't use some values of the observation space
-    # This is currently only works for tabular tmaze.
-    s = spzeros(agent.behaviour_feature_size)
-    s[convert(Int64,obs[1])] = 1
-    return s
+    return agent.state_constructor(obs)
 end
 
 function get_action(agent, state, obs)

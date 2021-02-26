@@ -3,6 +3,7 @@ module TabularTMazeExperiment
 using GVFHordes
 using Curiosity
 using MinimalRLCore
+using SparseArrays
 
 const TTMU = Curiosity.TabularTMazeUtils
 
@@ -13,6 +14,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "TB",
+        "demon_discounts" => 0.9,
         "behaviour_learner" => "RoundRobin",
         "behaviour_alpha" => 0.2,
         "intrinsic_reward" => "weight_change",
@@ -32,6 +34,7 @@ function construct_agent(parsed)
 
     feature_size = 21
     action_space = 4
+    observation_size = 5
     lambda = parsed["lambda"]
     demon_alpha = parsed["demon_alpha"]
     demon_alpha_init = parsed["demon_alpha_init"]
@@ -58,76 +61,27 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid behaviour learner"))
     end
 
-    agent = Agent(demons, feature_size, feature_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type)
+    #Create state constructor
+    function state_constructor(observation,feature_size)
+        s = spzeros(feature_size)
+        s[convert(Int64,observation[1])] = 1
+        return s
+    end
+
+    agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size))
 end
 
 function get_horde(parsed)
-    num_gvfs = 4
-    num_actions = 4
-    discount = 0.9
-    function pseudoterm(state)
-        term = false
-        if state[1] == 1 || state[1] == 5 || state[1] == 17 || state[1] == 21
-            term = true
-        end
-        return term
-    end
 
-    function demon_target_policy(gvf_i, observation, action)
-        state = convert(Int,observation[1])
-
-        policy_1 =  [1 0 0 0 0 0 3;
-                     1 0 0 0 0 0 3;
-                     1 4 4 4 4 4 4;
-                     1 0 0 1 0 0 1;
-                     1 0 0 1 0 0 1;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0]
-
-        policy_2  = [3 0 0 0 0 0 3;
-                     3 0 0 0 0 0 3;
-                     3 4 4 4 4 4 4;
-                     3 0 0 1 0 0 1;
-                     3 0 0 1 0 0 1;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0]
-        policy_3 = [3 0 0 0 0 0 1;
-                     3 0 0 0 0 0 1;
-                     2 2 2 2 2 2 1;
-                     1 0 0 1 0 0 1;
-                     1 0 0 1 0 0 1;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0]
-        policy_4 = [3 0 0 0 0 0 3;
-                     3 0 0 0 0 0 3;
-                     2 2 2 2 2 2 3;
-                     1 0 0 1 0 0 3;
-                     1 0 0 1 0 0 3;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0;
-                     0 0 0 1 0 0 0]
-        gvfs = [policy_1,policy_2,policy_3, policy_4]
-        mask = valid_state_mask()
-
-        action_prob = if gvfs[gvf_i][mask][state] == action
-            1.0
-        else
-            0.0
-        end
-        return action_prob
-    end
+    discount = parsed["demon_discounts"]
+    pseudoterm = TTMU.pseudoterm
+    num_actions = TTMU.NUM_ACTIONS
+    num_demons = TTMU.NUM_DEMONS
 
     horde = if parsed["demon_policy_type"] == "greedy_to_cumulant"
-        Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> demon_target_policy(i-1,obs,a))) for i in 2:5])
+        Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> TTMU.demon_target_policy(i,obs,a))) for i in 1:num_demons])
     elseif parsed["demon_policy_type"] == "random"
-        Horde([GVF(GVFParamFuncs.FeatureCumulant(i), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 2:5])
+        Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 1:num_demons])
     else
         throw(ArgumentError("Not a valid policy type for demons"))
     end
@@ -146,7 +100,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     agent = construct_agent(parsed)
 
-    goal_visitations = ones(4)
+    goal_visitations = zeros(4)
 
     Curiosity.experiment_wrapper(parsed, working) do parsed, logger
         eps = 1
