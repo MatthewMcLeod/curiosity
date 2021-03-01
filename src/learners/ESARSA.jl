@@ -5,15 +5,22 @@ mutable struct ESARSA <: Learner
     num_gvfs::Int
     num_actions::Int
     alpha::Float64
-    function ESARSA(lambda, feature_size, num_gvfs, num_actions, alpha)
-        new(lambda, zeros(num_actions, feature_size), num_gvfs, num_actions, alpha)
+    trace_type::String
+    function ESARSA(lambda, feature_size, num_gvfs, num_actions, alpha, trace_type)
+        new(lambda, zeros(num_actions, feature_size), num_gvfs, num_actions, alpha, trace_type)
     end
 end
 
 function update!(learner::ESARSA, weights, C, state, action, next_state, next_action, next_target_pis, next_discounts)
     # the eligibility trace is for state-action so need to find the exact state action pair per demon and not just the state
     inds = [action + (i-1)*learner.num_actions for i in 1:learner.num_gvfs]
-    learner.e[inds,:] .+= state'
+    if learner.trace_type == "accumulating"
+        learner.e[inds,:] .+= state'
+    elseif learner.trace_type == "replacing"
+        learner.e[inds,state.nzind] .= 1
+    else
+        throw("Not a valid trace type for ESARSA")
+    end
 
     pred = weights * next_state
     #TODO: FIX assumption that all pseudoterminations occur at the same time.

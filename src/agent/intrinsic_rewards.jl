@@ -22,3 +22,13 @@ function update_reward!(self::WeightChange, agent)
     self.previous_weights = current_ws
     return curiosity_reward
 end
+
+mutable struct NoReward <: IntrinsicReward
+    function NoReward(args...)
+        new()
+    end
+end
+
+function update_reward!(self::NoReward, agent)
+    return 0.0
+end

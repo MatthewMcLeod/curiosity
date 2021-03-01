@@ -1,7 +1,7 @@
 
 mutable struct GoalVisitation <: LoggerKeyData
     goal_visitations::Array{Int64}
-    
+
     function GoalVisitation()
         new(ones(4))
     end

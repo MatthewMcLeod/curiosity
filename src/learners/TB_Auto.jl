@@ -36,7 +36,7 @@ function update!(learner::TBAuto, weights, C, state, action, target_pis, discoun
     learner.e[state_action_row_ind,:] .+= state'
 
     pred = weights * next_state
-    Qs = row_order_reshape(pred, (learner.num_demons, learner.num_actions))
+    Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
     # Target Pi is num_demons  x num_actions
     backup_est_per_demon = vec(sum((Qs .* next_target_pis ), dims = 2))
     target = C + next_discounts .* backup_est_per_demon

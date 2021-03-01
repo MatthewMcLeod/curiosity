@@ -2,10 +2,9 @@
 module Curiosity
 
 using Reexport
+using GVFHordes
 
 abstract type Learner end
-
-using Reexport
 
 @reexport using MinimalRLCore
 
@@ -27,6 +26,9 @@ include("learners/TabularRoundRobin.jl")
 export Agent, agent_end!, step!
 include("agent/agent.jl")
 
+export TileCoder, create_features
+include("./agent/tile_coder.jl")
+
 abstract type CumulantSchedule end
 function update! end
 function get_cumulants end
@@ -41,6 +43,7 @@ include("logger/logger.jl")
 
 #utils
 include("utils/tmaze.jl")
+include("utils/mountain_car.jl")
 include("utils/learners.jl")
 
 include("utils/experiment.jl")

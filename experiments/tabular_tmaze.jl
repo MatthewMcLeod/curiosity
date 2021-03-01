@@ -17,6 +17,8 @@ default_args() =
         "demon_discounts" => 0.9,
         "behaviour_learner" => "RoundRobin",
         "behaviour_alpha" => 0.2,
+        "behaviour_gamma" => 0.9,
+        "behaviour_trace" => "accumulating"
         "intrinsic_reward" => "weight_change",
         "steps" => 20000,
         "seed" => 1,
@@ -42,6 +44,9 @@ function construct_agent(parsed)
     behaviour_learner = parsed["behaviour_learner"]
     behaviour_alpha = parsed["behaviour_alpha"]
     intrinsic_reward_type = parsed["intrinsic_reward"]
+    behaviour_gamma = parsed["behaviour_gamma"]
+    behaviour_trace = parsed["behaviour_trace"]
+
 
     demons = get_horde(parsed)
 
@@ -68,7 +73,7 @@ function construct_agent(parsed)
         return s
     end
 
-    agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size))
+    agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma)
 end
 
 function get_horde(parsed)
