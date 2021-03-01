@@ -22,14 +22,14 @@ mutable struct TabularTMaze <: MinimalRLCore.AbstractEnvironment
         step = 1
 
         world = [["G1", "0", "0", "0", "0", "0", "G3"],
-                          ["1", "0", "0", "0", "0", "0", "1"],
-                          ["1", "1", "1", "1", "1", "1", "1"],
-                          ["1", "0", "0", "1", "0", "0", "1"],
-                          ["G2", "0", "0", "1", "0", "0", "G4"],
-                          ["0", "0", "0", "1", "0", "0", "0"],
-                          ["0", "0", "0", "1", "0", "0", "0"],
-                          ["0", "0", "0", "1", "0", "0", "0"],
-                          ["0", "0", "0", "1", "0", "0", "0"]]
+                 ["1", "0", "0", "0", "0", "0", "1"],
+                 ["1", "1", "1", "1", "1", "1", "1"],
+                 ["1", "0", "0", "1", "0", "0", "1"],
+                 ["G2", "0", "0", "1", "0", "0", "G4"],
+                 ["0", "0", "0", "1", "0", "0", "0"],
+                 ["0", "0", "0", "1", "0", "0", "0"],
+                 ["0", "0", "0", "1", "0", "0", "0"],
+                 ["0", "0", "0", "1", "0", "0", "0"]]
         goal_states = ["G1", "G2", "G3", "G4"]
 
         terminal_states = []
@@ -59,14 +59,14 @@ function valid_state_mask()
     return a mask of valid states that is 9x7
     """
     world = [["G1", "0", "0", "0", "0", "0", "G3"],
-                      ["1", "0", "0", "0", "0", "0", "1"],
-                      ["1", "1", "1", "1", "1", "1", "1"],
-                      ["1", "0", "0", "1", "0", "0", "1"],
-                      ["G2", "0", "0", "1", "0", "0", "G4"],
-                      ["0", "0", "0", "1", "0", "0", "0"],
-                      ["0", "0", "0", "1", "0", "0", "0"],
-                      ["0", "0", "0", "1", "0", "0", "0"],
-                      ["0", "0", "0", "1", "0", "0", "0"]]
+             ["1", "0", "0", "0", "0", "0", "1"],
+             ["1", "1", "1", "1", "1", "1", "1"],
+             ["1", "0", "0", "1", "0", "0", "1"],
+             ["G2", "0", "0", "1", "0", "0", "G4"],
+             ["0", "0", "0", "1", "0", "0", "0"],
+             ["0", "0", "0", "1", "0", "0", "0"],
+             ["0", "0", "0", "1", "0", "0", "0"],
+             ["0", "0", "0", "1", "0", "0", "0"]]
 
     world = permutedims(hcat(world...))
     valid_states = findall(x-> x!="0", world)
@@ -97,19 +97,20 @@ function is_terminal(env::TabularTMaze, pos)
     return env.world[pos[1]][pos[2]] in env.goal_states
 end
 
-function MinimalRLCore.reset!(environment::TabularTMaze, args...)
+function MinimalRLCore.reset!(environment::TabularTMaze, rng=Random.GlobalRNG)
     if environment.exploring_starts == false
         environment.current_state = environment.start_state
     elseif environment.exploring_starts == true
         possible_start_states = findall(x -> x == "1", hcat(environment.world...))
-        start_state = possible_start_states[rand(1:length(possible_start_states))]
+        start_state = possible_start_states[rand(rng, 1:length(possible_start_states))]
         # The start states are flipped since hcat "transposes" a list of list when converting it to a matrix
         environment.current_state = [start_state[2],start_state[1]]
     end
 end
 
-function env_start!(environment::TabularTMaze, start_state)
-    throw("Implement env_start with a start_state")
+function MinimalRLCore.reset!(environment::TabularTMaze, start_state::CartesianIndex)
+    # throw("Implement env_start with a start_state")
+    environment.current_state = [start_state[2], start_state[1]]
 end
 
 function MinimalRLCore.environment_step!(environment::TabularTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)
@@ -143,5 +144,7 @@ function MinimalRLCore.get_state(env::TabularTMaze)
 
     return vcat(obs,cumulants)
 end
+
+MinimalRLCore.get_actions(env::TabularTMaze) = 1:4
 
 include("./tabular_tmaze_cumulants.jl")

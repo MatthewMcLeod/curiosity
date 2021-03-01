@@ -1,3 +1,8 @@
+using GVFHordes
+
+
+StatsBase.sample(rng::Random.AbstractRNG, p::GVFHordes.GVFParamFuncs.FunctionalPolicy, s, actions) =
+    sample(rng, Weights([p.func(s, a) for a in actions]))
 
 
 """
@@ -23,8 +28,8 @@ function monte_carlo_return(env,
         term = false
         cumulative_gamma = 1.0
         
-        cur_state = start!(env, cur_state)
-        next_action = StatsBase.sample(rng, policy(gvf), cur_state)
+        cur_state = start!(env, start_state)
+        next_action = StatsBase.sample(rng, GVFHordes.policy(gvf), cur_state, get_actions(env))
         
         while cumulative_gamma > γ_thresh &&
             step < max_steps &&
@@ -32,15 +37,15 @@ function monte_carlo_return(env,
             
             # Take action
             action = next_action
-            next_state, r, term = step!(env, cur_state, action; rng=rng)
+            next_state, r, term = MinimalRLCore.step!(env, action, rng)
 
             # Get next action for GVFs
-            next_action = StatsBase.sample(rng, policy(gvf), cur_state)
+            next_action = StatsBase.sample(rng, GVFHordes.policy(gvf), next_state, get_actions(env))
 
             # Update Return
             c, γ, pi_prob = get(gvf, cur_state, action, next_state, next_action, nothing)
-            returns[ret] += cumulative_gamma*(1 - term)*c
-            cumulative_gamma *= γ
+            returns[ret] += cumulative_gamma*c
+            cumulative_gamma *= γ*(1-term)
             
             cur_state = next_state
             step += 1

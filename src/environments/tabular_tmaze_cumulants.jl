@@ -33,4 +33,33 @@ function update!(env::TabularTMaze, self::DrifterDistractor, pos)
     self.drifter_mean += rand(Normal(0, self.drifter_std))
 end
 
+
+mutable struct Constant <: CumulantSchedule
+    c1::Float64
+    c2::Float64
+    c3::Float64
+    c4::Float64
+end
+
+Constant(c = 1.0) = Constant(c,c,c,c)
+
+function get_cumulants(env::TabularTMaze, cs::Constant, pos)
+    num_cumulants = 4
+    cumulants = zeros(num_cumulants)
+    if env.world[pos[1]][pos[2]] == "G1"
+        cumulants[1] = cs.c1
+    elseif env.world[pos[1]][pos[2]] == "G2"
+        cumulants[2] = cs.c2
+    elseif env.world[pos[1]][pos[2]] == "G3"
+        cumulants[3] = cs.c3
+    elseif env.world[pos[1]][pos[2]] == "G4"
+        cumulants[4] = cs.c4
+    end
+    return cumulants
+end
+
+function update!(env::TabularTMaze, self::DrifterDistractor, pos)
+    self.drifter_mean += rand(Normal(0, self.drifter_std))
+end
+
 end

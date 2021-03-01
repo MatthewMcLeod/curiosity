@@ -45,6 +45,7 @@ include("utils/learners.jl")
 
 include("utils/experiment.jl")
 
+using GVFHordes
 include("monte_carlo.jl")
 
 end # module
