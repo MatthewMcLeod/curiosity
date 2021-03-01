@@ -20,8 +20,9 @@ mutable struct Agent <: AbstractAgent
     intrinsic_reward::IntrinsicReward
     state_constructor::Any
     behaviour_gamma::Float64
+    use_external_reward::Bool
 
-    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, observation_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type, state_constructor, behaviour_gamma)
+    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, observation_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type, state_constructor, behaviour_gamma, use_external_reward)
         intrinsic_reward = if intrinsic_reward_type == "weight_change"
             #TODO: The intrinsic reward is defined by how the components of the agent are put together. For example, an intrinsic reward
             # could be the model error, which would then require different components that are assembled in the agent
@@ -46,7 +47,8 @@ mutable struct Agent <: AbstractAgent
             Array{Float64,1}(undef,length(horde)),
             intrinsic_reward,
             state_constructor,
-            behaviour_gamma
+            behaviour_gamma,
+            use_external_reward,
             )
     end
 end
@@ -76,7 +78,8 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     update_demons!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal)
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
-    total_reward = r_int + r
+
+    total_reward = agent.use_external_reward ? r_int + r : r_int
     update_behaviour!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal, total_reward)
 
     agent.last_state = next_state

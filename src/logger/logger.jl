@@ -3,14 +3,17 @@ import Reproduce
 abstract type LoggerKeyData end
 
 include("goal_visitation.jl")
+include("episode_length.jl")
 
 # Module for scoping key names
 module LoggerKey
     const GOAL_VISITATION = :goal_visitation
+    const EPISODE_LENGTH = :episode_length
 end
 
 const LOGGER_KEY_MAP = Dict(
-    LoggerKey.GOAL_VISITATION => GoalVisitation()
+    LoggerKey.GOAL_VISITATION => GoalVisitation(),
+    LoggerKey.EPISODE_LENGTH => EpisodeLength()
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
@@ -39,9 +42,9 @@ mutable struct Logger
     end
 end
 
-function logger_step!(self::Logger, env, agent, s, a, s_next, r)
+function logger_step!(self::Logger, env, agent, s, a, s_next, r, is_terminal)
     for data in self.logger_key_data
-        step!(data, env, agent, s, a, s_next, r)
+        step!(data, env, agent, s, a, s_next, r, is_terminal)
     end
 end
 

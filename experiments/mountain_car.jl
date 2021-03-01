@@ -1,6 +1,3 @@
-
-
-
 module MountainCarExperiment
 
 using GVFHordes
@@ -12,7 +9,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 50000,
+        "steps" => 10000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -21,10 +18,11 @@ default_args() =
         "behaviour_alpha" => 0.5/8,
 
         "behaviour_learner" => "ESARSA",
-        "behaviour_rew" => "env",
+        # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
-        "intrinsic_reward" =>"no_reward",
+        "intrinsic_reward" =>"weight_change",
         "behaviour_trace" => "replacing",
+        "use_external_reward" => true,
 
         "lambda" => 0.9,
         "demon_alpha" => 0.1,
@@ -37,6 +35,9 @@ default_args() =
         "distractor" => (1.0, 1.0),
         "constant_target"=> 1.0,
         "exploring_starts"=>true,
+        "save_dir" => "MountainCarExperiment",
+        "logger_keys" => [LoggerKey.EPISODE_LENGTH],
+
     )
 
 
@@ -52,6 +53,8 @@ function construct_agent(parsed)
         behaviour_gamma = parsed["behaviour_gamma"]
         behaviour_trace = parsed["behaviour_trace"]
         intrinsic_reward_type = parsed["intrinsic_reward"]
+        use_external_reward = parsed["use_external_reward"]
+
 
         #Create state constructor
         state_constructor_tc = TileCoder(parsed["numtilings"],parsed["numtiles"],observation_size)
@@ -79,7 +82,7 @@ function construct_agent(parsed)
             return s
         end
 
-        agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size, state_constructor_tc), behaviour_gamma)
+        agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size, state_constructor_tc), behaviour_gamma, use_external_reward)
 end
 
 function get_horde(parsed)
@@ -97,24 +100,32 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     agent = construct_agent(parsed)
 
-    eps = 1
-    max_num_steps = num_steps
-    steps = Int[]
 
-    while sum(steps) < max_num_steps
-        cur_step = 0
-        tr, stp =
-            run_episode!(env, agent) do (s, a, s_next, r)
-                #This is a callback for every timestep where logger can go
-                # agent is accesible in this scope
-                cur_step+=1
-                if cur_step % 500 == 0
-                    println("At step: ", cur_step)
+    Curiosity.experiment_wrapper(parsed, working) do parsed, logger
+        eps = 1
+        max_num_steps = num_steps
+        steps = Int[]
+
+        while sum(steps) < max_num_steps
+            cur_step = 0
+            is_terminal = false
+
+            tr, stp =
+                run_episode!(env, agent) do (s, a, s_next, r, t)
+                    #This is a callback for every timestep where logger can go
+                    # agent is accesible in this scope
+                    cur_step+=1
+                    if cur_step % 500 == 0
+                        println("At step: ", cur_step)
+                    end
+                    logger_step!(logger, env, agent, s, a, s_next, r, t)
                 end
-            end
-            println("Finished episode: ", cur_step)
-        push!(steps, stp)
-        eps += 1
+                println("Finished episode: ", cur_step)
+                # is_terminal = true
+                # logger_step!(logger, env, agent, s, a, s_next, r, is_terminal)
+            push!(steps, stp)
+            eps += 1
+        end
     end
 end
 

@@ -20,6 +20,7 @@ default_args() =
         "behaviour_gamma" => 0.9,
         "behaviour_trace" => "accumulating"
         "intrinsic_reward" => "weight_change",
+        "use_external_reward" => true,
         "steps" => 20000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
@@ -46,6 +47,7 @@ function construct_agent(parsed)
     intrinsic_reward_type = parsed["intrinsic_reward"]
     behaviour_gamma = parsed["behaviour_gamma"]
     behaviour_trace = parsed["behaviour_trace"]
+    use_external_reward = parsed["use_external_reward"]
 
 
     demons = get_horde(parsed)
@@ -73,7 +75,7 @@ function construct_agent(parsed)
         return s
     end
 
-    agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma)
+    agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
 end
 
 function get_horde(parsed)
