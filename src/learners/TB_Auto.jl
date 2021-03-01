@@ -36,16 +36,10 @@ function update!(learner::TBAuto, weights, C, state, action, target_pis, discoun
     learner.e[state_action_row_ind,:] .+= state'
 
     pred = weights * next_state
-    #TODO: FIX assumption that all pseudoterminations occur at the same time.
-    target = if next_discounts[1] != 0
-        # expected sarsa backup for TB
-        Qs = row_order_reshape(pred, (learner.num_demons, learner.num_actions))
-        # Target Pi is num_demons  x num_actions
-        backup_est_per_demon = vec(sum((Qs .* next_target_pis ), dims = 2))
-        C + next_discounts .* backup_est_per_demon
-     else
-         C
-     end
+    Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
+    # Target Pi is num_demons  x num_actions
+    backup_est_per_demon = vec(sum((Qs .* next_target_pis ), dims = 2))
+    target = C + next_discounts .* backup_est_per_demon
      # TD error per demon is the td error on Q
     td_err = target - (weights * state)[state_action_row_ind]
     td_err_across_demons = repeat(td_err, inner=learner.num_actions)

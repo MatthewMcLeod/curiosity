@@ -61,7 +61,7 @@ end
 
 
 function MinimalRLCore.environment_step!(env::MountainCar, action, rng::AbstractRNG=Random.GLOBAL_RNG)
-    
+
     @boundscheck valid_action(env, action)
     env.vel =
         clamp(env.vel + (action - 2)*0.001 - 0.0025*cos(3*env.pos),
