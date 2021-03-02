@@ -48,6 +48,8 @@ include("utils/learners.jl")
 
 include("utils/experiment.jl")
 
+using GVFHordes
+export monte_carlo_returns
 include("monte_carlo.jl")
 
 end # module

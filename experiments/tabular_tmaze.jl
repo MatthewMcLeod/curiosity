@@ -18,7 +18,7 @@ default_args() =
         "behaviour_learner" => "RoundRobin",
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_trace" => "accumulating"
+        "behaviour_trace" => "accumulating",
         "intrinsic_reward" => "weight_change",
         "use_external_reward" => true,
         "steps" => 20000,
@@ -117,11 +117,11 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         while sum(steps) < max_num_steps
             cur_step = 0
             tr, stp =
-                run_episode!(env, agent) do (s, a, s_next, r)
+                run_episode!(env, agent) do (s, a, s_next, r, t)
                     #This is a callback for every timestep where logger can go
                     # agent is accesible in this scope
 
-                    logger_step!(logger, env, agent, s, a, s_next, r)
+                    logger_step!(logger, env, agent, s, a, s_next, r, t)
 
                     cur_step+=1
                     C,_,_ = get(agent.demons, s, a, s_next)

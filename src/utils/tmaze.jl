@@ -28,6 +28,13 @@ function get_cumulant_schedule(parsed)
     sched = parsed["cumulant_schedule"]
     if parsed["cumulant_schedule"] == "DrifterDistractor"
         DrifterDistractor(parsed)
+    elseif parsed["cumulant_schedule"] == "Constant"
+        if parsed["cumulant"] isa Number
+            TTMCS.Constant(parsed["cumulant"])
+        else
+            TTMCS.Constant(parsed["cumulant"]...)
+        end
+
     else
         throw("$(sched) Not Implemented")
     end

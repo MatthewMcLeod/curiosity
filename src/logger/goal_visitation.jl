@@ -7,7 +7,7 @@ mutable struct GoalVisitation <: LoggerKeyData
     end
 end
 
-function step!(self::GoalVisitation, env, agent, s, a, s_next, r)
+function step!(self::GoalVisitation, env, agent, s, a, s_next, r, t)
     C,_,_ = get(agent.demons, s, a, s_next)
     if sum(C) != 0
         gvf_i = findfirst(!iszero,C)

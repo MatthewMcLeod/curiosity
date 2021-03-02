@@ -24,19 +24,18 @@ MountainCar(rng::AbstractRNG, normalized::Bool=false)
 mutable struct MountainCar <: MinimalRLCore.AbstractEnvironment
     pos::Float64
     vel::Float64
-    actions::AbstractSet
     normalized::Bool
     function MountainCar(pos=0.0, vel=0.0, normalized::Bool=false)
         mcc = MountainCarConst
         @boundscheck (pos >= mcc.pos_limit[1] && pos <= mcc.pos_limit[2])
         @boundscheck (vel >= mcc.vel_limit[1] && vel <= mcc.vel_limit[2])
-        new(pos, vel, Set([mcc.Reverse, mcc.Neutral, mcc.Accelerate]), normalized)
+        new(pos, vel, normalized)
     end
 end
 
 
-MinimalRLCore.get_actions(env::MountainCar) = env.actions
-valid_action(env::MountainCar, action) = action in env.actions
+MinimalRLCore.get_actions(env::MountainCar) = [MountainCarConst.Reverse, MountainCarConst.Neutral, MountainCarConst.Accelerate]
+valid_action(env::MountainCar, action) = action in [MountainCarConst.Reverse, MountainCarConst.Neutral, MountainCarConst.Accelerate]
 
 
 function MinimalRLCore.reset!(env::MountainCar, rng::AbstractRNG=Random.GLOBAL_RNG)
@@ -48,7 +47,7 @@ end
 
 function MinimalRLCore.reset!(env::MountainCar,
                               start_state::T) where {T<:AbstractArray}
-    if env.normalized
+    if env.normalized == false
         env.pos = start_state[1]
         env.vel = start_state[2]
     else

@@ -1,53 +1,57 @@
 module MountainCarUtils
 using GVFHordes
 
-const discount = 0.9
-# const pos_limit = (-1.2, 0.5)
+const discount = 0.99
 import ..MountainCarConst
 
+# function MCNorm(obs)
+#     pos_limit = MountainCarConst.pos_limit
+#     vel_limit = MountainCarConst.vel_limit
+#     return Float32[(obs[1] - pos_limit[1])/(pos_limit[2] - pos_limit[1]),
+#                    (obs[2] - vel_limit[1])/(vel_limit[2] - vel_limit[1])]
+# end
 
 function steps_to_wall_gvf()
-    # GVF(GVFParamFuncs.FunctionalCumulant((args...)->return 0), GVFParamFuncs.ConstantDiscount(1.0), GVFParamFuncs.RandomPolicy(fill(1/3,3)))
     GVF(GVFParamFuncs.FunctionalCumulant(steps_to_wall_cumulant), GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0), GVFParamFuncs.FunctionalPolicy(energy_pump_policy) )
 end
 
 function steps_to_goal_gvf()
-    # GVF(GVFParamFuncs.FunctionalCumulant((args...)->return 0), GVFParamFuncs.ConstantDiscount(1.0), GVFParamFuncs.RandomPolicy(fill(1/3,3)))
-    # GVF(GVFParamFuncs.FunctionalCumulant((args...)->return 0), GVFParamFuncs.ConstantDiscount(1.0), GVFParamFuncs.FunctionalPolicy(energy_pump_policy))
-    # GVF(GVFParamFuncs.FunctionalCumulant(steps_to_goal_cumulant), GVFParamFuncs.ConstantDiscount(1.0), GVFParamFuncs.FunctionalPolicy(energy_pump_policy))
     GVF(GVFParamFuncs.FunctionalCumulant(steps_to_goal_cumulant), GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0), GVFParamFuncs.FunctionalPolicy(energy_pump_policy))
-
 end
 
 function energy_pump_policy(obs, action)
     # Energy pumping is in the direction of the velocity
-    action_to_take = if obs[2] >= 0
-        3 # Go Right/Accelerate
+    #NOTE: Needs to know if the env is normalized. Always assume it is. Equivalent of 0 velocity is 0.5
+    vel_0 = 0.5
+    action_to_take = if obs[2] >= vel_0
+        MountainCarConst.Accelerate # Go Right/Accelerate
     else
-        1 # Go left/Reverse
+        MountainCarConst.Reverse # Go left/Reverse
     end
     return action_to_take == action ? 1.0 : 0.0
 end
 
 function steps_to_wall_pseudoterm(obs)
-    return obs[1] >= MountainCarConst.pos_limit[1]
+    normed_wall_pos = 0.0
+    # return obs[1] <= MountainCarConst.pos_limit[1]
+    return obs[1] <= normed_wall_pos
+end
+function steps_to_wall_cumulant(obs, action, pred)
+    normed_wall_pos = 0.0
+    # return obs[1] <= MountainCarConst.pos_limit[1] ? 1.0 : 0.0
+    return obs[1] <= normed_wall_pos ? 1.0 : 0.0
 end
 
 function steps_to_goal_pseudoterm(obs)
-    return obs[1] >= MountainCarConst.pos_limit[2]
-end
-
-function steps_to_wall_cumulant(obs, action, pred)
-    return obs[1] >= MountainCarConst.pos_limit[1] ? 1.0 : 0.0
+    normed_goal_pos = 1.0
+    # return obs[1] >= MountainCarConst.pos_limit[2]
+    return obs[1] >= normed_goal_pos
 end
 
 function steps_to_goal_cumulant(obs, action, pred)
-    return obs[1] >= MountainCarConst.pos_limit[2] ? 1.0 : 0.0
+    normed_goal_pos = 1.0
+    # return obs[1] >= MountainCarConst.pos_limit[2] ? 1.0 : 0.0
+    return obs[1] >= normed_goal_pos ? 1.0 : 0.0
 end
-
-
-# Cumulant(gvf, s) = s == goal ? 1 : 0
-# Discount(gvf, s) = s == goal ? 0.0 : \gamma
-
 
 end #end MountainCarUtils
