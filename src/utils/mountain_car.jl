@@ -1,5 +1,7 @@
 module MountainCarUtils
 using GVFHordes
+import StatsBase
+import Random
 
 const discount = 0.99
 import ..MountainCarConst
@@ -12,28 +14,51 @@ function MCNorm(obs)
 end
 
 function task_gvf()
-    GVF(GVFParamFuncs.FunctionalCumulant(task_cumulant), GVFParamFuncs.StateTerminationDiscount(0.9, task_pseudoterm, 0.0), GVFParamFuncs.FunctionalPolicy(energy_pump_policy) )
+    GVF(GVFParamFuncs.FunctionalCumulant(task_cumulant),
+        GVFParamFuncs.StateTerminationDiscount(0.95, task_pseudoterm, 0.0),
+        EnergyPumpPolicy(true))
 end
 
 function steps_to_wall_gvf()
-    GVF(GVFParamFuncs.FunctionalCumulant(steps_to_wall_cumulant), GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0), GVFParamFuncs.FunctionalPolicy(energy_pump_policy) )
+    GVF(GVFParamFuncs.FunctionalCumulant(steps_to_wall_cumulant),
+        GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0),
+        EnergyPumpPolicy(true))
 end
 
 function steps_to_goal_gvf()
-    GVF(GVFParamFuncs.FunctionalCumulant(steps_to_goal_cumulant), GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0), GVFParamFuncs.FunctionalPolicy(energy_pump_policy))
+    GVF(GVFParamFuncs.FunctionalCumulant(steps_to_goal_cumulant),
+        GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0),
+        EnergyPumpPolicy(true))
 end
 
-function energy_pump_policy(obs, action)
-    # Energy pumping is in the direction of the velocity
-    #NOTE: Needs to know if the env is normalized. Always assume it is. Equivalent of 0 velocity is 0.5
-    vel_0 = 0.5
-    action_to_take = if obs[2] >= vel_0
+struct EnergyPumpPolicy <: GVFParamFuncs.AbstractPolicy
+    normalized::Bool
+    EnergyPumpPolicy(normalized=false) = new(normalized)
+end
+
+vel_0(π::EnergyPumpPolicy) = if π.normalized == true
+    0.5
+else
+    0.0
+end
+
+Base.get(π::EnergyPumpPolicy, state_t, action_t) =
+    if state_t[2] >= vel_0(π)
+        MountainCarConst.Accelerate == action_t ? 1.0 : 0.0 # Go Right/Accelerate
+    else
+        MountainCarConst.Reverse == action_t ? 1.0 : 0.0 # Go left/Reverse
+    end
+
+StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t) =
+    if state_t[2] >= vel_0(π)
         MountainCarConst.Accelerate # Go Right/Accelerate
     else
         MountainCarConst.Reverse # Go left/Reverse
     end
-    return action_to_take == action ? 1.0 : 0.0
-end
+StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t, actions) =
+    StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t)
+StatsBase.sample(π::EnergyPumpPolicy, args...) =
+    StatsBase.sample(Random.GLOBAL_RNG, π::EnergyPumpPolicy, args...)
 
 function steps_to_wall_pseudoterm(obs)
     normed_wall_pos = 0.0
