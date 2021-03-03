@@ -32,7 +32,7 @@ default_args() =
 
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
-        "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR, LoggerKey.TEMP_PRINT],
+        "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
 
     )
 
@@ -98,7 +98,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
-        LoggerInitKey.INTERVAL => 1,
+        LoggerInitKey.INTERVAL => 50,
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
@@ -112,8 +112,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             max_episode_steps = min(max_num_steps - sum(steps), 1000)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
-                    #This is a callback for every timestep where logger can go
-                    # agent is accesible in this scope
                     logger_step!(logger, env, agent, s, a, s_next, r, t)
                 end
                 logger_episode_end!(logger)

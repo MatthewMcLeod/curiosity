@@ -22,7 +22,7 @@ behaviour_learner = "ESARSA"
 behaviour_gamma = 0.99
 intrinsic_reward ="weight_change"
 behaviour_trace = "replacing"
-use_external_reward = false
+use_external_reward = true
 
 lambda = 0.9
 demon_alpha = 0.1
