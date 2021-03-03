@@ -4,6 +4,7 @@ using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
+using ProgressMeter
 
 const MCU = Curiosity.MountainCarUtils
 
@@ -38,7 +39,7 @@ default_args() =
 
 
 function construct_agent(parsed)
-        observation_size = 4
+        observation_size = 2
         action_space = 3
         lambda = parsed["lambda"]
         demon_alpha = parsed["demon_alpha"]
@@ -53,7 +54,8 @@ function construct_agent(parsed)
 
 
         #Create state constructor
-        state_constructor_tc = TileCoder(parsed["numtilings"],parsed["numtiles"],observation_size)
+    state_constructor_tc = TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
+
         feature_size = size(state_constructor_tc)
 
         demons = get_horde(parsed)
@@ -101,11 +103,15 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         LoggerInitKey.INTERVAL => 50,
     )
 
+
+
+    
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
-
+        
+        prg_bar = ProgressMeter.Progress(num_steps, "Step: ")
         while sum(steps) < max_num_steps
             is_terminal = false
 
@@ -113,8 +119,12 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)
+                    if progress
+                        next!(prg_bar)
+                    end
                 end
-                logger_episode_end!(logger)
+            logger_episode_end!(logger)
+
             push!(steps, stp)
             eps += 1
         end

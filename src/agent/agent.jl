@@ -78,6 +78,7 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     update_demons!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal)
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
+    # r_int = 0.0
 
     total_reward = agent.use_external_reward ? r_int + r : r_int
     update_behaviour!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal, total_reward)
