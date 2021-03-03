@@ -6,7 +6,7 @@ mutable struct MCError <: LoggerKeyData
     eval_set::Dict
 
     function MCError()
-        eval_set = @load "/home/matthewmcleod/Documents/Masters/curiosity/src/data/MCEvalSet.jld2" MCEvalSet
+        eval_set = @load string(pwd(),"/src/data/MCEvalSet.jld2") MCEvalSet
         new(zeros(2,10000), MCEvalSet)
     end
 end
