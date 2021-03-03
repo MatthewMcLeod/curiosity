@@ -7,9 +7,8 @@ arg_iter_type = "iter"
 
 [static_args]
 
-save_keys=["demon_learner"]
-runs="1:2"
-steps = 10000
+save_keys=["demon_learner", "runs"]
+steps = 20000
 seed = 1
 
 #Tile coding params used by Rich textbook for mountain car
@@ -39,3 +38,4 @@ logger_keys = ["MC_ERROR","EPISODE_LENGTH"]
 behaviour_learner = ["ESARSA"]
 demon_learner = ["TBAuto", "TB"]
 behaviour_alpha = [0.0625] # 0.5/8
+runs="1:5"
