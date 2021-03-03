@@ -8,7 +8,7 @@ mutable struct EpisodeLength <: LoggerKeyData
     end
 end
 
-function step!(self::EpisodeLength, env, agent, s, a, s_next, r, t)
+function step!(self::EpisodeLength, env, agent, s, a, s_next, r, t, total_steps)
     if t == false
         self.step_counter += 1
     else

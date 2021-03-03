@@ -41,3 +41,10 @@ end
 function get_weights(learner::TB, weights)
     return weights
 end
+
+function predict(learner::TB, agent, weights::Array{Float64,2}, obs, action)
+    state = agent.state_constructor(obs)
+    preds = weights * state
+    inds = [action + (i-1)*learner.num_actions for i in 1:learner.num_demons]
+    return preds[inds]
+end

@@ -1,0 +1,41 @@
+[config]
+save_dir = "MountainCar"
+exp_file = "experiments/mountain_car.jl"
+exp_module_name = "MountainCarExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+save_keys=["demon_learner"]
+runs="1:2"
+steps = 10000
+seed = 1
+
+#Tile coding params used by Rich textbook for mountain car
+numtilings = 8
+numtiles = 8
+# behaviour_alpha = 0.0625 # 0.5/8
+
+behaviour_learner = "ESARSA"
+# behaviour_rew = env
+behaviour_gamma = 0.99
+intrinsic_reward ="weight_change"
+behaviour_trace = "replacing"
+use_external_reward = false
+
+lambda = 0.9
+demon_alpha = 0.1
+demon_alpha_init = 1.0
+demon_policy_type = "greedy_to_cumulant"
+
+exploring_starts=true
+save_dir = "MountainCarExperiment"
+# logger_keys = [LoggerKey.EPISODE_LENGTH]
+# logger_keys = [episode_length]
+logger_keys = ["MC_ERROR","EPISODE_LENGTH"]
+
+[sweep_args]
+behaviour_learner = ["ESARSA"]
+demon_learner = ["TBAuto", "TB"]
+behaviour_alpha = [0.0625] # 0.5/8

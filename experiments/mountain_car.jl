@@ -20,7 +20,7 @@ default_args() =
         "behaviour_learner" => "ESARSA",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
-        "intrinsic_reward" =>"weight_change",
+        "intrinsic_reward" =>"no_reward",
         "behaviour_trace" => "replacing",
         "use_external_reward" => true,
 
@@ -30,13 +30,9 @@ default_args() =
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "TB",
 
-        "cumulant_schedule" => "DrifterDistractor",
-        "drifter" => (1.0, sqrt(0.01)),
-        "distractor" => (1.0, 1.0),
-        "constant_target"=> 1.0,
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
-        "logger_keys" => [LoggerKey.EPISODE_LENGTH],
+        "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
 
     )
 
@@ -96,29 +92,32 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     seed = parsed["seed"]
 
     normalized = true
-    env = MountainCar(normalized)
+    env = MountainCar(0.0,0.0,normalized)
 
     agent = construct_agent(parsed)
-
 
     Curiosity.experiment_wrapper(parsed, working) do parsed, logger
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
+        total_steps = 0
 
         while sum(steps) < max_num_steps
             cur_step = 0
             is_terminal = false
 
+            max_episode_steps = min(max_num_steps - sum(steps), 1000)
+
             tr, stp =
-                run_episode!(env, agent) do (s, a, s_next, r, t)
+                run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     #This is a callback for every timestep where logger can go
                     # agent is accesible in this scope
                     cur_step+=1
+                    total_steps += 1
                     if cur_step % 500 == 0
                         println("At step: ", cur_step)
                     end
-                    logger_step!(logger, env, agent, s, a, s_next, r, t)
+                    logger_step!(logger, env, agent, s, a, s_next, r, t, total_steps)
                 end
                 println("Finished episode: ", cur_step)
                 # is_terminal = true

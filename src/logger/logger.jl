@@ -4,23 +4,26 @@ abstract type LoggerKeyData end
 
 include("goal_visitation.jl")
 include("episode_length.jl")
+include("mountain_car_error.jl")
 
 # Module for scoping key names
 module LoggerKey
-    const GOAL_VISITATION = :goal_visitation
-    const EPISODE_LENGTH = :episode_length
+    const GOAL_VISITATION = "GOAL_VISITATION"
+    const EPISODE_LENGTH = "EPISODE_LENGTH"
+    const MC_ERROR = "MC_ERROR"
 end
 
 const LOGGER_KEY_MAP = Dict(
     LoggerKey.GOAL_VISITATION => GoalVisitation(),
-    LoggerKey.EPISODE_LENGTH => EpisodeLength()
+    LoggerKey.EPISODE_LENGTH => EpisodeLength(),
+    LoggerKey.MC_ERROR => MCError()
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
 mutable struct Logger
     save_file:: String
     # Tracks what needs to be logged
-    logger_keys::Array{Symbol}
+    logger_keys::Array{String}
     # Array of structs for logger logic
     logger_key_data::Array{LoggerKeyData}
 
@@ -42,9 +45,9 @@ mutable struct Logger
     end
 end
 
-function logger_step!(self::Logger, env, agent, s, a, s_next, r, is_terminal)
+function logger_step!(self::Logger, env, agent, s, a, s_next, r, is_terminal, total_steps)
     for data in self.logger_key_data
-        step!(data, env, agent, s, a, s_next, r, is_terminal)
+        step!(data, env, agent, s, a, s_next, r, is_terminal, total_steps)
     end
 end
 
