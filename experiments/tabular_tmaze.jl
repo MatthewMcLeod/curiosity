@@ -109,7 +109,12 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     goal_visitations = zeros(4)
 
-    Curiosity.experiment_wrapper(parsed, working) do parsed, logger
+    logger_init_dict = Dict(
+        LoggerInitKey.TOTAL_STEPS => num_steps,
+        LoggerInitKey.INTERVAL => 1,
+    )
+
+    Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
@@ -130,6 +135,8 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                         goal_visitations[gvf_i] += 1
                     end
                 end
+                logger_episode_end!(logger)
+
             push!(steps, stp)
             eps += 1
         end

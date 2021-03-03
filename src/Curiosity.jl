@@ -38,7 +38,7 @@ include("environments/tabular_tmaze.jl")
 include("environments/mountain_car.jl")
 
 # logger
-export Logger, logger_step!, LoggerKey
+export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils
