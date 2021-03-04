@@ -7,8 +7,8 @@ arg_iter_type = "iter"
 
 [static_args]
 
-save_keys=["demon_learner", "runs"]
-steps = 20000
+save_keys=["demon_learner", "runs", "demon_alpha", "behaviour_alpha", "use_external_reward"]
+steps = 50000
 seed = 1
 
 #Tile coding params used by Rich textbook for mountain car
@@ -21,11 +21,11 @@ behaviour_learner = "ESARSA"
 behaviour_gamma = 0.99
 intrinsic_reward ="weight_change"
 behaviour_trace = "replacing"
-use_external_reward = true
+# use_external_reward = true
 
 lambda = 0.9
-demon_alpha = 0.1
-demon_alpha_init = 1.0
+# demon_alpha = 0.1
+demon_alpha_init = 0.125
 demon_policy_type = "greedy_to_cumulant"
 
 exploring_starts=true
@@ -37,5 +37,7 @@ logger_keys = ["MC_ERROR","EPISODE_LENGTH"]
 [sweep_args]
 behaviour_learner = ["ESARSA"]
 demon_learner = ["TBAuto", "TB"]
-behaviour_alpha = [0.0625] # 0.5/8
-runs="1:5"
+behaviour_alpha = "2.0 .^ (-5:-4)" # range of 2^[-3:-1]/8
+demon_alpha = "2.0 .^ (-7:-3)"
+runs="1:30"
+use_external_reward=[true, false]

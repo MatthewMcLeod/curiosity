@@ -4,20 +4,27 @@ mutable struct EpisodeLength <: LoggerKeyData
     step_counter::Int
 
     function EpisodeLength(logger_init_info)
-        new([],1)
+        new([],0)
     end
 end
 
 function step!(self::EpisodeLength, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
-    if is_terminal == false
-        self.step_counter += 1
-    else
+    self.step_counter += 1
+    if is_terminal == true
         push!(self.episode_length, self.step_counter)
-        self.step_counter = 1
+        self.step_counter = 0
+    # else
     end
+
 end
 
 function episode_end!(self::EpisodeLength, cur_step_in_episode, cur_step_total)
+    # Environment must have cut off trajectory for exceeding max length
+    if self.step_counter > 0
+        # subtract a step since the counting in step is forward
+        push!(self.episode_length, self.step_counter)
+        self.step_counter = 0
+    end
 end
 
 function save_log(self::EpisodeLength, save_dict::Dict)

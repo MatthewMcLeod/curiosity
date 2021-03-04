@@ -10,7 +10,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 10000,
+        "steps" => 20000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -21,13 +21,13 @@ default_args() =
         "behaviour_learner" => "ESARSA",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
-        "intrinsic_reward" =>"no_reward",
+        "intrinsic_reward" =>"weight_change",
         "behaviour_trace" => "replacing",
         "use_external_reward" => true,
 
         "lambda" => 0.9,
         "demon_alpha" => 0.1,
-        "demon_alpha_init" => 1.0,
+        "demon_alpha_init" => 1.0/8,
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "TB",
 
@@ -105,12 +105,12 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
 
 
-    
+
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
-        
+
         prg_bar = ProgressMeter.Progress(num_steps, "Step: ")
         while sum(steps) < max_num_steps
             is_terminal = false
