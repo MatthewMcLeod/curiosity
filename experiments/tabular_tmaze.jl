@@ -29,7 +29,7 @@ default_args() =
         "constant_target"=> 1.0,
         "exploring_starts"=>true,
         "save_dir" => "TabularTMazeExperiment",
-        "logger_keys" => [LoggerKey.GOAL_VISITATION],
+        "logger_keys" => [LoggerKey.GOAL_VISITATION, LoggerKey.TTMAZE_ERROR],
     )
 
 
@@ -111,7 +111,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
-        LoggerInitKey.INTERVAL => 1,
+        LoggerInitKey.INTERVAL => 2000,
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger

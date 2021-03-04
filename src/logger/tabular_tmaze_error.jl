@@ -1,32 +1,33 @@
 using JLD2
 using Statistics
 
-mutable struct MCError <: LoggerKeyData
+mutable struct TTMazeError <: LoggerKeyData
     error::Array{Float64,2}
     eval_set::Dict
     log_interval::Int
 
-    function MCError(logger_init_info)
-        eval_set = @load string(pwd(),"/src/data/MCEvalSet.jld2") MCEvalSet
+    function TTMazeError(logger_init_info)
+        eval_set = @load string(pwd(),"/src/data/TTMazeEvalSet.jld2") TTMazeEvalSet
         num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL])
 
-        new(zeros(2,num_logged_steps), MCEvalSet, logger_init_info[LoggerInitKey.INTERVAL])
+        new(zeros(4,num_logged_steps), TTMazeEvalSet, logger_init_info[LoggerInitKey.INTERVAL])
     end
 end
 
-function step!(self::MCError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+function step!(self::TTMazeError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
 
     if rem(cur_step_total, self.log_interval) == 0
         ind = fld(cur_step_total, self.log_interval)
         Q_est = hcat([predict(agent.demon_learner, agent, agent.demon_weights, state, action) for (state,action) in zip(self.eval_set["states"], self.eval_set["actions"])]...)
+
         err = mean((Q_est - self.eval_set["ests"]) .^ 2, dims=2)
         self.error[:,ind] = err
     end
 end
 
-function episode_end!(self::MCError, cur_step_in_episode, cur_step_total)
+function episode_end!(self::TTMazeError, cur_step_in_episode, cur_step_total)
 end
 
-function save_log(self::MCError, save_dict::Dict)
-    save_dict[:mc_error] = self.error
+function save_log(self::TTMazeError, save_dict::Dict)
+    save_dict[:ttmaze_error] = self.error
 end

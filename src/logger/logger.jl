@@ -19,6 +19,7 @@ end
 include("goal_visitation.jl")
 include("episode_length.jl")
 include("mountain_car_error.jl")
+include("tabular_tmaze_error.jl")
 include("temp_print.jl")
 
 # Module for scoping key names
@@ -27,6 +28,7 @@ module LoggerKey
     const EPISODE_LENGTH = "EPISODE_LENGTH"
     const MC_ERROR = "MC_ERROR"
     const TEMP_PRINT = "TEMP_PRINT"
+    const TTMAZE_ERROR = "TTMAZE_ERROR"
 end
 
 module LoggerInitKey
@@ -38,6 +40,7 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.GOAL_VISITATION => GoalVisitation,
     LoggerKey.EPISODE_LENGTH => EpisodeLength,
     LoggerKey.MC_ERROR => MCError,
+    LoggerKey.TTMAZE_ERROR => TTMazeError,
     LoggerKey.TEMP_PRINT => TempPrint
 )
 
