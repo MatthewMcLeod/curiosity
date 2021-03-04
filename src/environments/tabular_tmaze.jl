@@ -110,7 +110,8 @@ end
 
 function MinimalRLCore.reset!(environment::TabularTMaze, start_state::CartesianIndex)
     # throw("Implement env_start with a start_state")
-    environment.current_state = [start_state[2], start_state[1]]
+    # environment.current_state = [start_state[2], start_state[1]]
+    environment.current_state = [start_state[1], start_state[2]]
 end
 
 function MinimalRLCore.environment_step!(environment::TabularTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)

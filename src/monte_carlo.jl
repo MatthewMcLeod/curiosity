@@ -16,6 +16,7 @@ The interface is limited in that it can't do rollouts on compositional GVFs.
 function monte_carlo_return(env,
                             gvf,
                             start_state,
+                            start_action,
                             num_returns,
                             γ_thresh=1e-6,
                             max_steps=Int(1e6),
@@ -29,7 +30,8 @@ function monte_carlo_return(env,
         cumulative_gamma = 1.0
 
         cur_state = start!(env, start_state)
-        next_action = StatsBase.sample(rng, GVFHordes.policy(gvf), cur_state, get_actions(env))
+        # next_action = StatsBase.sample(rng, GVFHordes.policy(gvf), cur_state, get_actions(env))
+        next_action = start_action
 
         while cumulative_gamma > γ_thresh &&
             step < max_steps &&
@@ -38,7 +40,6 @@ function monte_carlo_return(env,
             # Take action
             action = next_action
             next_state, r, term = MinimalRLCore.step!(env, action, rng)
-
 
             # Get next action for GVFs
             next_action = StatsBase.sample(rng, GVFHordes.policy(gvf), next_state, get_actions(env))
@@ -56,5 +57,5 @@ function monte_carlo_return(env,
     return returns
 end
 
-monte_carlo_returns(env, gvf, start_states, num_returns, γ_thresh, max_steps=Int(1e6), rng=Random.GLOBAL_RNG) =
-    [monte_carlo_return(env, gvf, st, num_returns, γ_thresh, max_steps) for st in start_states]
+monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_thresh, max_steps=Int(1e6), rng=Random.GLOBAL_RNG) =
+    [monte_carlo_return(env, gvf, st, a, num_returns, γ_thresh, max_steps) for (st, a) in zip(start_states,actions)]
