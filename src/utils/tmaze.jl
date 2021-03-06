@@ -1,5 +1,6 @@
 
 module TabularTMazeUtils
+using GVFHordes
 import ..TabularTMazeCumulantSchedules
 const TTMCS = TabularTMazeCumulantSchedules
 
@@ -65,6 +66,42 @@ function valid_state_mask()
     world = permutedims(hcat(world...))
     valid_states = findall(x-> x!="0", world)
     return valid_states
+end
+
+struct TTMazeStateActionCumulant <: GVFParamFuncs.AbstractCumulant
+    state_num::Int
+    action::Int
+end
+
+# Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred) =
+#     obs[1] == cumulant.state_num && action == cumulant.action ? 1 : 0
+
+function Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred)
+    #pred and action are switched???!
+    # action = pred
+    # println("Called: ",cumulant.state_num, "  ", cumulant.action)
+    println("Action Passed: ", action, " Obs passed: ", obs, " pred passed: ", pred)
+    if obs[1] == cumulant.state_num
+        println("Action: ", action)
+        return 1
+    else
+        return 0
+    end
+end
+
+
+function make_SR_for_policy(policy,discount,pseudoterm, num_features, num_actions)
+    return Horde([GVF(TTMazeStateActionCumulant(s,a), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy(policy)) for s in 1:num_features for a in 1:num_actions])
+end
+
+function make_SR_horde(discount, num_features, num_actions)
+    horde = make_SR_for_policy((obs,a) -> demon_target_policy(1,obs,a),discount,pseudoterm, num_features, num_actions)
+    for policy_i in 2:4
+        new_horde = make_SR_for_policy((obs,a) -> demon_target_policy(policy_i,obs,a),discount,pseudoterm, num_features, num_actions)
+
+        horde = GVFHordes.merge(horde,new_horde)
+    end
+    return horde
 end
 
 function demon_target_policy(gvf_i, observation, action)

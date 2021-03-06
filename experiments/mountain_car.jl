@@ -29,7 +29,7 @@ default_args() =
         "demon_alpha" => 0.1,
         "demon_alpha_init" => 1.0/8,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "TB",
+        "demon_learner" => "TBAuto",
 
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
@@ -102,9 +102,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         LoggerInitKey.TOTAL_STEPS => num_steps,
         LoggerInitKey.INTERVAL => 50,
     )
-
-
-
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
         eps = 1

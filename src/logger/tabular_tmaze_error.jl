@@ -15,6 +15,10 @@ mutable struct TTMazeError <: LoggerKeyData
 end
 
 function step!(self::TTMazeError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+    if s[1] == 3
+        predictions = predict(agent.demon_learner, agent, agent.demon_weights, s, a)
+        # println(predictions)
+    end
 
     if rem(cur_step_total, self.log_interval) == 0
         ind = fld(cur_step_total, self.log_interval)

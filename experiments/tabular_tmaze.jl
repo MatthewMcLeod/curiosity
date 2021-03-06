@@ -21,7 +21,7 @@ default_args() =
         "behaviour_trace" => "accumulating",
         "intrinsic_reward" => "weight_change",
         "use_external_reward" => true,
-        "steps" => 20000,
+        "steps" => 1,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
         "drifter" => (1.0, sqrt(0.01)),
@@ -50,7 +50,8 @@ function construct_agent(parsed)
     use_external_reward = parsed["use_external_reward"]
 
 
-    demons = get_horde(parsed)
+    demons = get_horde(parsed, feature_size, action_space)
+    println("Horde Length: ", length(demons))
 
     if demon_learner == "TB"
         demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
@@ -78,7 +79,7 @@ function construct_agent(parsed)
     agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
 end
 
-function get_horde(parsed)
+function get_horde(parsed, feature_size, action_space)
 
     discount = parsed["demon_discounts"]
     pseudoterm = TTMU.pseudoterm
@@ -92,6 +93,9 @@ function get_horde(parsed)
     else
         throw(ArgumentError("Not a valid policy type for demons"))
     end
+
+    horde = TTMU.make_SR_horde(discount, feature_size, action_space)
+
     return horde
 end
 
@@ -130,9 +134,12 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
                     cur_step+=1
                     C,_,_ = get(agent.demons, s, a, s_next)
+
                     if sum(C) != 0
                         gvf_i = findfirst(!iszero,C)
                         goal_visitations[gvf_i] += 1
+
+
                     end
                 end
                 logger_episode_end!(logger)
