@@ -5,7 +5,7 @@ using GVFHordes
 using MinimalRLCore
 
 mutable struct Agent <: AbstractAgent
-    demons::Horde
+    demons::GVFHordes.AbstractHorde
     demon_weights::Array{Float64,2}
     behaviour_weights::Array{Float64,2}
     demon_learner::Learner
@@ -78,7 +78,6 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     update_demons!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal)
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
-    # r_int = 0.0
 
     total_reward = agent.use_external_reward ? r_int + r : r_int
     update_behaviour!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal, total_reward)
@@ -110,25 +109,19 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
 
     #TODO: Fix how to get target policy probabilities for all actions as this is needed for off-policy learning algos
     # This is very ugly and I don't like passing all the target_pis through to demons...
-
-    # println("ACTION ",action, " NEXT ACTION ", next_action)
-    # println("NUM DEMONS: ", length(agent.demons))
     target_pis = zeros(length(agent.demons), agent.num_actions)
     for (i,a) in enumerate(1:agent.num_actions)
         _, _, pi = get(agent.demons, obs, a, next_obs, next_action)
         target_pis[:,i] = pi
     end
-    # println("MIDDLE")
     next_target_pis = zeros(length(agent.demons), agent.num_actions)
     for (i,a) in enumerate(1:agent.num_actions)
         _, _, pi = get(agent.demons, next_obs, a, next_obs, next_action)
         next_target_pis[:,i] = pi
     end
+
     C, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
 
-    # if sum(C) > 0
-    #     println("Sum of C is greater!", sum(C), " at state: ", state)
-    # end
     #TODO: Passing in all of this information is ugly.
     update!(agent.demon_learner, agent.demon_weights, C, state, action, target_pis, agent.prev_discounts, next_state, next_action, next_target_pis, discounts)
     agent.prev_discounts = deepcopy(discounts)

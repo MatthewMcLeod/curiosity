@@ -13,15 +13,16 @@ default_args() =
         "demon_alpha" => 0.1,
         "demon_alpha_init" => 0.1,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "TB",
+        "demon_learner" => "SR",
         "demon_discounts" => 0.9,
+        "horde_type" => "SR",
         "behaviour_learner" => "RoundRobin",
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
         "behaviour_trace" => "accumulating",
-        "intrinsic_reward" => "weight_change",
+        "intrinsic_reward" => "no_reward",
         "use_external_reward" => true,
-        "steps" => 1,
+        "steps" => 1000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
         "drifter" => (1.0, sqrt(0.01)),
@@ -29,7 +30,8 @@ default_args() =
         "constant_target"=> 1.0,
         "exploring_starts"=>true,
         "save_dir" => "TabularTMazeExperiment",
-        "logger_keys" => [LoggerKey.GOAL_VISITATION, LoggerKey.TTMAZE_ERROR],
+        # "logger_keys" => [LoggerKey.GOAL_VISITATION, LoggerKey.TTMAZE_ERROR],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR],
     )
 
 
@@ -57,6 +59,8 @@ function construct_agent(parsed)
         demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
     elseif demon_learner == "TBAuto"
         demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
+    elseif demon_learner == "SR"
+        demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha)
     else
         throw(ArgumentError("Not a valid demon learner"))
     end
@@ -76,7 +80,12 @@ function construct_agent(parsed)
         return s
     end
 
-    agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
+    demon_feature_size = if demon_learner isa SR
+        feature_size * action_space
+    else
+        feature_size
+    end
+    agent = Agent(demons, demon_feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
 end
 
 function get_horde(parsed, feature_size, action_space)
@@ -86,15 +95,17 @@ function get_horde(parsed, feature_size, action_space)
     num_actions = TTMU.NUM_ACTIONS
     num_demons = TTMU.NUM_DEMONS
 
-    horde = if parsed["demon_policy_type"] == "greedy_to_cumulant"
+
+    #TODO: Sort out the if-else block so that demon_policy_type and horde_type is not blocking eachother.
+    horde = if parsed["horde_type"] == "SR"
+         TTMU.make_SR_horde(discount, feature_size, action_space)
+    elseif parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["horde_type"] == "regular"
         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> TTMU.demon_target_policy(i,obs,a))) for i in 1:num_demons])
-    elseif parsed["demon_policy_type"] == "random"
+    elseif parsed["demon_policy_type"] == "random" && parsed["horde_type"] == "regular"
         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 1:num_demons])
     else
         throw(ArgumentError("Not a valid policy type for demons"))
     end
-
-    horde = TTMU.make_SR_horde(discount, feature_size, action_space)
 
     return horde
 end
@@ -133,34 +144,41 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)
 
                     cur_step+=1
-                    C,_,_ = get(agent.demons, s, a, s_next)
-
-                    if sum(C) != 0
-                        gvf_i = findfirst(!iszero,C)
-                        goal_visitations[gvf_i] += 1
-
-
-                    end
+                    # C,_,_ = get(agent.demons, s, a, s_next)
+                    #
+                    # if sum(C) != 0
+                    #     gvf_i = findfirst(!iszero,C)
+                    #     goal_visitations[gvf_i] += 1
+                    # end
                 end
                 logger_episode_end!(logger)
 
             push!(steps, stp)
             eps += 1
         end
+
+        if agent.demon_learner isa SR
+            println("SR for moving up at left junction")
+            obs = zeros(5)
+            obs[1] = 3
+            action = 1
+            println(predict(agent.demon_learner, agent, agent.demon_weights, obs, action))
+        end
+
     end
 
-    println("Took place over ", eps, " episodes")
-    println("Goal Visitation Frequency")
-    per = [goal_visitations[i] / sum(goal_visitations) for i in 1:4]
-    println(goal_visitations)
-
-    constant_demon = agent.demon_weights[5:8,:]
-    println("Estimate for moving into constant goals: ", constant_demon[3, 3:5], " should be ~[0.9, 1.0, 0]")
-    println("Estimate for moving into Junction: ", constant_demon[4, 6], " should be ~0.81")
-
-    distractor_demon = agent.demon_weights[1:4,:]
-    println("Estimate for moving into distractor goals: ", distractor_demon[1, 1:3], " should be ~[0, 1.0 , 0.9]")
-    println("Estimate for moving into Junction: ", distractor_demon[4, 6], " should be ~0.81")
+    # println("Took place over ", eps, " episodes")
+    # println("Goal Visitation Frequency")
+    # per = [goal_visitations[i] / sum(goal_visitations) for i in 1:4]
+    # println(goal_visitations)
+    #
+    # constant_demon = agent.demon_weights[5:8,:]
+    # println("Estimate for moving into constant goals: ", constant_demon[3, 3:5], " should be ~[0.9, 1.0, 0]")
+    # println("Estimate for moving into Junction: ", constant_demon[4, 6], " should be ~0.81")
+    #
+    # distractor_demon = agent.demon_weights[1:4,:]
+    # println("Estimate for moving into distractor goals: ", distractor_demon[1, 1:3], " should be ~[0, 1.0 , 0.9]")
+    # println("Estimate for moving into Junction: ", distractor_demon[4, 6], " should be ~0.81")
 end
 
 end

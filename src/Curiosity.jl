@@ -12,10 +12,11 @@ abstract type Learner end
 export Auto
 include("optimizers/Auto.jl")
 
-export TB, TBAuto, ESARSA, update!
+export TB, TBAuto, ESARSA, SR, update!, predict
 include("learners/TB.jl")
 include("learners/TB_Auto.jl")
 include("learners/ESARSA.jl")
+include("learners/SR.jl")
 
 abstract type IntrinsicReward end
 include("agent/intrinsic_rewards.jl")
@@ -42,11 +43,12 @@ export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils
+include("utils/SRHorde.jl")
 include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/learners.jl")
-
 include("utils/experiment.jl")
+
 
 using GVFHordes
 export monte_carlo_returns

@@ -2,6 +2,7 @@
 module TabularTMazeUtils
 using GVFHordes
 import ..TabularTMazeCumulantSchedules
+import ..GVFSRHordes
 const TTMCS = TabularTMazeCumulantSchedules
 
 const NUM_DEMONS = 4
@@ -41,9 +42,9 @@ function get_cumulant_schedule(parsed)
     end
 end
 
-function pseudoterm(state)
+function pseudoterm(obs)
     term = false
-    if state[1] == 1 || state[1] == 5 || state[1] == 17 || state[1] == 21
+    if obs[1] == 1 || obs[1] == 5 || obs[1] == 17 || obs[1] == 21
         term = true
     end
     return term
@@ -73,16 +74,9 @@ struct TTMazeStateActionCumulant <: GVFParamFuncs.AbstractCumulant
     action::Int
 end
 
-# Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred) =
-#     obs[1] == cumulant.state_num && action == cumulant.action ? 1 : 0
-
 function Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred)
-    #pred and action are switched???!
-    # action = pred
-    # println("Called: ",cumulant.state_num, "  ", cumulant.action)
-    println("Action Passed: ", action, " Obs passed: ", obs, " pred passed: ", pred)
-    if obs[1] == cumulant.state_num
-        println("Action: ", action)
+    if obs[1] == cumulant.state_num && action == cumulant.action
+        # println("Action Passed: ", action, " Obs passed: ", obs, " pred passed: ", pred)
         return 1
     else
         return 0
@@ -91,15 +85,16 @@ end
 
 
 function make_SR_for_policy(policy,discount,pseudoterm, num_features, num_actions)
-    return Horde([GVF(TTMazeStateActionCumulant(s,a), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy(policy)) for s in 1:num_features for a in 1:num_actions])
+    return GVFSRHordes.SRHorde([GVF(TTMazeStateActionCumulant(s,a),
+                    GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm),
+                    GVFParamFuncs.FunctionalPolicy(policy)) for s in 1:num_features for a in 1:num_actions])
 end
 
 function make_SR_horde(discount, num_features, num_actions)
     horde = make_SR_for_policy((obs,a) -> demon_target_policy(1,obs,a),discount,pseudoterm, num_features, num_actions)
     for policy_i in 2:4
         new_horde = make_SR_for_policy((obs,a) -> demon_target_policy(policy_i,obs,a),discount,pseudoterm, num_features, num_actions)
-
-        horde = GVFHordes.merge(horde,new_horde)
+        horde = GVFSRHordes.merge(horde,new_horde)
     end
     return horde
 end
