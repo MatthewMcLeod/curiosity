@@ -5,7 +5,7 @@ using GVFHordes
 using MinimalRLCore
 
 mutable struct Agent <: AbstractAgent
-    demons::Horde
+    demons::GVFHordes.AbstractHorde
     demon_weights::Array{Float64,2}
     behaviour_weights::Array{Float64,2}
     demon_learner::Learner
@@ -33,9 +33,13 @@ mutable struct Agent <: AbstractAgent
         else
             throw(ArgumentError("Not a valid intrinsic reward"))
         end
+
+        demon_weight_dims = size(demon_learner)
+        behaviour_weight_dims = size(behaviour_learner)
+
         new(horde,
-            zeros(length(horde) * num_actions, demon_feature_size),
-            zeros(1 * num_actions, behaviour_feature_size),
+            zeros(demon_weight_dims),
+            zeros(behaviour_weight_dims),
             demon_learner,
             behaviour_learner,
             zeros(behaviour_feature_size),
@@ -78,7 +82,6 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     update_demons!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal)
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
-    # r_int = 0.0
 
     total_reward = agent.use_external_reward ? r_int + r : r_int
     update_behaviour!(agent,agent.last_obs, obs, agent.last_state, agent.last_action, next_state, next_action, is_terminal, total_reward)
@@ -120,7 +123,9 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
         _, _, pi = get(agent.demons, next_obs, a, next_obs, next_action)
         next_target_pis[:,i] = pi
     end
+
     C, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
+
     #TODO: Passing in all of this information is ugly.
     update!(agent.demon_learner, agent.demon_weights, C, state, action, target_pis, agent.prev_discounts, next_state, next_action, next_target_pis, discounts)
     agent.prev_discounts = deepcopy(discounts)

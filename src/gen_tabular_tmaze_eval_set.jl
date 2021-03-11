@@ -33,31 +33,41 @@ function gen_dataset()
         return arr
     end
     #NOTE: This lets the agent start in terminal states. This is not normally possible.
-    ind_to_delete = [1,5,17,21]
+    # Work backwards with index so you dont have to reindex due to shifting
+    ind_to_delete = [21, 17, 5, 1]
     for i in ind_to_delete
         start_states = del!(start_states, i)
     end
-
     observations = []
     for s in start_states
         MinimalRLCore.reset!(env,s)
         push!(observations, MinimalRLCore.get_state(env))
     end
+    total_observations = []
+    total_start_states = []
+    total_actions = []
+    for (obs_ind,obs) in enumerate(observations)
+            unique_actions = unique([StatsBase.sample(GVFHordes.policy(gvf), obs, get_actions(env)) for gvf in horde.gvfs])
+            for ua in unique_actions
+                push!(total_actions, ua)
+                push!(total_observations, obs)
+                push!(total_start_states, start_states[obs_ind])
+            end
+    end
+
+
     num_returns = 2
     γ_thresh=1e-6
-    # println(length(observations))
-    actions = zeros(Int,length(horde.gvfs), length(observations))
-    horde_rets = zeros(length(horde.gvfs), length(observations))
-    for (gvf_i,gvf) in enumerate(hobservationsorde.gvfs)
-        actions[gvf_i,:] = [StatsBase.sample(GVFHordes.policy(gvf), obs, get_actions(env)) for obs in observations]
-        rets = monte_carlo_returns(env, gvf, start_states, actions[gvf_i,:], num_returns, γ_thresh)
-
+    actions = zeros(Int,length(horde.gvfs), length(total_observations))
+    horde_rets = zeros(length(horde.gvfs), length(total_observations))
+    for (gvf_i,gvf) in enumerate(horde.gvfs)
+        rets = monte_carlo_returns(env, gvf, total_start_states, total_actions, num_returns, γ_thresh)
         rets_avg = mean(hcat(rets...),dims=1) # stack horizontally and then average over runs
         horde_rets[gvf_i,:] = rets_avg
     end
 
 
-    return horde_rets, observations, actions
+    return horde_rets, total_observations, total_actions
 end
 
 function save_data(rets,obs,actions)

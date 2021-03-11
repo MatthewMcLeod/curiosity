@@ -3,6 +3,8 @@ mutable struct TabularRoundRobin <: Learner
 end
 function update!(self::TabularRoundRobin, reward, action, next_action, state, next_state, args...)
 end
+Base.size(learner::TabularRoundRobin) = (0,0)
+
 function get_action_probs(self::TabularRoundRobin, state, observation, args...)
     action_probs = zeros(4)
     UP = 1

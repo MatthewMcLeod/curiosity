@@ -24,7 +24,9 @@ docs/site/
 # Manifest.toml
 
 /MountainCar
+/MountainCarExploringVel
 /MountainCarExperiment
 /TabularTMazeExperiment
 /plotting/.ipynb_checkpoints/
 /plotting/plots/
+/data

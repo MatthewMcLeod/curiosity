@@ -25,6 +25,8 @@ mutable struct TBAuto <: Learner
         1)
     end
 end
+Base.size(learner::TBAuto) = size(learner.e)
+
 
 function update!(learner::TBAuto, weights, C, state, action, target_pis, discounts, next_state, next_action, next_target_pis, next_discounts)
     # Update eligibility trace
