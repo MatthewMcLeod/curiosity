@@ -10,7 +10,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 20000,
+        "steps" => 200000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -128,6 +128,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             push!(steps, stp)
             eps += 1
         end
+        logger
     end
 end
 
