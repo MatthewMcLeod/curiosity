@@ -33,9 +33,13 @@ mutable struct Agent <: AbstractAgent
         else
             throw(ArgumentError("Not a valid intrinsic reward"))
         end
+
+        demon_weight_dims = size(demon_learner)
+        behaviour_weight_dims = size(behaviour_learner)
+
         new(horde,
-            zeros(length(horde) * num_actions, demon_feature_size),
-            zeros(1 * num_actions, behaviour_feature_size),
+            zeros(demon_weight_dims),
+            zeros(behaviour_weight_dims),
             demon_learner,
             behaviour_learner,
             zeros(behaviour_feature_size),

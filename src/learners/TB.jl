@@ -8,8 +8,7 @@ mutable struct TB <: Learner
         new(lambda, zeros(num_actions * num_demons, feature_size), num_demons, num_actions, alpha)
     end
 end
-
-
+Base.size(learner::TB) = size(learner.e)
 
 function update!(learner::TB, weights, C, state, action, target_pis, discounts, next_state, next_action, next_target_pis, next_discounts)
     # Update eligibility trace

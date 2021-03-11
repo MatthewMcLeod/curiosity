@@ -7,9 +7,11 @@ mutable struct ESARSA <: Learner
     alpha::Float64
     trace_type::String
     function ESARSA(lambda, feature_size, num_gvfs, num_actions, alpha, trace_type)
-        new(lambda, zeros(num_actions, feature_size), num_gvfs, num_actions, alpha, trace_type)
+        new(lambda, zeros(num_gvfs * num_actions, feature_size), num_gvfs, num_actions, alpha, trace_type)
     end
 end
+
+Base.size(learner::ESARSA) = size(learner.e)
 
 function update!(learner::ESARSA, weights, C, state, action, next_state, next_action, next_target_pis, next_discounts)
     # the eligibility trace is for state-action so need to find the exact state action pair per demon and not just the state

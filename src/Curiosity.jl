@@ -12,11 +12,11 @@ abstract type Learner end
 export Auto
 include("optimizers/Auto.jl")
 
-export TB, TBAuto, ESARSA, SR, update!, predict
+export TB, TBAuto, ESARSA, SF, update!, predict
 include("learners/TB.jl")
 include("learners/TB_Auto.jl")
 include("learners/ESARSA.jl")
-include("learners/SR.jl")
+include("learners/SF.jl")
 
 abstract type IntrinsicReward end
 include("agent/intrinsic_rewards.jl")

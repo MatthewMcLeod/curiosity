@@ -26,7 +26,7 @@ default_args() =
         "use_external_reward" => true,
 
         "lambda" => 0.9,
-        "demon_alpha" => 0.1,
+        "demon_alpha" => 1.0/8,
         "demon_alpha_init" => 1.0/8,
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "TBAuto",
@@ -112,7 +112,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         while sum(steps) < max_num_steps
             is_terminal = false
 
-            max_episode_steps = min(max_num_steps - sum(steps), 1000)
+            max_episode_steps = min(max_num_steps - sum(steps), 200)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)

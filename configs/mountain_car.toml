@@ -1,5 +1,5 @@
 [config]
-save_dir = "MountainCarExploringVel"
+save_dir = "MountainSmallCutOff"
 exp_file = "experiments/mountain_car.jl"
 exp_module_name = "MountainCarExperiment"
 exp_func_name = "main_experiment"
@@ -7,8 +7,8 @@ arg_iter_type = "iter"
 
 [static_args]
 
-save_keys=["demon_learner", "runs", "demon_alpha", "behaviour_alpha", "use_external_reward"]
-steps = 60000
+save_keys=["demon_learner", "runs", "demon_alpha", "behaviour_alpha", "use_external_reward", "demon_alpha_init"]
+steps = 100000
 seed = 1
 
 #Tile coding params used by Rich textbook for mountain car
@@ -25,7 +25,7 @@ behaviour_trace = "replacing"
 
 lambda = 0.9
 # demon_alpha = 0.1
-demon_alpha_init = 0.125
+# demon_alpha_init = 0.125
 demon_policy_type = "greedy_to_cumulant"
 
 exploring_starts=true
@@ -37,7 +37,8 @@ logger_keys = ["MC_ERROR","EPISODE_LENGTH"]
 [sweep_args]
 behaviour_learner = ["ESARSA"]
 demon_learner = ["TBAuto", "TB"]
-behaviour_alpha = "2.0 .^ (-5:-4)" # range of 2^[-3:-1]/8
-demon_alpha = "2.0 .^ (-6:-3)"
+behaviour_alpha = "2.0 .^ (-5:-5)" # range of 2^[-3:-1]/8
+demon_alpha = "2.0 .^ (-5:-3)"
+demon_alpha_init = "2.0 .^ (-4:-4)"
 runs="1:30"
 use_external_reward=[true, false]
