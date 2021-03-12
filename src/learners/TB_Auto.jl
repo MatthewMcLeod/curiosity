@@ -1,10 +1,10 @@
 mutable struct TBAuto <: Learner
     lambda::Float64
     mu::Float64
-    e::Array{Float64,2}
-    alpha::Array{Float64,2}
-    h::Array{Float64,2}
-    n::Array{Float64,2}
+    e::Array{Float64, 2}
+    alpha::Array{Float64, 2}
+    h::Array{Float64, 2}
+    n::Array{Float64, 2}
     z::Array{Float64, 2}
     num_demons::Int
     num_actions::Int
@@ -28,7 +28,18 @@ end
 Base.size(learner::TBAuto) = size(learner.e)
 
 
-function update!(learner::TBAuto, weights, C, state, action, target_pis, discounts, next_state, next_action, next_target_pis, next_discounts)
+function update!(learner::TBAuto,
+                 weights,
+                 C,
+                 state,
+                 action,
+                 target_pis,
+                 discounts,
+                 next_state,
+                 next_action,
+                 next_target_pis,
+                 next_discounts)
+    
     # Update eligibility trace
     #Broadcast the policy and pseudotermination of each demon across the actions
     learner.e .*= learner.lambda * repeat(discounts, inner = learner.num_actions) .* repeat(target_pis[:,action], inner = learner.num_actions)
@@ -71,7 +82,6 @@ function update!(learner::TBAuto, weights, C, state, action, target_pis, discoun
     alpha_change = clamp.(td_err_across_demons_and_states[active_phi_ind] .* phi[active_phi_ind] .* learner.h[active_phi_ind] ./ learner.n[active_phi_ind], -1, 1)
     learner.alpha[active_phi_ind] = learner.alpha[active_phi_ind] .* exp.(learner.mu * alpha_change)
     learner.alpha[active_phi_ind] = clamp.(learner.alpha[active_phi_ind], 1e-6, 1 ./ abs_phi[active_phi_ind])
-
 
     # Check the norm to make sure it isn't too high
     if sum(learner.alpha .* z) > 1

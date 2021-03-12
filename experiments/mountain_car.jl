@@ -6,11 +6,13 @@ using MinimalRLCore
 using SparseArrays
 using ProgressMeter
 
+import Flux: Descent
+
 const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 20000,
+        "steps" => 200000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -61,9 +63,12 @@ function construct_agent(parsed)
         demons = get_horde(parsed)
 
         if demon_learner == "TB"
-            demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
+            demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
         elseif demon_learner == "TBAuto"
-            demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
+            demon_learner = TB(lambda,
+                               Auto(demon_alpha, demon_alpha_init),
+                               feature_size, length(demons), action_space)
+            # demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
         else
             throw(ArgumentError("Not a valid demon learner"))
         end
@@ -125,6 +130,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             push!(steps, stp)
             eps += 1
         end
+        logger
     end
 end
 
