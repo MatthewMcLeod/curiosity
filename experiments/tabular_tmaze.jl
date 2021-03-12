@@ -10,19 +10,19 @@ const TTMU = Curiosity.TabularTMazeUtils
 default_args() =
     Dict(
         "lambda" => 0.9,
-        "demon_alpha" => 0.1,
+        "demon_alpha" => 0.5,
         "demon_alpha_init" => 0.1,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "TB",
+        "demon_learner" => "SR",
         "demon_discounts" => 0.9,
         "horde_type" => "regular",
-        "behaviour_learner" => "ESARSA",
+        "behaviour_learner" => "RoundRobin",
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
         "behaviour_trace" => "accumulating",
-        "intrinsic_reward" => "weight_change",
+        "intrinsic_reward" => "no_reward",
         "use_external_reward" => true,
-        "steps" => 10000,
+        "steps" => 2000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
         "drifter" => (1.0, sqrt(0.01)),
@@ -59,7 +59,7 @@ function construct_agent(parsed)
     elseif demon_learner == "TBAuto"
         demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
     elseif demon_learner == "SR"
-        demon_learner = SF(lambda,feature_size,length(demons), action_space,  demon_alpha)
+        demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
     else
         throw(ArgumentError("Not a valid demon learner"))
     end
@@ -79,7 +79,7 @@ function construct_agent(parsed)
         return s
     end
 
-    demon_feature_size = if demon_learner isa SF
+    demon_feature_size = if demon_learner isa SR
         feature_size * action_space
     else
         feature_size
@@ -96,15 +96,18 @@ function get_horde(parsed, feature_size, action_space)
 
 
     #TODO: Sort out the if-else block so that demon_policy_type and horde_type is not blocking eachother.
-    horde = if parsed["horde_type"] == "SR"
-         TTMU.make_SR_horde(discount, feature_size, action_space)
-    elseif parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["horde_type"] == "regular"
+    horde = if parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["horde_type"] == "regular"
         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> TTMU.demon_target_policy(i,obs,a))) for i in 1:num_demons])
     elseif parsed["demon_policy_type"] == "random" && parsed["horde_type"] == "regular"
         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 1:num_demons])
     else
         throw(ArgumentError("Not a valid policy type for demons"))
     end
+
+    if parsed["demon_learner"] == "SR"
+         SF_horde = TTMU.make_SR_horde(discount, feature_size, action_space)
+         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde)
+     end
 
     return horde
 end
@@ -149,8 +152,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             push!(steps, stp)
             eps += 1
         end
-
-
     end
 
 end

@@ -85,7 +85,7 @@ end
 
 
 function make_SR_for_policy(policy,discount,pseudoterm, num_features, num_actions)
-    return GVFSRHordes.SRHorde([GVF(TTMazeStateActionCumulant(s,a),
+    return GVFSRHordes.SFHorde([GVF(TTMazeStateActionCumulant(s,a),
                     GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm),
                     GVFParamFuncs.FunctionalPolicy(policy)) for s in 1:num_features for a in 1:num_actions])
 end
