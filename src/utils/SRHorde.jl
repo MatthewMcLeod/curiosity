@@ -24,7 +24,13 @@ end
 
 function Base.get(gvfh::SRHorde, state_t, action_t, state_tp1, action_tp1, preds_tp1)
     C, discounts, pi = get(gvfh.PredHorde,state_t, action_t, state_tp1, action_tp1, preds_tp1)
-    C_SF, discounts_SF, pi_SF = get(gvfh.SFHorde,state_t, action_t, state_tp1, action_tp1, preds_tp1)
+    # NOTE: Assume discounts and pi align with the task definition in the Pred Horde.
+    #Do not need to query the SF Horde to get this info
+
+    C_SF = map(gvf -> get(cumulant(gvf), state_t, action_t, preds_tp1), gvfh.SFHorde.gvfs)
+    state_action_feature_length = Int( length(gvfh.SFHorde) / gvfh.num_tasks)
+    discounts_SF = repeat(discounts, inner = state_action_feature_length)
+    pi_SF = repeat(pi, inner = state_action_feature_length)
     return vcat(C,C_SF),vcat(discounts,discounts_SF), vcat(pi,pi_SF)
 end
 
