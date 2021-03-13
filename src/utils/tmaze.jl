@@ -76,7 +76,6 @@ end
 
 function Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred)
     if obs[1] == cumulant.state_num && action == cumulant.action
-        # println("Action Passed: ", action, " Obs passed: ", obs, " pred passed: ", pred)
         return 1
     else
         return 0
