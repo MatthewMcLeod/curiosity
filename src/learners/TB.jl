@@ -1,6 +1,5 @@
 import Flux: Optimise.apply!
 
-
 mutable struct TB{O} <: Learner
     lambda::Float64
     opt::O
@@ -11,6 +10,7 @@ mutable struct TB{O} <: Learner
     # alpha::Float64
     function TB(lambda, opt, feature_size, num_demons, num_actions)
         # new(lambda, zeros(num_actions * num_demons, feature_size), num_demons, num_actions, alpha)
+        @show (lambda, opt, IdDict(), num_demons, num_actions)
         new{typeof(opt)}(lambda, opt, IdDict(), num_demons, num_actions)
     end
 end
@@ -44,11 +44,11 @@ function update!(learner::TB,
 
     pred = get_prediction(weights, next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
-    
+
     # Target Pi is num_demons  x num_actions
     backup_est_per_demon = vec(sum((Qs .* next_target_pis ), dims = 2))
     target = C + next_discounts .* backup_est_per_demon
-    
+
      # TD error per demon is the td error on Q
     td_err = target - (weights * state)[inds]
     td_err_across_demons = repeat(td_err, inner=learner.num_actions)
@@ -64,7 +64,7 @@ function update!(learner::TB,
         abs_phi = abs.(e)
         apply!(learner.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
     else
-        apply!(leaner.opt, (e .* td_err_across_demons))
+        apply!(learner.opt, (e .* td_err_across_demons))
     end
 end
 
