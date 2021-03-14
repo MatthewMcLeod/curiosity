@@ -55,10 +55,6 @@ function construct_agent(parsed)
 
     demons = get_horde(parsed, feature_size, action_space)
 
-    # if demon_learner == "TB"
-    #     demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
-    # elseif demon_learner == "TBAuto"
-    #     demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
     if demon_learner == "TB"
         demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
     elseif demon_learner == "TBAuto"
