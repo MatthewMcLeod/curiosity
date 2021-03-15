@@ -1,40 +1,78 @@
-mutable struct TB <: Learner
+import Flux: Optimise.apply!
+
+mutable struct TB{O} <: Learner
     lambda::Float64
-    e::Array{Float64,2}
+    opt::O
+    # e::Array{Float32, 2}
+    e::IdDict
     num_demons::Int
     num_actions::Int
-    alpha::Float64
-    function TB(lambda, feature_size, num_demons, num_actions, alpha)
-        new(lambda, zeros(num_actions * num_demons, feature_size), num_demons, num_actions, alpha)
+    # alpha::Float64
+    function TB(lambda, opt, feature_size, num_demons, num_actions)
+        # new(lambda, zeros(num_actions * num_demons, feature_size), num_demons, num_actions, alpha)
+        @show (lambda, opt, IdDict(), num_demons, num_actions)
+        new{typeof(opt)}(lambda, opt, IdDict(), num_demons, num_actions)
     end
 end
 Base.size(learner::TB) = size(learner.e)
 
-function update!(learner::TB, weights, C, state, action, target_pis, discounts, next_state, next_action, next_target_pis, next_discounts)
+get_prediction(w::Matrix, s) = w*s
+
+get_action_inds(action, num_actions, num_gvfs) = [action + (i-1)*num_actions for i in 1:num_gvfs]
+
+function update!(learner::TB,
+                 weights,
+                 C,
+                 state,
+                 action,
+                 target_pis,
+                 discounts,
+                 next_state,
+                 next_action,
+                 next_target_pis,
+                 next_discounts)
     # Update eligibility trace
     #Broadcast the policy and pseudotermination of each demon across the actions
-    learner.e .*= learner.lambda * repeat(discounts, inner = learner.num_actions) .* repeat(target_pis[:,action], inner = learner.num_actions)
+    e = get!(learner.e, weights, zero(weights))::typeof(weights)
+
+    e .*= learner.lambda * repeat(discounts, inner = learner.num_actions) .* repeat(target_pis[:,action], inner = learner.num_actions)
 
     # the eligibility trace is for state-action so need to find the exact state action pair per demon and not just the state
-    inds = [action + (i-1)*learner.num_actions for i in 1:learner.num_demons]
-    learner.e[inds,:] .+= state'
+    inds = get_action_inds(action, learner.num_actions, learner.num_demons)
+    state_action_row_ind = inds
+    e[inds,:] .+= state'
 
-    pred = weights * next_state
+    pred = get_prediction(weights, next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
+
     # Target Pi is num_demons  x num_actions
     backup_est_per_demon = vec(sum((Qs .* next_target_pis ), dims = 2))
     target = C + next_discounts .* backup_est_per_demon
+
      # TD error per demon is the td error on Q
     td_err = target - (weights * state)[inds]
     td_err_across_demons = repeat(td_err, inner=learner.num_actions)
 
     # How to efficiently apply gradients back into weights? Should we move linear regression to Flux/Autograd?
     # TODO: Seperate optimizer and learning algo
-    weights .= weights + learner.alpha * (learner.e .* td_err_across_demons)
+    # weights .= weights + learner.alpha * (e .* td_err_across_demons)
+    if learner.opt isa Auto
+        next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
+        state_discount = zero(e)
+        state_discount[state_action_row_ind,:] .+= state'
+        state_discount[next_state_action_row_ind,:] .-= next_discounts * next_state'
+        abs_phi = abs.(e)
+        apply!(learner.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
+    else
+        apply!(learner.opt, (e .* td_err_across_demons))
+    end
 end
 
 function zero_eligibility_traces!(learner::TB)
-    learner.e .= 0
+    # learner.e .= 0
+    for (k, v) ∈ learner.e
+        v .= 0
+    end
 end
 
 function get_weights(learner::TB, weights)

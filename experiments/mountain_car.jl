@@ -6,6 +6,8 @@ using MinimalRLCore
 using SparseArrays
 using ProgressMeter
 
+import Flux: Descent
+
 const MCU = Curiosity.MountainCarUtils
 
 default_args() =
@@ -30,7 +32,6 @@ default_args() =
         "demon_alpha_init" => 1.0/8,
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "SR",
-
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
         "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
@@ -67,9 +68,12 @@ function construct_agent(parsed)
         @show (length(demons))
 
         if demon_learner == "TB"
-            demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
+            demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
         elseif demon_learner == "TBAuto"
-            demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
+            demon_learner = TB(lambda,
+                               Auto(demon_alpha, demon_alpha_init),
+                               feature_size, length(demons), action_space)
+            # demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
         elseif demon_learner == "SR"
             demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
         else
@@ -133,6 +137,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             push!(steps, stp)
             eps += 1
         end
+        logger
     end
 end
 

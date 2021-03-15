@@ -4,6 +4,7 @@ using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
+import Flux: Descent
 
 const TTMU = Curiosity.TabularTMazeUtils
 
@@ -13,7 +14,7 @@ default_args() =
         "demon_alpha" => 0.5,
         "demon_alpha_init" => 0.1,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "SR",
+        "demon_learner" => "TB",
         "demon_discounts" => 0.9,
         "horde_type" => "regular",
         "behaviour_learner" => "RoundRobin",
@@ -62,9 +63,11 @@ function construct_agent(parsed)
     demons = get_horde(parsed, feature_size, action_space, (obs) -> state_constructor(obs, feature_size))
 
     if demon_learner == "TB"
-        demon_learner = TB(lambda, feature_size, length(demons), action_space, demon_alpha)
+        demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
     elseif demon_learner == "TBAuto"
-        demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
+        demon_learner = TB(lambda,
+                           Auto(demon_alpha, demon_alpha_init),
+                           feature_size, length(demons), action_space)
     elseif demon_learner == "SR"
         demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
     else
