@@ -21,7 +21,7 @@ default_args() =
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
         "behaviour_trace" => "accumulating",
-        "intrinsic_reward" => "no_reward",
+        "intrinsic_reward" => "weight_change",
         "use_external_reward" => true,
         "steps" => 2000,
         "seed" => 1,
@@ -111,7 +111,7 @@ function get_horde(parsed, feature_size, action_space, state_constructor)
     if parsed["demon_learner"] == "SR"
          SF_horde = TTMU.make_SR_horde(discount, feature_size, action_space)
          horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, state_constructor)
-     end
+    end
 
     return horde
 end

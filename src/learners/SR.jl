@@ -60,7 +60,6 @@ function zero_eligibility_traces!(learner::SR)
 end
 
 function get_weights(learner::SR, weights)
-    @show size(weights)
     return weights
 end
 

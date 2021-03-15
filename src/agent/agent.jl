@@ -23,23 +23,25 @@ mutable struct Agent <: AbstractAgent
     use_external_reward::Bool
 
     function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, observation_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type, state_constructor, behaviour_gamma, use_external_reward)
+        demon_weight_dims = size(demon_learner)
+        behaviour_weight_dims = size(behaviour_learner)
+        demon_weights = zeros(demon_weight_dims)
+
         intrinsic_reward = if intrinsic_reward_type == "weight_change"
             #TODO: The intrinsic reward is defined by how the components of the agent are put together. For example, an intrinsic reward
             # could be the model error, which would then require different components that are assembled in the agent
             # Not sure how the construction of intrinisic reward could be abstracted out of this constructor
-            WeightChange(zeros(length(horde) * num_actions, demon_feature_size))
+            WeightChange(demon_weights)
         elseif intrinsic_reward_type == "no_reward"
             NoReward()
         else
             throw(ArgumentError("Not a valid intrinsic reward"))
         end
 
-        demon_weight_dims = size(demon_learner)
-        # demon_weight_dims = (length(horde)*num_actions, demon_feature_size)
-        behaviour_weight_dims = size(behaviour_learner)
+
 
         new(horde,
-            zeros(demon_weight_dims),
+            demon_weights,
             zeros(behaviour_weight_dims),
             demon_learner,
             behaviour_learner,
