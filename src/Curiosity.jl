@@ -9,6 +9,9 @@ abstract type Learner end
 @reexport using MinimalRLCore
 
 
+import Flux 
+import Flux.Optimise: update!
+
 export Auto
 include("optimizers/Auto.jl")
 

@@ -1,4 +1,4 @@
-import Flux: Optimise.apply!
+
 
 mutable struct TB{O} <: Learner
     lambda::Float64
@@ -7,14 +7,16 @@ mutable struct TB{O} <: Learner
     e::IdDict
     num_demons::Int
     num_actions::Int
+    feature_size::Int
     # alpha::Float64
     function TB(lambda, opt, feature_size, num_demons, num_actions)
         # new(lambda, zeros(num_actions * num_demons, feature_size), num_demons, num_actions, alpha)
-        @show (lambda, opt, IdDict(), num_demons, num_actions)
-        new{typeof(opt)}(lambda, opt, IdDict(), num_demons, num_actions)
+        # @show (lambda, opt, IdDict(), num_demons, num_actions)
+        new{typeof(opt)}(lambda, opt, IdDict(), num_demons, num_actions, feature_size)
     end
 end
-Base.size(learner::TB) = size(learner.e)
+# Base.size(learner::TB) = size(learner.e)
+Base.size(learner::TB) = size(learner.num_demons * learner.num_action, feature_size)
 
 get_prediction(w::Matrix, s) = w*s
 
@@ -62,9 +64,9 @@ function update!(learner::TB,
         state_discount[state_action_row_ind,:] .+= state'
         state_discount[next_state_action_row_ind,:] .-= next_discounts * next_state'
         abs_phi = abs.(e)
-        apply!(learner.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
+        update!(learner.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
     else
-        apply!(learner.opt, (e .* td_err_across_demons))
+        Flux.Optimise.update!(learner.opt, weights,  -(e .* td_err_across_demons))
     end
 end
 

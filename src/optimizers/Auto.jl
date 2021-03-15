@@ -14,7 +14,7 @@ end
 Auto(μ, α_init, τ=10000, M_Δ=1.0) = Auto(μ, τ, M_Δ, α_init, IdDict(), IdDict(), IdDict())
 
 # Assumes ϕ and θ are the same size!!!!
-function apply!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z) where {F<:AbstractFloat}
+function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z) where {F<:AbstractFloat}
     α = get!(opt.α, θ, zero(θ) .+ F(opt.α_init))::typeof(θ)
     h = get!(opt.h, θ, zero(θ))::typeof(θ)
     n = get!(opt.n, θ, zero(θ) .+ 1)::typeof(θ)
