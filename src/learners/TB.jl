@@ -1,4 +1,4 @@
-import Flux: Optimise.apply!
+
 
 mutable struct TB{O} <: Learner
     lambda::Float64
@@ -62,9 +62,9 @@ function update!(learner::TB,
         state_discount[state_action_row_ind,:] .+= state'
         state_discount[next_state_action_row_ind,:] .-= next_discounts * next_state'
         abs_phi = abs.(e)
-        apply!(learner.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
+        update!(learner.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
     else
-        apply!(learner.opt, (e .* td_err_across_demons))
+        Flux.Optimise.update!(learner.opt, weights,  -(e .* td_err_across_demons))
     end
 end
 
