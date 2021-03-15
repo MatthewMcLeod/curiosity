@@ -65,7 +65,6 @@ function construct_agent(parsed)
         end
 
         demons = get_horde(parsed,feature_size, action_space,(obs) -> state_constructor(obs, feature_size, state_constructor_tc))
-        @show (length(demons))
 
         if demon_learner == "TB"
             demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)

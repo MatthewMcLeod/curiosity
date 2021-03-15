@@ -28,7 +28,6 @@ end
 function update!(learner::SR, weights, C, state, action, target_pis, discounts, next_state, next_action, next_target_pis, next_discounts)
     next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
     active_state_action = get_active_action_state_vector(state, action,length(state), learner.num_actions)
-
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
     (reward_discounts, SF_discounts) = discounts[1:learner.num_tasks], discounts[learner.num_tasks+1:end]
     (reward_next_discounts, SF_next_discounts) = next_discounts[1:learner.num_tasks], next_discounts[learner.num_tasks+1:end]

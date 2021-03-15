@@ -34,8 +34,8 @@ mutable struct Agent <: AbstractAgent
             throw(ArgumentError("Not a valid intrinsic reward"))
         end
 
-        # demon_weight_dims = size(demon_learner)
-        demon_weight_dims = (length(horde)*num_actions, demon_feature_size)
+        demon_weight_dims = size(demon_learner)
+        # demon_weight_dims = (length(horde)*num_actions, demon_feature_size)
         behaviour_weight_dims = size(behaviour_learner)
 
         new(horde,
@@ -139,7 +139,7 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
             next_action,
             next_target_pis,
             discounts)
-    
+
     agent.prev_discounts = deepcopy(discounts)
 end
 
