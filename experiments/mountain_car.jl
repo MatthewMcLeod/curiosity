@@ -111,7 +111,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         LoggerInitKey.INTERVAL => 50,
     )
 
-    @time Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
+    Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
