@@ -52,8 +52,15 @@ function construct_agent(parsed)
     behaviour_trace = parsed["behaviour_trace"]
     use_external_reward = parsed["use_external_reward"]
 
+    #Create state constructor
+    function state_constructor(observation,feature_size)
+        s = spzeros(feature_size)
+        s[convert(Int64,observation[1])] = 1
+        return s
+    end
 
-    demons = get_horde(parsed, feature_size, action_space)
+
+    demons = get_horde(parsed, feature_size, action_space, (obs) -> state_constructor(obs, feature_size))
 
     if demon_learner == "TB"
         demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
@@ -75,12 +82,6 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid behaviour learner"))
     end
 
-    #Create state constructor
-    function state_constructor(observation,feature_size)
-        s = spzeros(feature_size)
-        s[convert(Int64,observation[1])] = 1
-        return s
-    end
 
     demon_feature_size = if demon_learner isa SR
         feature_size * action_space
@@ -90,7 +91,7 @@ function construct_agent(parsed)
     agent = Agent(demons, demon_feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
 end
 
-function get_horde(parsed, feature_size, action_space)
+function get_horde(parsed, feature_size, action_space, state_constructor)
 
     discount = parsed["demon_discounts"]
     pseudoterm = TTMU.pseudoterm
@@ -109,7 +110,7 @@ function get_horde(parsed, feature_size, action_space)
 
     if parsed["demon_learner"] == "SR"
          SF_horde = TTMU.make_SR_horde(discount, feature_size, action_space)
-         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde)
+         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, state_constructor)
      end
 
     return horde

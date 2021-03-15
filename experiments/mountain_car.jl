@@ -12,7 +12,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 20000,
+        "steps" => 1000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -23,7 +23,7 @@ default_args() =
         "behaviour_learner" => "ESARSA",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
-        "intrinsic_reward" =>"weight_change",
+        "intrinsic_reward" =>"no_reward",
         "behaviour_trace" => "replacing",
         "use_external_reward" => true,
 
@@ -31,8 +31,7 @@ default_args() =
         "demon_alpha" => 1.0/8,
         "demon_alpha_init" => 1.0/8,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "TB",
-
+        "demon_learner" => "SR",
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
         "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
@@ -56,11 +55,17 @@ function construct_agent(parsed)
 
 
         #Create state constructor
-    state_constructor_tc = TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
+        state_constructor_tc = TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
 
         feature_size = size(state_constructor_tc)
+        function state_constructor(obs, feature_size, tc)
+            s = spzeros(feature_size)
+            s[tc(obs)] .= 1
+            return s
+        end
 
-        demons = get_horde(parsed)
+        demons = get_horde(parsed,feature_size, action_space,(obs) -> state_constructor(obs, feature_size, state_constructor_tc))
+        @show (length(demons))
 
         if demon_learner == "TB"
             demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
@@ -69,6 +74,8 @@ function construct_agent(parsed)
                                Auto(demon_alpha, demon_alpha_init),
                                feature_size, length(demons), action_space)
             # demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
+        elseif demon_learner == "SR"
+            demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
         else
             throw(ArgumentError("Not a valid demon learner"))
         end
@@ -79,18 +86,18 @@ function construct_agent(parsed)
             throw(ArgumentError("Not a valid behaviour learner"))
         end
 
-        function state_constructor(obs, feature_size, tc)
-            s = spzeros(feature_size)
-            s[tc(obs)] .= 1
-            return s
-        end
+
 
         agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size, state_constructor_tc), behaviour_gamma, use_external_reward)
 end
 
-function get_horde(parsed)
-    action_space = 3
-    return Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
+function get_horde(parsed, feature_size, action_space, state_constructor)
+    horde = Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
+    if parsed["demon_learner"] == "SR"
+         SF_horde = MCU.make_SF_horde(feature_size, action_space, state_constructor)
+         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, state_constructor)
+    end
+    return horde
 end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)

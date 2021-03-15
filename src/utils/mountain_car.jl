@@ -5,8 +5,49 @@ import Random
 
 const discount = 0.99
 import ..MountainCarConst
+import ..GVFSRHordes
 
-function MCNorm(obs)
+struct MountainCarStateActionCumulant <: GVFParamFuncs.AbstractCumulant
+    state_num::Int
+    action::Int
+    state_constructor::Any
+end
+
+function Base.get(cumulant::MountainCarStateActionCumulant,obs,action,pred)
+    # @show obs
+    # state = cumulant.state_constructor(obs)
+    state = obs
+    # state = ones(4000)
+    if state[cumulant.state_num] == 1 && action == cumulant.action
+        # @show state
+        return 1
+    else
+        return 0
+    end
+end
+
+function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_actions, state_constructor)
+    return GVFSRHordes.SFHorde([GVF(MountainCarStateActionCumulant(s,a,state_constructor),
+                    gvf_pseudoterm,
+                    gvf_policy) for s in 1:num_features for a in 1:num_actions])
+end
+
+function make_SF_horde(num_features, num_actions, state_constructor)
+    steps_to_wall_horde = make_SF_for_policy(EnergyPumpPolicy(true),
+                GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0),
+                num_features, num_actions, state_constructor)
+
+    steps_to_goal_horde = make_SF_for_policy(EnergyPumpPolicy(true),
+                GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_cumulant, 0.0),
+                num_features, num_actions, state_constructor)
+
+    SF_horde = GVFSRHordes.merge(steps_to_wall_horde,steps_to_goal_horde)
+    return SF_horde
+end
+
+
+
+function MCNorm(obs)4
     pos_limit = MountainCarConst.pos_limit
     vel_limit = MountainCarConst.vel_limit
     return Float32[(obs[1] - pos_limit[1])/(pos_limit[2] - pos_limit[1]),
