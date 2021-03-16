@@ -9,17 +9,18 @@ abstract type Learner end
 @reexport using MinimalRLCore
 
 
-import Flux 
+import Flux
 import Flux.Optimise: update!
 
 export Auto
 include("optimizers/Auto.jl")
 
-export TB, TBAuto, ESARSA, SR, update!, predict, predict_SF
+export TB, TBAuto, ESARSA, SR, GPI, update!, predict, predict_SF
 include("learners/TB.jl")
 include("learners/TB_Auto.jl")
 include("learners/ESARSA.jl")
 include("learners/SR.jl")
+include("learners/GPI.jl")
 
 abstract type IntrinsicReward end
 include("agent/intrinsic_rewards.jl")

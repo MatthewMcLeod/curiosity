@@ -13,9 +13,10 @@ mutable struct SRHorde <: GVFHordes.AbstractHorde
     PredHorde::GVFHordes.AbstractHorde
     SFHorde::SFHorde
     num_tasks::Int
+    num_SFs::Int
     state_constructor::Function
-    function SRHorde(prediction_horde::GVFHordes.AbstractHorde, successor_feature_horde::SFHorde, state_constructor)
-        new(prediction_horde, successor_feature_horde, length(prediction_horde), state_constructor)
+    function SRHorde(prediction_horde::GVFHordes.AbstractHorde, successor_feature_horde::SFHorde, num_SFs, state_constructor)
+        new(prediction_horde, successor_feature_horde, length(prediction_horde), num_SFs, state_constructor)
     end
 end
 
@@ -25,17 +26,30 @@ end
 
 function Base.get(gvfh::SRHorde, state_t, action_t, state_tp1, action_tp1, preds_tp1)
     C, discounts, pi = get(gvfh.PredHorde,state_t, action_t, state_tp1, action_tp1, preds_tp1)
-    # NOTE: Assume discounts and pi align with the task definition in the Pred Horde.
+    # NOTE: Initial assumption that the task discount and pi align of pred horde
+    # Match the GVF horde is invalid. For GPI, the discount is the env while the SF component could be anything
+    #Assume discounts and pi align with the task definition in the Pred Horde.
     #Do not need to query the SF Horde to get this info
+    #Therefore, the following does not work!
+    # state_action_feature_length = Int( length(gvfh.SFHorde) / gvfh.num_tasks)
+    # discounts_SF = repeat(discounts, inner = state_action_feature_length)
+    # pi_SF = repeat(pi, inner = state_action_feature_length)
 
     constructed_state = gvfh.state_constructor(state_t)
 
     # C_SF = map(gvf -> get(cumulant(gvf), state_t, action_t, preds_tp1), gvfh.SFHorde.gvfs)
     C_SF = map(gvf -> get(cumulant(gvf), constructed_state, action_t, preds_tp1), gvfh.SFHorde.gvfs)
     # C_SF = ones(length(gvfh.SFHorde.gvfs))
-    state_action_feature_length = Int( length(gvfh.SFHorde) / gvfh.num_tasks)
-    discounts_SF = repeat(discounts, inner = state_action_feature_length)
-    pi_SF = repeat(pi, inner = state_action_feature_length)
+
+    state_action_feature_length = Int( length(gvfh.SFHorde) / gvfh.num_SFs)
+    inds_per_task = collect(1:state_action_feature_length:length(gvfh.SFHorde))
+    unique_discounts_SF = map(gvf -> get(discount(gvf), state_t, action_t, state_tp1, action_tp1, preds_tp1), gvfh.SFHorde.gvfs[inds_per_task])
+    unique_pi_SF = map(gvf -> get(policy(gvf), state_t, action_t), gvfh.SFHorde.gvfs[inds_per_task])
+
+    # @show (discounts, unique_discounts_SF)
+    discounts_SF = repeat(unique_discounts_SF, inner = state_action_feature_length)
+    pi_SF = repeat(unique_pi_SF, inner = state_action_feature_length)
+    #
     return vcat(C,C_SF),vcat(discounts,discounts_SF), vcat(pi,pi_SF)
 end
 

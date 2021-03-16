@@ -7,6 +7,7 @@ using MinimalRLCore
 mutable struct Agent <: AbstractAgent
     demons::GVFHordes.AbstractHorde
     demon_weights::Array{Float64,2}
+    behaviour_demons::Any
     behaviour_weights::Array{Float64,2}
     demon_learner::Learner
     behaviour_learner::Learner
@@ -22,8 +23,9 @@ mutable struct Agent <: AbstractAgent
     behaviour_gamma::Float64
     use_external_reward::Bool
 
-    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, observation_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type, state_constructor, behaviour_gamma, use_external_reward)
+    function Agent(horde, behaviour_horde, demon_feature_size::Int, behaviour_feature_size::Int, observation_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type, state_constructor, behaviour_gamma, use_external_reward)
         demon_weight_dims = size(demon_learner)
+        @show demon_weight_dims
         behaviour_weight_dims = size(behaviour_learner)
         demon_weights = zeros(demon_weight_dims)
 
@@ -47,6 +49,7 @@ mutable struct Agent <: AbstractAgent
 
         new(horde,
             demon_weights,
+            behaviour_horde,
             zeros(behaviour_weight_dims),
             demon_learner,
             behaviour_learner,
@@ -155,5 +158,39 @@ function update_behaviour!(agent,obs, next_obs, state, action, next_state, next_
     _, behaviour_pis = get_action(agent, state, obs)
     _, next_behaviour_pis = get_action(agent, next_state, next_obs)
 
-    update!(agent.behaviour_learner, agent.behaviour_weights, [reward], state, action, next_state, next_action, next_behaviour_pis, [!is_terminal*agent.behaviour_gamma])
+    if agent.behaviour_learner isa GPI
+        target_pis = zeros(length(agent.behaviour_demons), agent.num_actions)
+        for (i,a) in enumerate(1:agent.num_actions)
+            _, _, pi = get(agent.behaviour_demons, obs, a, next_obs, next_action)
+            target_pis[:,i] = pi
+        end
+        next_target_pis = zeros(length(agent.behaviour_demons), agent.num_actions)
+        for (i,a) in enumerate(1:agent.num_actions)
+            _, _, pi = get(agent.behaviour_demons, next_obs, a, next_obs, next_action)
+            next_target_pis[:,i] = pi
+        end
+        C, discounts, _ = get(agent.behaviour_demons, obs, action, next_obs, next_action)
+        #NOTE: Temporary Hack for GPI as we cannot define the GVF using intrinsic rewards....
+        # Also not sure how to define the gvf that learns off of weights in the agent
+        C[1] = reward
+        d = !is_terminal*agent.behaviour_gamma
+        discounts[1] = d
+        target_pis[1,:] = behaviour_pis
+        next_target_pis[1,:] = next_behaviour_pis
+
+        update!(agent.behaviour_learner,
+                agent.behaviour_weights,
+                C,
+                state,
+                action,
+                target_pis,
+                agent.prev_discounts,
+                next_state,
+                next_action,
+                next_target_pis,
+                discounts)
+
+    else
+        update!(agent.behaviour_learner, agent.behaviour_weights, [reward], state, action, next_state, next_action, next_behaviour_pis, [!is_terminal*agent.behaviour_gamma])
+    end
 end

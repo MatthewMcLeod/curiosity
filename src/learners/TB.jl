@@ -16,7 +16,7 @@ mutable struct TB{O} <: Learner
     end
 end
 # Base.size(learner::TB) = size(learner.e)
-Base.size(learner::TB) = size(learner.num_demons * learner.num_action, feature_size)
+Base.size(learner::TB) = (learner.num_demons * learner.num_actions, learner.feature_size)
 
 get_prediction(w::Matrix, s) = w*s
 
