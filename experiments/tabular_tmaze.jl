@@ -18,7 +18,7 @@ default_args() =
         "demon_discounts" => 0.9,
         "horde_type" => "regular",
         "behaviour_learner" => "GPI",
-        "behaviour_alpha" => 0.2,
+        "behaviour_alpha" => 0.5,
         "behaviour_gamma" => 0.9,
         "behaviour_trace" => "accumulating",
         "intrinsic_reward" => "weight_change",
@@ -182,15 +182,18 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             obs[1] = 3
             action = 1
             SF = predict_SF(agent.behaviour_learner, agent,  agent.behaviour_weights, obs, action)
-            println(SF)
+            println("GPI")
+            @show SF
         end
+
 
         if agent.demon_learner isa SR
             obs = zeros(5)
             obs[1] = 3
             action = 1
             SF = predict_SF(agent.demon_learner, agent,  agent.demon_weights, obs, action)
-            println(SF)
+            println("SF")
+            @show SF
         end
 
         println(goal_visitations)

@@ -119,36 +119,34 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     return next_action
 end
 
-function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
-    preds = ones(length(obs))
-
-    #TODO: Fix how to get target policy probabilities for all actions as this is needed for off-policy learning algos
-    # This is very ugly and I don't like passing all the target_pis through to demons...
+function get_demon_pis(agent::Agent, state, obs)
     target_pis = zeros(length(agent.demons), agent.num_actions)
     for (i,a) in enumerate(1:agent.num_actions)
-        _, _, pi = get(agent.demons, obs, a, next_obs, next_action)
+        _, _, pi = get(agent.demons, obs, a, obs, a)
         target_pis[:,i] = pi
     end
-    next_target_pis = zeros(length(agent.demons), agent.num_actions)
-    for (i,a) in enumerate(1:agent.num_actions)
-        _, _, pi = get(agent.demons, next_obs, a, next_obs, next_action)
-        next_target_pis[:,i] = pi
-    end
+    return target_pis
+end
 
-    C, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
+function get_behaviour_pis(agent::Agent, state, obs)
+    _, behaviour_pis = get_action(agent, state, obs)
+    return behaviour_pis
+end
 
-    #TODO: Passing in all of this information is ugly.
+function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
+    _, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
+
     update!(agent.demon_learner,
-            agent.demon_weights,
-            C,
+            agent,
+            obs,
+            next_obs,
             state,
             action,
-            target_pis,
-            agent.prev_discounts,
             next_state,
             next_action,
-            next_target_pis,
-            discounts)
+            is_terminal,
+            get_behaviour_pis,
+            get_demon_pis)
 
     agent.prev_discounts = deepcopy(discounts)
 end

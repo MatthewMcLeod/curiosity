@@ -51,7 +51,9 @@ function update!(learner::GPI, weights, C, state, action, target_pis, discounts,
     td_err = target - SF_estimator * active_state_action
     #td_err is (336x1)
     #TD err is applied across rows
-    SF_estimator .= SF_estimator .+ learner.alpha * td_err * active_state_action'
+    # SF_estimator .= SF_estimator .+ learner.alpha * td_err * active_state_action'
+    SF_estimator[:, active_state_action.nzind] .+= (learner.alpha  * td_err) * active_state_action.nzval'
+
 
     pred_err = reward_C - immediate_reward_estimator * active_state_action
     immediate_reward_estimator .= immediate_reward_estimator .+ learner.alpha * (pred_err) * active_state_action'
@@ -67,12 +69,13 @@ end
 
 function predict_SF(learner::GPI, state, weights, obs, action)
     active_state_action = get_active_action_state_vector(state, action,length(state), learner.num_actions)
-    preds = weights[learner.num_tasks+1:end,:] * active_state_action
+    preds = weights[learner.num_tasks+1:end, active_state_action.nzind] * active_state_action.nzval
+    # preds = weights[learner.num_tasks+1:end,:] * active_state_action
     return preds
 end
 
 function predict_SF(learner::GPI, agent::AbstractAgent, weights::Array{Float64,2}, obs, action)
-    @show obs
+    # @show obs
     state = agent.state_constructor(obs)
     return predict_SF(learner, state, weights, obs, action)
     # active_state_action = get_active_action_state_vector(state, action,length(state), learner.num_actions)
