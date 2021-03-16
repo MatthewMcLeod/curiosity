@@ -15,24 +15,19 @@ mutable struct TB{O} <: Learner
         new{typeof(opt)}(lambda, opt, IdDict(), num_demons, num_actions, feature_size)
     end
 end
-# Base.size(learner::TB) = size(learner.e)
-Base.size(learner::TB) = size(learner.num_demons * learner.num_action, feature_size)
+Base.size(learner::TB) = (learner.num_demons * learner.num_actions, learner.feature_size)
 
 get_prediction(w::Matrix, s) = w*s
 
 get_action_inds(action, num_actions, num_gvfs) = [action + (i-1)*num_actions for i in 1:num_gvfs]
 
-function update!(learner::TB,
-                 weights,
-                 C,
-                 state,
-                 action,
-                 target_pis,
-                 discounts,
-                 next_state,
-                 next_action,
-                 next_target_pis,
-                 next_discounts)
+function update!(learner::TB, agent, obs, next_obs, state, action, next_state, next_action, is_terminal, behaviour_pi_func, target_pi_func)
+    weights = agent.demon_weights
+    discounts = agent.prev_discounts
+    C, next_discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
+    target_pis = target_pi_func(agent, next_state, obs)
+    next_target_pis = target_pi_func(agent, next_state, next_obs)
+    
     # Update eligibility trace
     #Broadcast the policy and pseudotermination of each demon across the actions
     e = get!(learner.e, weights, zero(weights))::typeof(weights)
