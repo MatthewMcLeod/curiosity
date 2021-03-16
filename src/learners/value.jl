@@ -1,6 +1,6 @@
 
 
-abstract type ValueFunctionLearner end
+abstract type ValueFunctionLearner <: Learner end
 
 """
    QLearner(model, num_actions, num_demons) 

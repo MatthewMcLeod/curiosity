@@ -8,23 +8,27 @@ using GVFHordes
 
 @reexport using MinimalRLCore
 
-
 import Flux 
 import Flux.Optimise: update!
 
 abstract type Learner end
 
+export QLearner, VLearner, SR, predict#, predict_SF
+include("learners/value.jl")
+include("learners/SR.jl")
 
 export Auto
 include("optimizers/Auto.jl")
 
 abstract type LearningUpdate end
 
-export TB, TBAuto, ESARSA, SR, update!, predict, predict_SF
-include("learners/TB.jl")
-include("learners/TB_Auto.jl")
-include("learners/ESARSA.jl")
-include("learners/SR.jl")
+include("updates/update_utils.jl")
+
+export TB, TBAuto, ESARSA, SR, update!
+include("updates/TB.jl")
+# include("updates/TB_Auto.jl")
+include("updates/ESARSA.jl")
+include("updates/SR.jl")
 
 abstract type IntrinsicReward end
 include("agent/intrinsic_rewards.jl")

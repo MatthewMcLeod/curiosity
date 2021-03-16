@@ -116,11 +116,10 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     return next_action
 end
 
-function get_demon_pis(agent::Agent, state, obs)
-    target_pis = zeros(length(agent.demons), agent.num_actions)
-    for (i,a) in enumerate(1:agent.num_actions)
-        _, _, pi = get(agent.demons, obs, a, obs, a)
-        target_pis[:,i] = pi
+function get_demon_pis(horde, num_actions, state, obs)
+    target_pis = zeros(length(horde), num_actions)
+    for (i,a) in enumerate(1:num_actions)
+        target_pis[:,i] = get(demons[i], obs, a)
     end
     return target_pis
 end
@@ -142,8 +141,8 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
             next_state,
             next_action,
             is_terminal,
-            get_behaviour_pis,
-            get_demon_pis)
+            # get_behaviour_pis,
+            (state, obs) -> get_demon_pis(agent, state, obs))
 
     agent.prev_discounts = deepcopy(discounts)
 end
