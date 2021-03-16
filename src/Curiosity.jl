@@ -4,7 +4,7 @@ module Curiosity
 using Reexport
 using GVFHordes
 
-abstract type Learner end
+# abstract type Learner end
 
 @reexport using MinimalRLCore
 
@@ -12,8 +12,13 @@ abstract type Learner end
 import Flux 
 import Flux.Optimise: update!
 
+abstract type Learner end
+
+
 export Auto
 include("optimizers/Auto.jl")
+
+abstract type LearningUpdate end
 
 export TB, TBAuto, ESARSA, SR, update!, predict, predict_SF
 include("learners/TB.jl")
