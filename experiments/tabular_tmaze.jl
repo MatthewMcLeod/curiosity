@@ -1,10 +1,13 @@
 module TabularTMazeExperiment
 
+import Flux: Descent
+import Random
+
 using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
-import Flux: Descent
+
 
 const TTMU = Curiosity.TabularTMazeUtils
 
@@ -53,7 +56,7 @@ function construct_agent(parsed)
     use_external_reward = parsed["use_external_reward"]
 
     #Create state constructor
-    function state_constructor(observation,feature_size)
+    function state_constructor(observation, feature_size)
         s = spzeros(feature_size)
         s[convert(Int64,observation[1])] = 1
         return s
@@ -119,7 +122,7 @@ end
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     num_steps = parsed["steps"]
-    seed = parsed["seed"]
+    Random.seed!(parsed["seed"])
 
     cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
 

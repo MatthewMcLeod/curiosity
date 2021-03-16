@@ -1,5 +1,7 @@
 module MountainCarExperiment
 
+import Random
+
 using GVFHordes
 using Curiosity
 using MinimalRLCore
@@ -102,7 +104,8 @@ end
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     num_steps = parsed["steps"]
-    seed = parsed["seed"]
+    
+    Random.seed!(parsed["seed"])
 
     normalized = true
     env = MountainCar(0.0,0.0,normalized)
