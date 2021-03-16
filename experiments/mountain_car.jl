@@ -59,7 +59,7 @@ function construct_agent(parsed)
 
         feature_size = size(state_constructor_tc)
         function state_constructor(obs, feature_size, tc)
-            s = spzeros(feature_size)
+            s = spzeros(Int, feature_size)
             s[tc(obs)] .= 1
             return s
         end
@@ -111,7 +111,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
-        LoggerInitKey.INTERVAL => 50,
+        LoggerInitKey.INTERVAL => 1000,
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger

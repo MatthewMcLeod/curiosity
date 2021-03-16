@@ -21,7 +21,17 @@ get_prediction(w::Matrix, s) = w*s
 
 get_action_inds(action, num_actions, num_gvfs) = [action + (i-1)*num_actions for i in 1:num_gvfs]
 
-function update!(learner::TB, agent, obs, next_obs, state, action, next_state, next_action, is_terminal, behaviour_pi_func, target_pi_func)
+function update!(learner::TB,
+                 agent,
+                 obs,
+                 next_obs,
+                 state,
+                 action,
+                 next_state,
+                 next_action,
+                 is_terminal,
+                 behaviour_pi_func,
+                 target_pi_func)
     weights = agent.demon_weights
     discounts = agent.prev_discounts
     C, next_discounts, _ = get(agent.demons, obs, action, next_obs, next_action)

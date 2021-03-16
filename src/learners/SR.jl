@@ -3,22 +3,27 @@ using LinearAlgebra
 
 mutable struct SR <: Learner
     lambda::Float64
-    e::Array{Float64,2}
+    e::Array{Float64, 2}
     num_demons::Int
     num_actions::Int
     alpha::Float64
-    immediate_reward_predictor::Array{Float64,2}
+    immediate_reward_predictor::Array{Float64, 2}
     feature_size::Int
     num_tasks::Int
     function SR(lambda, feature_size, num_demons, num_actions, alpha, num_tasks)
-        new(lambda, zeros(num_demons, feature_size), num_demons, num_actions, alpha, ones(num_demons,feature_size * num_actions), feature_size,num_tasks)
+        new(lambda,
+            zeros(num_demons, feature_size),
+            num_demons, num_actions, alpha,
+            ones(num_demons, feature_size * num_actions),
+            feature_size,
+            num_tasks)
     end
 end
 
 Base.size(learner::SR) = (learner.num_demons, learner.feature_size * learner.num_actions)
 
 function get_active_action_state_vector(state::AbstractArray, action, feature_size, num_actions)
-
+    # @show eltype(state)
     vec_length = feature_size * num_actions
     new_ind = (state.nzind .- 1) * num_actions .+ action
     active_state_action = sparsevec(new_ind, state.nzval, vec_length)
@@ -56,8 +61,9 @@ function update!(learner::SR, agent, obs, next_obs, state, action, next_state, n
     target = SF_C + SF_next_discounts .* reward_feature_backup
     td_err = target - SF_estimator * active_state_action
     #td_err is (336x1)
-    #TD err is applied across rows
-    SF_estimator .= SF_estimator .+ learner.alpha * td_err * active_state_action'
+    # TD err is applied across rows
+    SF_estimator[:, active_state_action.nzind] .+= (learner.alpha  * td_err) * active_state_action.nzval'
+
 
     pred_err = reward_C - immediate_reward_estimator * active_state_action
     immediate_reward_estimator .= immediate_reward_estimator .+ learner.alpha * (pred_err) * active_state_action'
@@ -74,8 +80,9 @@ end
 function predict_SF(learner::SR, agent, weights::Array{Float64,2}, obs, action)
     state = agent.state_constructor(obs)
     active_state_action = get_active_action_state_vector(state, action,length(state), learner.num_actions)
-    preds = weights[learner.num_tasks+1:end,:] * active_state_action
+    preds = weights[learner.num_tasks+1:end, active_state_action.nzind] * active_state_action.nzval
     return preds
+    
 end
 function predict(learner::SR, agent, weights::Array{Float64,2}, obs, action)
     state = agent.state_constructor(obs)
