@@ -53,10 +53,7 @@ function update!(lu::TB,
 
     # update discounts
     discounts .= next_discounts
-    
-    # How to efficiently apply gradients back into weights? Should we move linear regression to Flux/Autograd?
-    # TODO: Seperate optimizer and learning algo
-    # weights .= weights + learner.alpha * (e .* td_err_across_demons)
+
     if learner.opt isa Auto
         next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
         state_discount = zero(e)

@@ -6,7 +6,6 @@ using MinimalRLCore
 
 mutable struct Agent <: AbstractAgent
     demons::GVFHordes.AbstractHorde
-    demon_weights::Array{Float64,2}
     behaviour_weights::Array{Float64,2}
     demon_learner::Learner
     behaviour_learner::Learner
@@ -16,13 +15,23 @@ mutable struct Agent <: AbstractAgent
     demon_feature_size::Int
     behaviour_feature_size::Int
     last_obs::Any
-    prev_discounts::Array{Float64,1}
     intrinsic_reward::IntrinsicReward
     state_constructor::Any
     behaviour_gamma::Float64
     use_external_reward::Bool
 
-    function Agent(horde, demon_feature_size::Int, behaviour_feature_size::Int, observation_size::Int, num_actions::Int, demon_learner, behaviour_learner, intrinsic_reward_type, state_constructor, behaviour_gamma, use_external_reward)
+    function Agent(horde,
+                   demon_feature_size::Int,
+                   behaviour_feature_size::Int,
+                   observation_size::Int,
+                   num_actions::Int,
+                   demon_learner,
+                   behaviour_learner,
+                   intrinsic_reward_type,
+                   state_constructor,
+                   behaviour_gamma,
+                   use_external_reward)
+        
         demon_weight_dims = size(demon_learner)
         behaviour_weight_dims = size(behaviour_learner)
         demon_weights = zeros(demon_weight_dims)
@@ -116,13 +125,13 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     return next_action
 end
 
-function get_demon_pis(horde, num_actions, state, obs)
-    target_pis = zeros(length(horde), num_actions)
-    for (i,a) in enumerate(1:num_actions)
-        target_pis[:,i] = get(demons[i], obs, a)
-    end
-    return target_pis
-end
+# function get_demon_pis(horde, num_actions, state, obs)
+#     target_pis = zeros(length(horde), num_actions)
+#     for (i,a) in enumerate(1:num_actions)
+#         target_pis[:,i] = get(demons[i], obs, a)
+#     end
+#     return target_pis
+# end
 
 function get_behaviour_pis(agent::Agent, state, obs)
     _, behaviour_pis = get_action(agent, state, obs)
@@ -130,7 +139,7 @@ function get_behaviour_pis(agent::Agent, state, obs)
 end
 
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
-    _, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
+    # _, discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
 
     update!(agent.demon_learner,
             agent,
@@ -141,10 +150,9 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
             next_state,
             next_action,
             is_terminal,
-            # get_behaviour_pis,
-            (state, obs) -> get_demon_pis(agent, state, obs))
+            (state, obs) -> get_behaviour_pis(agent, state, obs))
 
-    agent.prev_discounts = deepcopy(discounts)
+    # agent.prev_discounts = deepcopy(discounts)
 end
 
 function update_behaviour!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal, reward)
