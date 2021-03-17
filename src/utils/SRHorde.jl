@@ -24,7 +24,7 @@ function Base.length(h::SRHorde)
 end
 
 function Base.get(gvfh::SRHorde, state_t, action_t, state_tp1, action_tp1, preds_tp1)
-    C, discounts, pi = get(gvfh.PredHorde,state_t, action_t, state_tp1, action_tp1, preds_tp1)
+    C, discounts, pi = get(gvfh.PredHorde, state_t, action_t, state_tp1, action_tp1, preds_tp1)
     # NOTE: Assume discounts and pi align with the task definition in the Pred Horde.
     #Do not need to query the SF Horde to get this info
 

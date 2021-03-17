@@ -4,28 +4,28 @@ module Curiosity
 using Reexport
 using GVFHordes
 
-abstract type Learner end
+# abstract type Learner end
 
 @reexport using MinimalRLCore
-
 
 import Flux 
 import Flux.Optimise: update!
 
+
+include("utils/SRHorde.jl")
+
 export Auto
 include("optimizers/Auto.jl")
 
-export TB, TBAuto, ESARSA, SR, update!, predict, predict_SF
-include("learners/TB.jl")
-include("learners/TB_Auto.jl")
-include("learners/ESARSA.jl")
-include("learners/SR.jl")
+
+export QLearner, LinearQLearner, VLearner, SRLearner, predict#, predict_SF
+include("learner.jl")
 
 abstract type IntrinsicReward end
 include("agent/intrinsic_rewards.jl")
 
 export TabularRoundRobin, update!
-include("learners/TabularRoundRobin.jl")
+include("updates/TabularRoundRobin.jl")
 
 export Agent, agent_end!, step!
 include("agent/agent.jl")
@@ -46,7 +46,7 @@ export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils
-include("utils/SRHorde.jl")
+
 include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/learners.jl")
