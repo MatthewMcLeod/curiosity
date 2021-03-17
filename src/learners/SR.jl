@@ -30,7 +30,6 @@ SRLearner(lu, feature_size, num_demons, num_actions, num_tasks) =
 
 update(l::SRLearner) = l.update
 
-# TODO: Does it makes sense to have the size be the size of the model parameters? Not really.... Should be size of the output
 Base.size(learner::SRLearner) = learner.num_demons
 
 function get_active_action_state_vector(state::SparseVector, action, feature_size, num_actions)
@@ -45,9 +44,7 @@ function predict_SF(learner::SRLearner, ϕ::SparseVector, action)
     learner.ψ[:, active_state_action.nzind] * active_state_action.nzval
 end
 
-function predict(learner::SRLearner, ϕ::SparseVector, action)#agent, weights::Array{Float64,2}, obs, action)
-    # state = agent.state_constructor(obs)
-    # active_state_action = get_active_action_state_vector(ϕ, action, length(ϕ), learner.num_actions)
+function predict(learner::SRLearner, ϕ::SparseVector, action)
 
     SF = predict_SF(learner, ϕ, action)
 

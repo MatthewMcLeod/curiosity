@@ -39,14 +39,12 @@ function update!(learner::ESARSA, weights, C, state, action, next_state, next_ac
         C + next_discounts .* backup_est_per_demon
      else
          C
-     end
-     # TD error per demon is the td error on Q
+    end
+    
+    # TD error per demon is the td error on Q
     td_err = target - (weights * state)[inds]
     td_err_across_demons = repeat(td_err, inner=learner.num_actions)
 
-    # @show size(learner.e)
-    # @show size(td_err_across_demons)
-    # throw("stop")
     weights .+= learner.alpha * (learner.e .* td_err_across_demons)
 
     #Broadcast the policy and pseudotermination of each demon across the actions

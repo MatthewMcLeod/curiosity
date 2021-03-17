@@ -31,17 +31,17 @@ is_linear(l::QLearner) = false
 is_linear(l::QLearner{Matrix{<:Number}}) = true
 
 
-mutable struct VLearner{F, LU<:LearningUpdate} <: ValueFunctionLearner
-    model::F
-    update::LU
-    num_demons::Int
-end
+# mutable struct VLearner{F, LU<:LearningUpdate} <: ValueFunctionLearner
+#     model::F
+#     update::LU
+#     num_demons::Int
+# end
 
-predict(l::VLearner{F}, ϕ) where {F <: Matrix} = l.model*ϕ
-predict(l::VLearner, ϕ) = l.model(ϕ)
+# predict(l::VLearner{F}, ϕ) where {F <: Matrix} = l.model*ϕ
+# predict(l::VLearner, ϕ) = l.model(ϕ)
 
-(l::VLearner)(ϕ) = predict(l.model, ϕ)
+# (l::VLearner)(ϕ) = predict(l.model, ϕ)
 
-is_linear(l::VLearner) = false
-is_linear(l::VLearner{Matrix{<:Number}}) = true
+# is_linear(l::VLearner) = false
+# is_linear(l::VLearner{Matrix{<:Number}}) = true
 
