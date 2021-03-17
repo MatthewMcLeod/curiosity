@@ -1,6 +1,6 @@
 
 
-@kwdef mutable struct TB{O} <: Learner
+Base.@kwdef mutable struct TB{O} <: LearningUpdate
     lambda::Float64
     opt::O
     e::IdDict = IdDict()
@@ -10,7 +10,7 @@ end
 get_action_inds(action, num_actions, num_gvfs) = [action + (i-1)*num_actions for i in 1:num_gvfs]
 
 function update!(lu::TB,
-                 learner::QLearner{Matrix{<:AbstractFloat}},
+                 learner::QLearner,
                  demons,
                  obs,
                  next_obs,
@@ -54,15 +54,15 @@ function update!(lu::TB,
     # update discounts
     discounts .= next_discounts
 
-    if learner.opt isa Auto
+    if lu.opt isa Auto
         next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
         state_discount = zero(e)
         state_discount[state_action_row_ind,:] .+= state'
         state_discount[next_state_action_row_ind,:] .-= next_discounts * next_state'
         abs_phi = abs.(e)
-        update!(learner.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
+        update!(lu.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
     else
-        Flux.Optimise.update!(learner.opt, weights,  -(e .* td_err_across_demons))
+        Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err_across_demons))
     end
 end
 
@@ -72,6 +72,8 @@ function zero_eligibility_traces!(learner::TB)
         v .= 0
     end
 end
+
+
 
 # function get_weights(learner::TB, weights)
 #     return weights

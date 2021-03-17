@@ -1,5 +1,5 @@
 
-mutable struct ESARSA <: Learner
+mutable struct ESARSA <: LearningUpdate
     lambda::Float64
     e::Array{Float64,2}
     num_gvfs::Int
@@ -19,7 +19,7 @@ function update!(learner::ESARSA, weights, C, state, action, next_state, next_ac
     if learner.trace_type == "accumulating"
         learner.e[inds,:] .+= state'
     elseif learner.trace_type == "replacing"
-        learner.e[inds,state.nzind] .= 1
+        learner.e[inds, state.nzind] .= 1
     else
         throw("Not a valid trace type for ESARSA")
     end

@@ -11,30 +11,20 @@ using GVFHordes
 import Flux 
 import Flux.Optimise: update!
 
-abstract type Learner end
-
-export QLearner, VLearner, SR, predict#, predict_SF
-include("learners/value.jl")
-include("learners/SR.jl")
 
 export Auto
 include("optimizers/Auto.jl")
 
-abstract type LearningUpdate end
 
-include("updates/update_utils.jl")
 
-export TB, TBAuto, ESARSA, SR, update!
-include("updates/TB.jl")
-# include("updates/TB_Auto.jl")
-include("updates/ESARSA.jl")
-include("updates/SR.jl")
+export QLearner, LinearQLearner, VLearner, SR, predict#, predict_SF
+include("learner.jl")
 
 abstract type IntrinsicReward end
 include("agent/intrinsic_rewards.jl")
 
 export TabularRoundRobin, update!
-include("learners/TabularRoundRobin.jl")
+include("updates/TabularRoundRobin.jl")
 
 export Agent, agent_end!, step!
 include("agent/agent.jl")
