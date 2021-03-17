@@ -12,12 +12,13 @@ import Flux
 import Flux.Optimise: update!
 
 
+include("utils/SRHorde.jl")
+
 export Auto
 include("optimizers/Auto.jl")
 
 
-
-export QLearner, LinearQLearner, VLearner, SR, predict#, predict_SF
+export QLearner, LinearQLearner, VLearner, SRLearner, predict#, predict_SF
 include("learner.jl")
 
 abstract type IntrinsicReward end
@@ -45,7 +46,7 @@ export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils
-include("utils/SRHorde.jl")
+
 include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/learners.jl")

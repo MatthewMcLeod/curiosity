@@ -19,21 +19,15 @@ mutable struct Agent{IR<:IntrinsicReward,
 
     demons::H
     demon_learner::DL
-    # demon_lu::DLU
 
     last_obs::O
     last_state::Φ
-
     
     last_action::Int
     num_actions::Int
-    # demon_feature_size::Int
-    # behaviour_feature_size::Int
     
     intrinsic_reward::IR
-    
     state_constructor::SC
-
     use_external_reward::Bool
 
 end
@@ -147,8 +141,6 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     agent.last_obs = obs
     zero_eligibility_traces!(agent.demon_learner)
 
-    # agent.prev_discounts = deepcopy(discounts)
-
     return next_action
 end
 
@@ -160,18 +152,7 @@ get_behaviour_pis(agent::Agent, state, obs) =
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
 
 
-    # lu::TB,
-    # learner::QLearner{Matrix{<:AbstractFloat}},
-    # demons,
-    # obs,
-    # next_obs,
-    # state,
-    # action,
-    # next_state,
-    # next_action,
-    # is_terminal,
-    # behaviour_pi_func)
-    update!(update(agent.demon_learner),
+    update!(# update(agent.demon_learner),
             agent.demon_learner,
             agent.demons,
             obs,

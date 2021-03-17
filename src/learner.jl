@@ -3,7 +3,7 @@ abstract type LearningUpdate end
 abstract type Learner end
 
 include("learners/value.jl")
-# include("learners/SR.jl")
+include("learners/SR.jl")
 
 update!(learner::Learner, args...) =
     update!(update(learner), learner, args...)
@@ -16,7 +16,7 @@ include("updates/update_utils.jl")
 include("updates/TB.jl")
 # include("updates/TB_Auto.jl")
 include("updates/ESARSA.jl")
-include("updates/SR.jl")
+# include("updates/SR.jl")
 
 
 

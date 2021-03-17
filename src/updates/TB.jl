@@ -9,8 +9,16 @@ end
 
 get_action_inds(action, num_actions, num_gvfs) = [action + (i-1)*num_actions for i in 1:num_gvfs]
 
+function get_demon_parameters(lu::TB, learner, demons, obs, state, action, next_obs, next_state, next_action)
+    C, next_discounts, _ = get(demons, obs, action, next_obs, next_action)
+    target_pis = get_demon_pis(demons, learner.num_actions, state, obs)
+    next_target_pis = get_demon_pis(demons, learner.num_actions, next_state, next_obs)
+    C, next_discounts, target_pis, next_target_pis
+end
+
+
 function update!(lu::TB,
-                 learner::QLearner,
+                 learner::QLearner{Matrix{<:Number}},
                  demons,
                  obs,
                  next_obs,
@@ -24,9 +32,14 @@ function update!(lu::TB,
     weights = learner.model
     λ = lu.lambda
 
-    C, next_discounts, _ = get(demons, obs, action, next_obs, next_action)
-    target_pis = get_demon_pis(demons, learner.num_actions, state, obs)
-    next_target_pis = get_demon_pis(demons, learner.num_actions, next_state, next_obs)
+    C, next_discounts, target_pis, next_target_pis =
+        get_demon_parameters(lu,
+                             learner,
+                             demons,
+                             obs,
+                             action,
+                             next_obs,
+                             next_action)
 
     discounts = get!(lu.prev_discounts, learner, zero(next_discounts))::typeof(next_discounts)
     e = get!(lu.e, weights, zero(weights))::typeof(weights)
@@ -64,6 +77,75 @@ function update!(lu::TB,
     else
         Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err_across_demons))
     end
+end
+
+function update!(lu::TB,
+                 learner::SRLearner,
+                 demons,
+                 obs,
+                 next_obs,
+                 state::SparseVector,
+                 action,
+                 next_state,
+                 next_action,
+                 is_terminal,
+                 behaviour_pi_func)
+
+    
+    ψ = learner.ψ
+    w = learner.r_w
+
+    C, next_discounts, target_pis, next_target_pis =
+        get_demon_parameters(lu,
+                             learner,
+                             demons,
+                             obs,
+                             state,
+                             action,
+                             next_obs,
+                             next_state,
+                             next_action)
+
+    discounts = get!(lu.prev_discounts, learner, zero(next_discounts))::typeof(next_discounts)
+
+
+    next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
+    active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
+    
+    (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
+    (reward_discounts, SF_discounts) = discounts[1:learner.num_tasks], discounts[learner.num_tasks+1:end]
+    (reward_next_discounts, SF_next_discounts) = next_discounts[1:learner.num_tasks], next_discounts[learner.num_tasks+1:end]
+    (reward_target_pis, SF_target_pis) = target_pis[1:learner.num_tasks,:], target_pis[learner.num_tasks+1:end,:]
+    (reward_next_target_pis, SF_next_target_pis) = next_target_pis[1:learner.num_tasks,:], next_target_pis[learner.num_tasks+1:end, :]
+
+    
+    pred = ψ * next_active_state_action
+    reward_feature_backup = zeros(length(SF_C))
+    for a in 1:learner.num_actions
+        next_possible_active_state_action = get_active_action_state_vector(next_state, a, length(next_state), learner.num_actions)
+        reward_feature_backup += SF_next_target_pis[:,a] .* (ψ * next_possible_active_state_action)
+    end
+
+    target = SF_C + SF_next_discounts .* reward_feature_backup
+    td_err = target - ψ * active_state_action
+
+    pred_err = reward_C - w * active_state_action
+    #td_err is (336x1)
+    # TD err is applied across rows
+
+    if lu.opt isa Auto
+        throw("SR + TB + Auto not implemented")
+    elseif lu.opt isa Flux.Descent
+        α = lu.opt.eta
+        ψ[:, active_state_action.nzind] .+= (α  * td_err) * active_state_action.nzval'
+        w .= w .+ α * pred_err * active_state_action'
+    else
+        update!(lu.opt, ψ, -td_err * active_state_action')
+        update!(lu.opt, w, -pred_err * active_state_action')
+    end
+
+
+    
 end
 
 function zero_eligibility_traces!(learner::TB)

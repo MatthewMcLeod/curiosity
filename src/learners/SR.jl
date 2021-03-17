@@ -1,10 +1,10 @@
 using SparseArrays
 using LinearAlgebra
 
-mutable struct SR{F<:Number} <: Learner
-    pred_weights::Matrix{F}
+mutable struct SRLearner{F<:Number, LU<:LearningUpdate} <: Learner
     ψ::Matrix{F}
     r_w::Matrix{F}
+    update::LU
     
     num_demons::Int
     num_actions::Int
@@ -15,17 +15,23 @@ mutable struct SR{F<:Number} <: Learner
     
 end
 
-function SR(feature_size, num_demons, num_actions, num_tasks)
-    SR(zeros(num_tasks, feature_size * num_actions),
-       zeros(num_demons, feature_size * num_actions),
-       ones(num_demons, feature_size * num_actions),
-       num_demons, num_actions, 
-       feature_size,
-       num_tasks)
+function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks) where {F<:Number}
+    SRLearner(zeros(F, num_demons-num_tasks, feature_size * num_actions),
+              zeros(F, num_tasks, feature_size * num_actions),
+              lu,
+              num_demons,
+              num_actions, 
+              feature_size,
+              num_tasks)
 end
 
+SRLearner(lu, feature_size, num_demons, num_actions, num_tasks) =
+    SRLearner{Float64}(lu, feature_size, num_demons, num_actions, num_tasks)
+
+update(l::SRLearner) = l.update
+
 # TODO: Does it makes sense to have the size be the size of the model parameters? Not really.... Should be size of the output
-Base.size(learner::SR) = size(learner.ψ) #(learner.num_demons, learner.feature_size * learner.num_actions)
+Base.size(learner::SRLearner) = learner.num_demons
 
 function get_active_action_state_vector(state::SparseVector, action, feature_size, num_actions)
     vec_length = feature_size * num_actions
@@ -34,20 +40,23 @@ function get_active_action_state_vector(state::SparseVector, action, feature_siz
     return active_state_action
 end
 
-predict_sf(learner::SR, ϕ::SparseVector) = learner.ψ[:, active_state_action.nzind] * active_state_action.nzval
-
-function predict(learner::SR, ϕ::SparseVector, action)#agent, weights::Array{Float64,2}, obs, action)
-    # state = agent.state_constructor(obs)
+function predict_SF(learner::SRLearner, ϕ::SparseVector, action)
     active_state_action = get_active_action_state_vector(ϕ, action, length(ϕ), learner.num_actions)
+    learner.ψ[:, active_state_action.nzind] * active_state_action.nzval
+end
 
-    SF = predict_SF(learner, ϕ)
+function predict(learner::SRLearner, ϕ::SparseVector, action)#agent, weights::Array{Float64,2}, obs, action)
+    # state = agent.state_constructor(obs)
+    # active_state_action = get_active_action_state_vector(ϕ, action, length(ϕ), learner.num_actions)
+
+    SF = predict_SF(learner, ϕ, action)
 
     #Column is SF per task
-    reshaped_SF = reshape(SF, length(active_state_action), learner.num_tasks)
+    reshaped_SF = reshape(SF, :, learner.num_tasks)
     
-    Q = learner.pred_weights * reshaped_SF
+    Q = learner.r_w * reshaped_SF
     return Q[diagind(Q)]
 end
 
-(l::SR)(ϕ, a) = predict(l, ϕ, a)
-(l::SR)(ϕ) = [predict(l, ϕ, a) for a ∈ 1:num_actions]
+(l::SRLearner)(ϕ, a) = predict(l, ϕ, a)
+(l::SRLearner)(ϕ) = [predict(l, ϕ, a) for a ∈ 1:num_actions]

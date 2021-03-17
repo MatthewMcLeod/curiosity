@@ -31,12 +31,12 @@ function get_active_action_state_vector(state::AbstractArray, action, feature_si
 end
 
 function update!(learner::SR, agent, obs, next_obs, state, action, next_state, next_action, is_terminal, behaviour_pi_func, target_pi_func)
+
     weights = agent.demon_weights
     discounts = agent.prev_discounts
     C, next_discounts, _ = get(agent.demons, obs, action, next_obs, next_action)
     target_pis = target_pi_func(agent, next_state, obs)
     next_target_pis = target_pi_func(agent, next_state, next_obs)
-
 
 
     next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
