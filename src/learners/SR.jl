@@ -82,7 +82,7 @@ function predict_SF(learner::SR, agent, weights::Array{Float64,2}, obs, action)
     active_state_action = get_active_action_state_vector(state, action,length(state), learner.num_actions)
     preds = weights[learner.num_tasks+1:end, active_state_action.nzind] * active_state_action.nzval
     return preds
-    
+
 end
 function predict(learner::SR, agent, weights::Array{Float64,2}, obs, action)
     state = agent.state_constructor(obs)

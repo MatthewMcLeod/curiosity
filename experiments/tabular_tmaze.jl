@@ -14,7 +14,7 @@ default_args() =
         "demon_alpha" => 0.5,
         "demon_alpha_init" => 0.1,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "SR",
+        "demon_learner" => "TB",
         "demon_discounts" => 0.9,
         "horde_type" => "regular",
         "behaviour_learner" => "GPI",
@@ -23,7 +23,7 @@ default_args() =
         "behaviour_trace" => "accumulating",
         "intrinsic_reward" => "weight_change",
         "use_external_reward" => true,
-        "steps" => 50000,
+        "steps" => 10000,
         "seed" => 1,
         "cumulant_schedule" => "DrifterDistractor",
         "drifter" => (1.0, sqrt(0.01)),
@@ -32,7 +32,7 @@ default_args() =
         "exploring_starts"=>true,
         "save_dir" => "TabularTMazeExperiment",
         # "logger_keys" => [LoggerKey.GOAL_VISITATION, LoggerKey.TTMAZE_ERROR],
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.VALUE_MAP],
     )
 
 
@@ -147,6 +147,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
         LoggerInitKey.INTERVAL => 50,
+        LoggerInitKey.ENV => "tabular_tmaze"
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger

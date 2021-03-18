@@ -33,7 +33,7 @@ mutable struct Agent <: AbstractAgent
             #TODO: The intrinsic reward is defined by how the components of the agent are put together. For example, an intrinsic reward
             # could be the model error, which would then require different components that are assembled in the agent
             # Not sure how the construction of intrinisic reward could be abstracted out of this constructor
-            WeightChange(demon_weights)
+            WeightChange(get_weights(demon_learner, demon_weights))
         elseif intrinsic_reward_type == "no_reward"
             NoReward()
         else

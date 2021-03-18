@@ -75,12 +75,8 @@ function predict_SF(learner::GPI, state, weights, obs, action)
 end
 
 function predict_SF(learner::GPI, agent::AbstractAgent, weights::Array{Float64,2}, obs, action)
-    # @show obs
     state = agent.state_constructor(obs)
     return predict_SF(learner, state, weights, obs, action)
-    # active_state_action = get_active_action_state_vector(state, action,length(state), learner.num_actions)
-    # preds = weights[learner.num_tasks+1:end,:] * active_state_action
-    # return preds
 end
 function predict(learner::GPI, state, weights, obs, action)
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
@@ -90,35 +86,28 @@ function predict(learner::GPI, state, weights, obs, action)
     reshaped_SF = reshape(SF,length(active_state_action),Int(length(SF)/length(active_state_action)))
     prediction_weights = weights[1:learner.num_tasks,:]
     Q = prediction_weights * reshaped_SF
-    # return Q[diagind(Q)]
-    return Q
+    # Action value is the best action value among the Successor features for the task.
+    # num_tasks is always 1 for GPI
+    return maximum(Q)
 end
 function predict(learner::GPI, agent::AbstractAgent, weights::Array{Float64,2}, obs, action)
     state = agent.state_constructor(obs)
     return predict(learner, state, weights, obs, action)
-    # active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
-    #
-    # SF = predict_SF(learner,agent,weights, obs, action)
-    #
-    # #Column is SF per task
-    # reshaped_SF = reshape(SF,length(active_state_action),learner.num_tasks)
-    # prediction_weights = weights[1:learner.num_tasks,:]
-    # Q = prediction_weights * reshaped_SF
-    # return Q[diagind(Q)]
 end
 
 function get_action_probs(self::GPI, state, obs, weights)
     # qs = weights * state
     #NOTE Need to iterate over actions!
-    num_SFs = 4
-    all_qs = zeros(self.num_actions, num_SFs)
-    for (ind,a) in enumerate(1:self.num_actions)
-        all_qs[ind,:] = vec(predict(self,state, weights, obs, a))
-    end
-    qs = vec(maximum(all_qs, dims=1))
+    # num_SFs = 4
+    # all_qs = zeros(self.num_actions, num_SFs)
+    # for (ind,a) in enumerate(1:self.num_actions)
+    #     all_qs[ind,:] = vec(predict(self,state, weights, obs, a))
+    # end
+    # qs = vec(maximum(all_qs, dims=2))
+
+    qs = [predict(self,state, weights, obs, a) for a in 1:self.num_actions]
 
     epsilon = 0.2
-
     # Apply Epsilon Greedy
     m = maximum(qs)
     probs = zeros(length(qs))
