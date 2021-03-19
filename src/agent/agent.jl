@@ -12,7 +12,7 @@ mutable struct Agent{IR<:IntrinsicReward,
                      Φ,
                      SC} <: AbstractAgent
 
-    
+
     behaviour_weights::Array{Float64,2}
     behaviour_lu::BLU
     behaviour_gamma::Float64
@@ -22,10 +22,10 @@ mutable struct Agent{IR<:IntrinsicReward,
 
     last_obs::O
     last_state::Φ
-    
+
     last_action::Int
     num_actions::Int
-    
+
     intrinsic_reward::IR
     state_constructor::SC
     use_external_reward::Bool
@@ -42,32 +42,32 @@ function Agent(horde,
                intrinsic_reward_type,
                state_constructor,
                use_external_reward)
-    
+
     behaviour_weight_dims = (num_actions, behaviour_feature_size)
 
     intrinsic_reward = if intrinsic_reward_type == "weight_change"
         #TODO: The intrinsic reward is defined by how the components of the agent are put together. For example, an intrinsic reward
         # could be the model error, which would then require different components that are assembled in the agent
         # Not sure how the construction of intrinisic reward could be abstracted out of this constructor
-        WeightChange(demon_learner.model)
+        WeightChange(get_weights(demon_learner))
     elseif intrinsic_reward_type == "no_reward"
         NoReward()
     else
         throw(ArgumentError("Not a valid intrinsic reward"))
     end
-    
+
 
     Agent(zeros(behaviour_weight_dims),
           behaviour_lu,
           behaviour_gamma,
-          
+
           horde,
           demon_learner,
           # demon_lu,
 
           zeros(observation_size),
           spzeros(behaviour_feature_size),
-          
+
           0, # last_action
           num_actions,
           # demon_feature_size,
@@ -77,7 +77,7 @@ function Agent(horde,
           state_constructor,
 
           use_external_reward)
-    
+
 end
 
 function proc_input(agent, obs)
@@ -145,7 +145,7 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
 end
 
 
-get_behaviour_pis(agent::Agent, state, obs) = 
+get_behaviour_pis(agent::Agent, state, obs) =
     get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
 
 
@@ -170,7 +170,7 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
 
     behaviour_pis = get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
     next_behaviour_pis = get_action_probs(agent.behaviour_lu, next_state, next_obs, agent.behaviour_weights)
-    
+
     update!(agent.behaviour_lu,
             agent.behaviour_weights,
             [reward],

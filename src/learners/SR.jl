@@ -5,14 +5,18 @@ mutable struct SRLearner{F<:Number, LU<:LearningUpdate} <: Learner
     ψ::Matrix{F}
     r_w::Matrix{F}
     update::LU
-    
+
     num_demons::Int
     num_actions::Int
-    
+
     feature_size::Int
-    
+
     num_tasks::Int
-    
+
+end
+
+function get_weights(learner::SRLearner)
+    return vcat(learner.ψ, learner.r_w) 
 end
 
 function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks) where {F<:Number}
@@ -20,7 +24,7 @@ function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks) wher
               zeros(F, num_tasks, feature_size * num_actions),
               lu,
               num_demons,
-              num_actions, 
+              num_actions,
               feature_size,
               num_tasks)
 end
@@ -50,7 +54,7 @@ function predict(learner::SRLearner, ϕ::SparseVector, action)
 
     #Column is SF per task
     reshaped_SF = reshape(SF, :, learner.num_tasks)
-    
+
     Q = learner.r_w * reshaped_SF
     return Q[diagind(Q)]
 end

@@ -38,7 +38,7 @@ function make_SF_horde(num_features, num_actions, state_constructor)
                 num_features, num_actions, state_constructor)
 
     steps_to_goal_horde = make_SF_for_policy(EnergyPumpPolicy(true),
-                GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_cumulant, 0.0),
+                GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0),
                 num_features, num_actions, state_constructor)
 
     SF_horde = GVFSRHordes.merge(steps_to_wall_horde,steps_to_goal_horde)

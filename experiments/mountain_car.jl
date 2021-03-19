@@ -33,7 +33,7 @@ default_args() =
         "demon_alpha" => 1.0/8,
         "demon_alpha_init" => 1.0/8,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
@@ -73,7 +73,7 @@ function construct_agent(parsed)
                        feature_size,
                        action_space, (obs) ->
                        state_constructor(obs, feature_size, state_constructor_tc))
-    
+
     demon_lu = if demon_lu == "TB"
         TB(lambda=lambda, opt=Descent(demon_alpha))
     elseif demon_learner == "TBAuto"
@@ -96,7 +96,7 @@ function construct_agent(parsed)
     else
         throw(ArgumentError("Not a valid demon learner"))
     end
-    
+
     behaviour_lu = if behaviour_learner == "ESARSA"
         ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
     else
@@ -131,7 +131,8 @@ function get_horde(parsed, feature_size, action_space, state_constructor)
     horde = Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
     if parsed["demon_learner"] == "SR"
          SF_horde = MCU.make_SF_horde(feature_size, action_space, state_constructor)
-         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, state_constructor)
+         num_SFs = 2
+         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, state_constructor)
     end
     return horde
 end
@@ -139,7 +140,7 @@ end
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     num_steps = parsed["steps"]
-    
+
     Random.seed!(parsed["seed"])
 
     normalized = true

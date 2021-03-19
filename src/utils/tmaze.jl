@@ -91,7 +91,7 @@ function make_SR_for_policy(policy,discount,pseudoterm, num_features, num_action
                     GVFParamFuncs.FunctionalPolicy(policy)) for s in 1:num_features for a in 1:num_actions])
 end
 
-function make_SR_horde(discount, num_features, num_actions)
+function make_SF_horde(discount, num_features, num_actions)
     horde = make_SR_for_policy((obs,a) -> demon_target_policy(1,obs,a),discount,pseudoterm, num_features, num_actions)
     for policy_i in 2:4
         new_horde = make_SR_for_policy((obs,a) -> demon_target_policy(policy_i,obs,a),discount,pseudoterm, num_features, num_actions)
