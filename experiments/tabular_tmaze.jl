@@ -15,7 +15,7 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "RoundRobin",
+        "behaviour_learner" => "ESARSA",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
@@ -34,7 +34,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 2000,
+        "steps" => 20000,
         "use_external_reward" => true,
     )
 
@@ -144,7 +144,7 @@ function construct_agent(parsed)
           observation_size,
           action_space,
           intrinsic_reward_type,
-          (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
+          (obs) -> state_constructor(obs, feature_size),
           use_external_reward)
 end
 
@@ -223,24 +223,24 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             eps += 1
         end
 
-        if agent.behaviour_learner isa GPI
-            obs = zeros(5)
-            obs[1] = 3
-            action = 1
-            SF = predict_SF(agent.behaviour_learner, agent,  agent.behaviour_weights, obs, action)
-            println("GPI")
-            @show SF
-        end
+        # if agent.behaviour_learner isa GPI
+        #     obs = zeros(5)
+        #     obs[1] = 3
+        #     action = 1
+        #     SF = predict_SF(agent.behaviour_learner, agent,  agent.behaviour_weights, obs, action)
+        #     println("GPI")
+        #     @show SF
+        # end
 
-
-        if agent.demon_learner isa SR
-            obs = zeros(5)
-            obs[1] = 3
-            action = 1
-            SF = predict_SF(agent.demon_learner, agent,  agent.demon_weights, obs, action)
-            println("SF")
-            @show SF
-        end
+        #
+        # if agent.demon_learner isa SRLearner
+        #     obs = zeros(5)
+        #     obs[1] = 3
+        #     action = 1
+        #     SF = predict_SF(agent.demon_learner, agent,  agent.demon_weights, obs, action)
+        #     println("SF")
+        #     @show SF
+        # end
 
         println(goal_visitations)
     end

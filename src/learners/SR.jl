@@ -15,6 +15,10 @@ mutable struct SRLearner{F<:Number, LU<:LearningUpdate} <: Learner
 
 end
 
+function get_weights(learner::SRLearner)
+    return vcat(learner.ψ, learner.r_w) 
+end
+
 function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks) where {F<:Number}
     SRLearner(zeros(F, num_demons-num_tasks, feature_size * num_actions),
               zeros(F, num_tasks, feature_size * num_actions),

@@ -17,7 +17,7 @@ mutable struct WeightChange <: IntrinsicReward
 end
 
 function update_reward!(self::WeightChange, agent)
-    current_ws = deepcopy(get_weights(agent.demon_learner, agent.demon_weights))
+    current_ws = deepcopy(get_weights(agent.demon_learner))
     curiosity_reward = sum(abs.(flattenall(current_ws - self.previous_weights)))
     self.previous_weights = current_ws
     return curiosity_reward
