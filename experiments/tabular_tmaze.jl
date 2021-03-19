@@ -64,21 +64,8 @@ function construct_agent(parsed)
         return s
     end
 
-
     demons = get_horde(parsed, feature_size, action_space, (obs) -> state_constructor(obs, feature_size))
     behaviour_demons = nothing
-
-    # if demon_learner == "TB"
-    #     demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
-    # elseif demon_learner == "TBAuto"
-    #     demon_learner = TB(lambda,
-    #                        Auto(demon_alpha, demon_alpha_init),
-    #                        feature_size, length(demons), action_space)
-    # elseif demon_learner == "SR"
-    #     demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
-    # else
-    #     throw(ArgumentError("Not a valid demon learner"))
-    # end
 
     demon_lu = if demon_lu == "TB"
         TB(lambda=lambda, opt=Descent(demon_alpha))
@@ -89,25 +76,6 @@ function construct_agent(parsed)
     else
         throw(ArgumentError("Not a valid demon learner"))
     end
-
-    # if behaviour_learner == "RoundRobin"
-    #     behaviour_learner = TabularRoundRobin()
-    # elseif behaviour_learner == "ESARSA"
-    #     behaviour_learner = ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha,behaviour_trace)
-    # elseif behaviour_learner == "GPI"
-    #     discount = parsed["behaviour_gamma"]
-    #     SF_horde = TTMU.make_SF_horde(discount, feature_size, action_space)
-    #     num_SFs = 4
-    #     #NOTE: Tasks is learning the reward feature vector
-    #     #Dummy prediction GVF
-    #     DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
-    #     pred_horde = Horde([DummyGVF])
-    #
-    #     behaviour_demons = Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
-    #     behaviour_learner = GPI(lambda,feature_size,length(behaviour_demons), action_space,  behaviour_alpha,behaviour_demons.num_tasks)
-    # else
-    #     throw(ArgumentError("Not a valid behaviour learner"))
-    # end
 
     demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
         LinearQLearner(demon_lu, feature_size, action_space, length(demons))
@@ -129,13 +97,6 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid behaviour learner"))
     end
 
-
-    # demon_feature_size = if demon_learner isa SR
-    #     feature_size * action_space
-    # else
-    #     feature_size
-    # end
-    # agent = Agent(demons, behaviour_demons, demon_feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
     Agent(demons,
           feature_size,
           behaviour_lu,
