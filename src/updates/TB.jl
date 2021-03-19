@@ -1,8 +1,9 @@
 
 
-Base.@kwdef mutable struct TB{O} <: LearningUpdate
+Base.@kwdef mutable struct TB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
+    trace::T = AccumulatingTraces()
     e::IdDict = IdDict()
     prev_discounts::IdDict = IdDict()
 end
@@ -48,13 +49,18 @@ function update!(lu::TB,
 
     # Update eligibility trace
     #Broadcast the policy and pseudotermination of each demon across the actions
-    e .*= λ * repeat(discounts, inner = learner.num_actions) .* repeat(target_pis[:,action], inner = learner.num_actions)
-
-    # the eligibility trace is for state-action so need to find the exact state action pair per demon and not just the state
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
-    e[inds,:] .+= state'
 
+    update_trace!(lu.trace,
+                  e,
+                  state,
+                  λ,
+                  repeat(discounts, inner = learner.num_actions),
+                  repeat(target_pis[:,action], inner = learner.num_actions),
+                  inds)
+    
+    
     pred = learner(next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
 
@@ -109,7 +115,9 @@ function update!(lu::TB,
                              next_action)
 
     discounts = get!(lu.prev_discounts, learner, zero(next_discounts))::typeof(next_discounts)
-
+    e_ψ = get!(lu.e, learner.ψ, zero(learner.ψ))::typeof(learner.ψ)
+    e_w = get!(lu.e, learner.r_w, zero(learner.r_w))::typeof(learner.r_w)
+    λ = lu.lambda
 
     next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
@@ -120,7 +128,11 @@ function update!(lu::TB,
     (reward_target_pis, SF_target_pis) = target_pis[1:learner.num_tasks,:], target_pis[learner.num_tasks+1:end,:]
     (reward_next_target_pis, SF_next_target_pis) = next_target_pis[1:learner.num_tasks,:], next_target_pis[learner.num_tasks+1:end, :]
 
-    
+
+    # Update Traces: See update_utils.jl
+    update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
+    update_trace!(lu.trace, e_w, active_state_action, λ, reward_discounts, reward_target_pis[:, action])
+
     pred = ψ * next_active_state_action
     reward_feature_backup = zeros(length(SF_C))
     for a in 1:learner.num_actions
@@ -136,23 +148,31 @@ function update!(lu::TB,
     # TD err is applied across rows
 
     if lu.opt isa Auto
+        abs_ϕ = abs.(e_ψ)
+        z = abs_ϕ .* max.(abs_ϕ, state - γ*next_state)
+        
         throw("SR + TB + Auto not implemented")
     elseif lu.opt isa Flux.Descent
         α = lu.opt.eta
-        ψ[:, active_state_action.nzind] .+= (α  * td_err) * active_state_action.nzval'
-        w .= w .+ α * pred_err * active_state_action'
+        if λ == 0
+            ψ[:, active_state_action.nzind] .+= (α  * td_err) * active_state_action.nzval'
+            w .= w .+ α * pred_err * active_state_action'
+        else
+            update!(lu.opt, ψ, -td_err .* e_ψ)
+            update!(lu.opt, w, -pred_err .* e_w)
+        end
     else
-        update!(lu.opt, ψ, -td_err * active_state_action')
-        update!(lu.opt, w, -pred_err * active_state_action')
+        update!(lu.opt, ψ, -td_err .* e_ψ)
+        update!(lu.opt, w, -pred_err * e_w)
     end
 
 
     
 end
 
-function zero_eligibility_traces!(learner::TB)
+function zero_eligibility_traces!(lu::TB)
     # learner.e .= 0
-    for (k, v) ∈ learner.e
+    for (k, v) ∈ lu.e
         v .= 0
     end
 end
