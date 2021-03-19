@@ -18,7 +18,7 @@ end
 
 
 function update!(lu::TB,
-                 learner::QLearner{Matrix{<:Number}},
+                 learner::QLearner{M, LU},
                  demons,
                  obs,
                  next_obs,
@@ -27,7 +27,7 @@ function update!(lu::TB,
                  next_state,
                  next_action,
                  is_terminal,
-                 behaviour_pi_func)
+                 behaviour_pi_func) where {M<:AbstractMatrix, LU<:TB}
 
     weights = learner.model
     λ = lu.lambda
@@ -37,8 +37,10 @@ function update!(lu::TB,
                              learner,
                              demons,
                              obs,
+                             state,
                              action,
                              next_obs,
+                             next_state,
                              next_action)
 
     discounts = get!(lu.prev_discounts, learner, zero(next_discounts))::typeof(next_discounts)
