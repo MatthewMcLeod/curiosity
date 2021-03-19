@@ -1,38 +1,41 @@
 module TabularTMazeExperiment
 
+import Flux: Descent
+import Random
+
 using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
-import Flux: Descent
+
 
 const TTMU = Curiosity.TabularTMazeUtils
 
 default_args() =
     Dict(
-        "lambda" => 0.9,
-        "demon_alpha" => 0.5,
-        "demon_alpha_init" => 0.1,
-        "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "TB",
-        "demon_discounts" => 0.9,
-        "horde_type" => "regular",
-        "behaviour_learner" => "GPI",
-        "behaviour_alpha" => 0.5,
+        "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
+        "behaviour_learner" => "RoundRobin",
         "behaviour_trace" => "accumulating",
-        "intrinsic_reward" => "weight_change",
-        "use_external_reward" => true,
-        "steps" => 10000,
-        "seed" => 1,
-        "cumulant_schedule" => "DrifterDistractor",
-        "drifter" => (1.0, sqrt(0.01)),
-        "distractor" => (1.0, 1.0),
         "constant_target"=> 1.0,
+        "cumulant_schedule" => "DrifterDistractor",
+        "demon_alpha_init" => 0.1,
+        "demon_alpha" => 0.5,
+        "demon_discounts" => 0.9,
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
+        "demon_policy_type" => "greedy_to_cumulant",
+        "distractor" => (1.0, 1.0),
+        "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>true,
+        "horde_type" => "regular",
+        "intrinsic_reward" => "weight_change",
+        "lambda" => 0.9,
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
-        # "logger_keys" => [LoggerKey.GOAL_VISITATION, LoggerKey.TTMAZE_ERROR],
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.VALUE_MAP],
+        "seed" => 1,
+        "steps" => 2000,
+        "use_external_reward" => true,
     )
 
 
@@ -45,6 +48,8 @@ function construct_agent(parsed)
     demon_alpha = parsed["demon_alpha"]
     demon_alpha_init = parsed["demon_alpha_init"]
     demon_learner = parsed["demon_learner"]
+    demon_lu = parsed["demon_update"]
+
     behaviour_learner = parsed["behaviour_learner"]
     behaviour_alpha = parsed["behaviour_alpha"]
     intrinsic_reward_type = parsed["intrinsic_reward"]
@@ -53,7 +58,7 @@ function construct_agent(parsed)
     use_external_reward = parsed["use_external_reward"]
 
     #Create state constructor
-    function state_constructor(observation,feature_size)
+    function state_constructor(observation, feature_size)
         s = spzeros(feature_size)
         s[convert(Int64,observation[1])] = 1
         return s
@@ -63,44 +68,84 @@ function construct_agent(parsed)
     demons = get_horde(parsed, feature_size, action_space, (obs) -> state_constructor(obs, feature_size))
     behaviour_demons = nothing
 
-    if demon_learner == "TB"
-        demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
+    # if demon_learner == "TB"
+    #     demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
+    # elseif demon_learner == "TBAuto"
+    #     demon_learner = TB(lambda,
+    #                        Auto(demon_alpha, demon_alpha_init),
+    #                        feature_size, length(demons), action_space)
+    # elseif demon_learner == "SR"
+    #     demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
+    # else
+    #     throw(ArgumentError("Not a valid demon learner"))
+    # end
+
+    demon_lu = if demon_lu == "TB"
+        TB(lambda=lambda, opt=Descent(demon_alpha))
     elseif demon_learner == "TBAuto"
-        demon_learner = TB(lambda,
-                           Auto(demon_alpha, demon_alpha_init),
-                           feature_size, length(demons), action_space)
-    elseif demon_learner == "SR"
-        demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
+        TB(lambda,
+           Auto(demon_alpha, demon_alpha_init),
+           feature_size, length(demons), action_space)
     else
         throw(ArgumentError("Not a valid demon learner"))
     end
 
-    if behaviour_learner == "RoundRobin"
-        behaviour_learner = TabularRoundRobin()
-    elseif behaviour_learner == "ESARSA"
-        behaviour_learner = ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha,behaviour_trace)
-    elseif behaviour_learner == "GPI"
-        discount = parsed["behaviour_gamma"]
-        SF_horde = TTMU.make_SF_horde(discount, feature_size, action_space)
-        num_SFs = 4
-        #NOTE: Tasks is learning the reward feature vector
-        #Dummy prediction GVF
-        DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
-        pred_horde = Horde([DummyGVF])
+    # if behaviour_learner == "RoundRobin"
+    #     behaviour_learner = TabularRoundRobin()
+    # elseif behaviour_learner == "ESARSA"
+    #     behaviour_learner = ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha,behaviour_trace)
+    # elseif behaviour_learner == "GPI"
+    #     discount = parsed["behaviour_gamma"]
+    #     SF_horde = TTMU.make_SF_horde(discount, feature_size, action_space)
+    #     num_SFs = 4
+    #     #NOTE: Tasks is learning the reward feature vector
+    #     #Dummy prediction GVF
+    #     DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
+    #     pred_horde = Horde([DummyGVF])
+    #
+    #     behaviour_demons = Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
+    #     behaviour_learner = GPI(lambda,feature_size,length(behaviour_demons), action_space,  behaviour_alpha,behaviour_demons.num_tasks)
+    # else
+    #     throw(ArgumentError("Not a valid behaviour learner"))
+    # end
 
-        behaviour_demons = Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
-        behaviour_learner = GPI(lambda,feature_size,length(behaviour_demons), action_space,  behaviour_alpha,behaviour_demons.num_tasks)
+    demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
+        LinearQLearner(demon_lu, feature_size, action_space, length(demons))
+    elseif demon_learner ∈ ["SR", "SRLearner", "sr"]
+        SRLearner(demon_lu,
+                  feature_size,
+                  length(demons),
+                  action_space,
+                  demons.num_tasks)
+    else
+        throw(ArgumentError("Not a valid demon learner"))
+    end
+
+    behaviour_lu = if behaviour_learner == "ESARSA"
+        ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    elseif behaviour_learner == "RoundRobin"
+        TabularRoundRobin()
     else
         throw(ArgumentError("Not a valid behaviour learner"))
     end
 
 
-    demon_feature_size = if demon_learner isa SR
-        feature_size * action_space
-    else
-        feature_size
-    end
-    agent = Agent(demons, behaviour_demons, demon_feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
+    # demon_feature_size = if demon_learner isa SR
+    #     feature_size * action_space
+    # else
+    #     feature_size
+    # end
+    # agent = Agent(demons, behaviour_demons, demon_feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size), behaviour_gamma, use_external_reward)
+    Agent(demons,
+          feature_size,
+          behaviour_lu,
+          behaviour_gamma,
+          demon_learner,
+          observation_size,
+          action_space,
+          intrinsic_reward_type,
+          (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
+          use_external_reward)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)
@@ -133,7 +178,7 @@ end
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     num_steps = parsed["steps"]
-    seed = parsed["seed"]
+    Random.seed!(parsed["seed"])
 
     cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
 

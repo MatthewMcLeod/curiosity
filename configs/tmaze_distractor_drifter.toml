@@ -1,0 +1,36 @@
+[config]
+save_dir = "TMazeDrifterDIstractor"
+exp_file = "experiments/tabular_tmaze.jl"
+exp_module_name = "TabularTMazeExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+save_keys=["demon_learner", "seed", "demon_alpha", "behaviour_alpha", "demon_alpha_init"]
+
+behaviour_alpha = 0.2
+behaviour_gamma = 0.9
+behaviour_learner = "RoundRobin"
+behaviour_trace = "accumulating"
+constant_target = 1.0
+cumulant_schedule = "DrifterDistractor"
+demon_alpha = 0.5
+demon_alpha_init = 0.1
+demon_discounts = 0.9
+demon_learner = "TBAuto"
+demon_policy_type = "greedy_to_cumulant"
+distractor = "(1.0, 1.0)"
+drifter = "(1.0, sqrt(0.01))"
+exploring_starts = true
+horde_type = "regular"
+intrinsic_reward = "weight_change"
+lambda = 0.9
+logger_keys = ["TTMAZE_ERROR"]
+save_dir = "TabularTMazeExperiment"
+# seed = 1
+steps = 2000
+use_external_reward = true
+
+[sweep_args]
+seed = [1]

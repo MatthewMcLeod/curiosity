@@ -29,6 +29,17 @@ function get_cumulants(env::TabularTMaze, self::DrifterDistractor, pos)
     return cumulants
 end
 
+function get_cumulant_eval_values(self::DrifterDistractor)
+    # Used for scaling the eval set based on the end values
+    num_cumulants = 4
+    cumulants = zeros(num_cumulants)
+    cumulants[1] = self.distractor_mean
+    cumulants[2] = self.constants
+    cumulants[3] = self.drifter_mean
+    cumulants[4] = self.constants
+    return cumulants
+end
+
 function update!(env::TabularTMaze, self::DrifterDistractor, pos)
     self.drifter_mean += rand(Normal(0, self.drifter_std))
 end

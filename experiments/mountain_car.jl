@@ -1,5 +1,7 @@
 module MountainCarExperiment
 
+import Random
+
 using GVFHordes
 using Curiosity
 using MinimalRLCore
@@ -31,7 +33,8 @@ default_args() =
         "demon_alpha" => 1.0/8,
         "demon_alpha_init" => 1.0/8,
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_learner" => "SR",
+        "demon_learner" => "q",
+        "demon_update" => "TB",
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
         "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
@@ -40,61 +43,96 @@ default_args() =
 
 
 function construct_agent(parsed)
-        observation_size = 2
-        action_space = 3
-        lambda = parsed["lambda"]
-        demon_alpha = parsed["demon_alpha"]
-        demon_alpha_init = parsed["demon_alpha_init"]
-        demon_learner = parsed["demon_learner"]
-        behaviour_learner = parsed["behaviour_learner"]
-        behaviour_alpha = parsed["behaviour_alpha"]
-        behaviour_gamma = parsed["behaviour_gamma"]
-        behaviour_trace = parsed["behaviour_trace"]
-        intrinsic_reward_type = parsed["intrinsic_reward"]
-        use_external_reward = parsed["use_external_reward"]
+    observation_size = 2
+    action_space = 3
+    lambda = parsed["lambda"]
+    demon_alpha = parsed["demon_alpha"]
+    demon_alpha_init = parsed["demon_alpha_init"]
+    demon_learner = parsed["demon_learner"]
+    demon_lu = parsed["demon_update"]
+    behaviour_learner = parsed["behaviour_learner"]
+    # behaviour_lu = parsed["behaviour_update"]
+    behaviour_alpha = parsed["behaviour_alpha"]
+    behaviour_gamma = parsed["behaviour_gamma"]
+    behaviour_trace = parsed["behaviour_trace"]
+    intrinsic_reward_type = parsed["intrinsic_reward"]
+    use_external_reward = parsed["use_external_reward"]
 
 
-        #Create state constructor
-        state_constructor_tc = TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
+    #Create state constructor
+    state_constructor_tc = TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
 
-        feature_size = size(state_constructor_tc)
-        function state_constructor(obs, feature_size, tc)
-            s = spzeros(Int, feature_size)
-            s[tc(obs)] .= 1
-            return s
-        end
+    feature_size = size(state_constructor_tc)
+    function state_constructor(obs, feature_size, tc)
+        s = spzeros(Int, feature_size)
+        s[tc(obs)] .= 1
+        return s
+    end
 
-        demons = get_horde(parsed,feature_size, action_space,(obs) -> state_constructor(obs, feature_size, state_constructor_tc))
+    demons = get_horde(parsed,
+                       feature_size,
+                       action_space, (obs) ->
+                       state_constructor(obs, feature_size, state_constructor_tc))
 
-        if demon_learner == "TB"
-            demon_learner = TB(lambda, Descent(demon_alpha), feature_size, length(demons), action_space)
-        elseif demon_learner == "TBAuto"
-            demon_learner = TB(lambda,
-                               Auto(demon_alpha, demon_alpha_init),
-                               feature_size, length(demons), action_space)
-            # demon_learner = TBAuto(lambda, feature_size, length(demons), action_space, demon_alpha, demon_alpha_init)
-        elseif demon_learner == "SR"
-            demon_learner = SR(lambda,feature_size,length(demons), action_space,  demon_alpha, demons.num_tasks)
-        else
-            throw(ArgumentError("Not a valid demon learner"))
-        end
+    demon_lu = if demon_lu == "TB"
+        TB(lambda=lambda, opt=Descent(demon_alpha))
+    elseif demon_learner == "TBAuto"
+        TB(lambda,
+           Auto(demon_alpha, demon_alpha_init),
+           feature_size, length(demons), action_space)
+    else
+        throw(ArgumentError("Not a valid demon learner"))
+    end
 
-        if behaviour_learner == "ESARSA"
-            behaviour_learner = ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
-        else
-            throw(ArgumentError("Not a valid behaviour learner"))
-        end
+    # (update, num_features, num_actions, num_demons; init=(s...)->zeros(s...)) =
+    demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
+        LinearQLearner(demon_lu, feature_size, action_space, length(demons))
+    elseif demon_learner ∈ ["SR", "SRLearner", "sr"]
+        SRLearner(demon_lu,
+                  feature_size,
+                  length(demons),
+                  action_space,
+                  demons.num_tasks)
+    else
+        throw(ArgumentError("Not a valid demon learner"))
+    end
 
+    behaviour_lu = if behaviour_learner == "ESARSA"
+        ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    else
+        throw(ArgumentError("Not a valid behaviour learner"))
+    end
 
+    Agent(demons,
+          feature_size,
+          behaviour_lu,
+          behaviour_gamma,
+          demon_learner,
+          observation_size,
+          action_space,
+          intrinsic_reward_type,
+          (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
+          use_external_reward)
 
-        agent = Agent(demons, feature_size, feature_size, observation_size, action_space, demon_learner, behaviour_learner, intrinsic_reward_type, (obs) -> state_constructor(obs, feature_size, state_constructor_tc), behaviour_gamma, use_external_reward)
+    # Agent(demons,
+    #       feature_size,
+    #       feature_size,
+    #       observation_size,
+    #       action_space,
+    #       demon_learner,
+    #       behaviour_learner,
+    #       intrinsic_reward_type,
+    #       (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
+    #       behaviour_gamma,
+    #       use_external_reward)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)
     horde = Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
     if parsed["demon_learner"] == "SR"
          SF_horde = MCU.make_SF_horde(feature_size, action_space, state_constructor)
-         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, state_constructor)
+         num_SFs = 2
+         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, state_constructor)
     end
     return horde
 end
@@ -102,7 +140,8 @@ end
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     num_steps = parsed["steps"]
-    seed = parsed["seed"]
+
+    Random.seed!(parsed["seed"])
 
     normalized = true
     env = MountainCar(0.0,0.0,normalized)

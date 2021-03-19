@@ -10,7 +10,6 @@ mutable struct TabularTMaze <: MinimalRLCore.AbstractEnvironment
     start_state::Array{Int64}
     current_state::Array{Int64}
     goal_states::Array{String}
-    terminal_states::Array{Any,1}
     feature_size::Int64
     step::Int
     exploring_starts::Bool
@@ -31,16 +30,8 @@ mutable struct TabularTMaze <: MinimalRLCore.AbstractEnvironment
                  ["0", "0", "0", "1", "0", "0", "0"],
                  ["0", "0", "0", "1", "0", "0", "0"]]
         goal_states = ["G1", "G2", "G3", "G4"]
-
-        terminal_states = []
         start_state = [1,1]
-
-        terms = [[1, 1], [5, 1], [1, 7], [5, 7]]
-        for goal_state in terms
-            obs = generate_obs(goal_state)
-            push!(terminal_states, obs)
-        end
-        new(world, start_state, [1,1], goal_states, terminal_states, feature_size,step, exploring_starts, cumulant_schedule)
+        new(world, start_state, [1,1], goal_states, feature_size,step, exploring_starts, cumulant_schedule)
     end
 end
 
