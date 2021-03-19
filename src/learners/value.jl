@@ -5,7 +5,7 @@ abstract type ValueFunctionLearner <: Learner end
 update(l::ValueFunctionLearner) = l.update
 
 """
-   QLearner(model, num_actions, num_demons) 
+   QLearner(model, num_actions, num_demons)
 """
 mutable struct QLearner{F, LU<:LearningUpdate} <: ValueFunctionLearner
     model::F
@@ -30,8 +30,15 @@ predict(l::QLearner, ϕ::AbstractMatrix, a) = predict(l, ϕ)[a .+ (0:(l.num_demo
 is_linear(l::QLearner) = false
 is_linear(l::QLearner{Matrix{<:Number}}) = true
 
+<<<<<<< HEAD
 
 # mutable struct VLearner{F, LU<:LearningUpdate} <: ValueFunctioner
+=======
+function get_weights(l::QLearner)
+    return l.model
+end
+# mutable struct VLearner{F, LU<:LearningUpdate} <: ValueFunctionLearner
+>>>>>>> 79a59e7ff935f1839f84618c7fe2500a90147634
 #     model::F
 #     update::LU
 #     num_demons::Int
@@ -44,4 +51,3 @@ is_linear(l::QLearner{Matrix{<:Number}}) = true
 
 # is_linear(l::VLearner) = false
 # is_linear(l::VLearner{Matrix{<:Number}}) = true
-

@@ -21,6 +21,7 @@ include("episode_length.jl")
 include("mountain_car_error.jl")
 include("tabular_tmaze_error.jl")
 include("temp_print.jl")
+include("value_map.jl")
 
 # Module for scoping key names
 module LoggerKey
@@ -29,11 +30,13 @@ module LoggerKey
     const MC_ERROR = "MC_ERROR"
     const TEMP_PRINT = "TEMP_PRINT"
     const TTMAZE_ERROR = "TTMAZE_ERROR"
+    const VALUE_MAP = "VALUE_MAP"
 end
 
 module LoggerInitKey
     const TOTAL_STEPS = "TOTAL_STEPS"
     const INTERVAL = "INTERVAL"
+    const ENV = "ENV"
 end
 
 const LOGGER_KEY_MAP = Dict(
@@ -41,7 +44,8 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.EPISODE_LENGTH => EpisodeLength,
     LoggerKey.MC_ERROR => MCError,
     LoggerKey.TTMAZE_ERROR => TTMazeError,
-    LoggerKey.TEMP_PRINT => TempPrint
+    LoggerKey.TEMP_PRINT => TempPrint,
+    LoggerKey.VALUE_MAP => ValueMap
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
