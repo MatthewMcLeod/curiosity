@@ -76,12 +76,11 @@ function construct_agent(parsed)
 
     demon_lu = if demon_lu == "TB"
         TB(lambda=lambda, opt=Descent(demon_alpha))
-    elseif demon_learner == "TBAuto"
-        TB(lambda,
-           Auto(demon_alpha, demon_alpha_init),
-           feature_size, length(demons), action_space)
+    elseif demon_lu == "TBAuto"
+        TB(lambda=lambda,
+           opt=Auto(demon_alpha, demon_alpha_init))
     else
-        throw(ArgumentError("Not a valid demon learner"))
+        throw(ArgumentError("$(demon_lu) not a valid demon learner"))
     end
 
     # (update, num_features, num_actions, num_demons; init=(s...)->zeros(s...)) =

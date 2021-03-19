@@ -44,8 +44,8 @@ function update!(lu::TB,
                              next_state,
                              next_action)
 
-    discounts = get!(lu.prev_discounts, learner, zero(next_discounts))::typeof(next_discounts)
-    e = get!(lu.e, weights, zero(weights))::typeof(weights)
+    discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(next_discounts)
+    e = get!(()->zero(weights), lu.e, weights)::typeof(weights)
 
     # Update eligibility trace
     #Broadcast the policy and pseudotermination of each demon across the actions
@@ -98,7 +98,6 @@ function update!(lu::TB,
                  next_action,
                  is_terminal,
                  behaviour_pi_func)
-
     
     ψ = learner.ψ
     w = learner.r_w
@@ -114,9 +113,10 @@ function update!(lu::TB,
                              next_state,
                              next_action)
 
-    discounts = get!(lu.prev_discounts, learner, zero(next_discounts))::typeof(next_discounts)
-    e_ψ = get!(lu.e, learner.ψ, zero(learner.ψ))::typeof(learner.ψ)
-    e_w = get!(lu.e, learner.r_w, zero(learner.r_w))::typeof(learner.r_w)
+    discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(next_discounts)
+    e_nz = get!(()->Int[], lu.e, learner)::Array{Int, 1}
+    e_ψ = get!(()->zero(ψ), lu.e, ψ)::typeof(ψ)
+    e_w = get!(()->zero(w), lu.e, w)::typeof(w)
     λ = lu.lambda
 
     next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
@@ -130,8 +130,11 @@ function update!(lu::TB,
 
 
     # Update Traces: See update_utils.jl
-    update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
-    update_trace!(lu.trace, e_w, active_state_action, λ, reward_discounts, reward_target_pis[:, action])
+    if λ !== 0.0
+        update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
+        update_trace!(lu.trace, e_w, active_state_action, λ, reward_discounts, reward_target_pis[:, action])
+        e_nz = e_nz ∪ active_state_action.nzind
+    end
 
     pred = ψ * next_active_state_action
     reward_feature_backup = zeros(length(SF_C))
@@ -148,18 +151,35 @@ function update!(lu::TB,
     # TD err is applied across rows
 
     if lu.opt isa Auto
-        abs_ϕ = abs.(e_ψ)
-        z = abs_ϕ .* max.(abs_ϕ, state - γ*next_state)
-        
-        throw("SR + TB + Auto not implemented")
+        # next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
+        state_discount = -SF_next_discounts * next_active_state_action'
+        state_discount .+= active_state_action'
+        abs_ϕ_ψ = if λ == 0.0
+            abs.(repeat(active_state_action, outer=(1, length(td_err)))')
+        else
+            abs.(e_ψ)
+        end
+        z = abs_ϕ_ψ .* max.(abs_ϕ_ψ, state_discount)
+        update!(lu.opt, ψ, e_ψ, td_err, z)
+
+        state_discount_r = -reward_next_discounts * next_active_state_action'
+        state_discount_r .+= active_state_action'
+        abs_ϕ_w = if λ == 0.0
+            abs.(repeat(active_state_action, outer=(1, length(pred_err)))')
+        else
+            abs.(e_w)
+        end
+        z_r = abs_ϕ_w .* max.(abs_ϕ_w, state_discount_r)
+        update!(lu.opt, w, e_w, pred_err, z)
+        # throw("SR + TB + Auto not implemented")
     elseif lu.opt isa Flux.Descent
         α = lu.opt.eta
-        if λ == 0
+        if λ == 0.0
             ψ[:, active_state_action.nzind] .+= (α  * td_err) * active_state_action.nzval'
             w .= w .+ α * pred_err * active_state_action'
         else
-            update!(lu.opt, ψ, -td_err .* e_ψ)
-            update!(lu.opt, w, -pred_err .* e_w)
+            ψ[:, e_nz] .+= (α  * td_err) .* e_ψ[:, e_nz]
+            w[:, e_nz] .+= (α  * pred_err) .* e_w[:, e_nz]
         end
     else
         update!(lu.opt, ψ, -td_err .* e_ψ)
@@ -173,7 +193,11 @@ end
 function zero_eligibility_traces!(lu::TB)
     # learner.e .= 0
     for (k, v) ∈ lu.e
-        v .= 0
+        if eltype(v) <: Integer
+            lu.e[k] = Int[]
+        else
+            v .= 0
+        end
     end
 end
 

@@ -30,15 +30,11 @@ predict(l::QLearner, ϕ::AbstractMatrix, a) = predict(l, ϕ)[a .+ (0:(l.num_demo
 is_linear(l::QLearner) = false
 is_linear(l::QLearner{Matrix{<:Number}}) = true
 
-<<<<<<< HEAD
-
-# mutable struct VLearner{F, LU<:LearningUpdate} <: ValueFunctioner
-=======
 function get_weights(l::QLearner)
     return l.model
 end
-# mutable struct VLearner{F, LU<:LearningUpdate} <: ValueFunctionLearner
->>>>>>> 79a59e7ff935f1839f84618c7fe2500a90147634
+
+# mutable struct VLearner <: ValueFunctionLearner
 #     model::F
 #     update::LU
 #     num_demons::Int
