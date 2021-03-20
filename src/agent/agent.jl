@@ -152,8 +152,7 @@ get_behaviour_pis(agent::Agent, state, obs) =
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
 
 
-    update!(# update(agent.demon_learner),
-            agent.demon_learner,
+    update!(agent.demon_learner,
             agent.demons,
             obs,
             next_obs,
