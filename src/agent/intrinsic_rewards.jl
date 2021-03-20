@@ -23,12 +23,8 @@ function update_reward!(self::WeightChange, agent)
     return curiosity_reward
 end
 
-mutable struct NoReward <: IntrinsicReward
-    function NoReward(args...)
-        new()
-    end
-end
+mutable struct NoReward <: IntrinsicReward end
 
-function update_reward!(self::NoReward, agent)
-    return 0.0
+function update_reward!(::NoReward, agent)
+    return 0
 end

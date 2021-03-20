@@ -35,6 +35,8 @@ default_args() =
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "Q",
         "demon_update" => "TB",
+        "demon_opt" => "Auto",
+        "demon_lambda" => 0.9,
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
         "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
@@ -75,40 +77,12 @@ function construct_agent(parsed)
                        action_space, (obs) ->
                        state_constructor(obs, feature_size, state_constructor_tc))
 
-    demon_lu = if demon_lu == "TB"
-        TB(lambda=parsed["lambda"],
-           opt=Descent(parsed["demon_alpha"]))
-    elseif demon_lu == "TBAuto"
-        TB(lambda=parsed["lambda"],
-           opt=Auto(parsed["demon_alpha"],
-                    parsed["demon_alpha_init"]))
-    elseif demon_learner ∈ ["LSTD", "lstd"]
-        nothing
-    else
-        throw(ArgumentError("$(demon_lu) not a valid demon learner"))
-    end
-
-    demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
-        LinearQLearner(demon_lu,
-                       feature_size,
-                       action_space,
-                       length(demons))
-    elseif demon_learner ∈ ["SR", "SRLearner", "sr"]
-        SRLearner(demon_lu,
-                  feature_size,
-                  length(demons),
-                  action_space,
-                  demons.num_tasks)
-    elseif demon_learner ∈ ["LSTD", "lstd"]
-        LSTDLearner(parsed["eta"],
-                    parsed["lambda"],
-                    feature_size,
-                    action_space,
-                    length(demons))
-    else
-        throw(ArgumentError("Not a valid demon learner"))
-    end
-
+    demon_learner = Curiosity.get_linear_learner(parsed,
+                                                 feature_size,
+                                                 action_space,
+                                                 demons,
+                                                 "demon")
+    
     behaviour_lu = if behaviour_learner == "ESARSA"
         ESARSA(parsed["lambda"], feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
     else

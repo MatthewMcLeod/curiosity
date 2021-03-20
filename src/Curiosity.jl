@@ -18,7 +18,6 @@ export Auto
 include("optimizers/Auto.jl")
 
 
-
 include("learner.jl")
 
 abstract type IntrinsicReward end
@@ -51,6 +50,7 @@ include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/learners.jl")
 include("utils/experiment.jl")
+include("utils/agent.jl")
 
 
 using GVFHordes
