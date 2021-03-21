@@ -91,9 +91,9 @@ function assign_horde!(agent, horde)
     agent.demons = horde
 end
 
-function MinimalRLCore.end!(agent, obs, reward, is_terminal)
-    return step!(agent, obs, reward, is_terminal)
-end
+MinimalRLCore.end!(agent, obs, reward, is_terminal) = 
+    MinimalRLCore.step!(agent, obs, reward, is_terminal)
+
 
 function MinimalRLCore.start!(agent::Agent, obs, args...)
     next_state = proc_input(agent, obs)
@@ -142,12 +142,11 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     return next_action
 end
 
-
-
-
 get_behaviour_pis(agent::Agent, state, obs) =
-    get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
-
+    get_action_probs(agent.behaviour_lu,
+                     state,
+                     obs,
+                     agent.behaviour_weights)
 
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
 
