@@ -47,14 +47,8 @@ default_args() =
 function construct_agent(parsed)
     observation_size = 2
     action_space = 3
-    # lambda = parsed["lambda"]
-    # demon_alpha = parsed["demon_alpha"]
-    # demon_alpha_init = parsed["demon_alpha_init"]
-    demon_learner = parsed["demon_learner"]
-    demon_lu = parsed["demon_update"]
+
     behaviour_learner = parsed["behaviour_learner"]
-    
-    # behaviour_lu = parsed["behaviour_update"]
     behaviour_alpha = parsed["behaviour_alpha"]
     behaviour_gamma = parsed["behaviour_gamma"]
     behaviour_trace = parsed["behaviour_trace"]
@@ -63,7 +57,8 @@ function construct_agent(parsed)
 
 
     #Create state constructor
-    state_constructor_tc = TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
+    state_constructor_tc =
+        TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
 
     feature_size = size(state_constructor_tc)
     function state_constructor(obs, feature_size, tc)
@@ -74,8 +69,10 @@ function construct_agent(parsed)
 
     demons = get_horde(parsed,
                        feature_size,
-                       action_space, (obs) ->
-                       state_constructor(obs, feature_size, state_constructor_tc))
+                       action_space,
+                       (obs) -> state_constructor(obs,
+                                                  feature_size,
+                                                  state_constructor_tc))
 
     demon_learner = Curiosity.get_linear_learner(parsed,
                                                  feature_size,
@@ -100,17 +97,6 @@ function construct_agent(parsed)
           (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
           use_external_reward)
 
-    # Agent(demons,
-    #       feature_size,
-    #       feature_size,
-    #       observation_size,
-    #       action_space,
-    #       demon_learner,
-    #       behaviour_learner,
-    #       intrinsic_reward_type,
-    #       (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
-    #       behaviour_gamma,
-    #       use_external_reward)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)
