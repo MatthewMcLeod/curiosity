@@ -18,7 +18,7 @@ export Auto
 include("optimizers/Auto.jl")
 
 
-export QLearner, LinearQLearner, VLearner, SRLearner, predict#, predict_SF
+export QLearner, LinearQLearner, VLearner, SRLearner, GPI, predict, predict_SF
 include("learner.jl")
 
 abstract type IntrinsicReward end

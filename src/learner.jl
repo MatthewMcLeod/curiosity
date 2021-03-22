@@ -4,6 +4,7 @@ abstract type Learner end
 
 include("learners/value.jl")
 include("learners/SR.jl")
+include("learners/GPI.jl")
 
 update!(learner::Learner, args...) =
     update!(update(learner), learner, args...)

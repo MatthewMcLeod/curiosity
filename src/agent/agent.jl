@@ -16,6 +16,7 @@ mutable struct Agent{IR<:IntrinsicReward,
     behaviour_weights::Array{Float64,2}
     behaviour_lu::BLU
     behaviour_learner::Any
+    behaviour_demons::Any
     behaviour_gamma::Float64
 
     demons::H
@@ -37,6 +38,7 @@ function Agent(horde,
                behaviour_feature_size::Int,
                behaviour_lu,
                behaviour_learner,
+               behaviour_horde,
                behaviour_gamma,
                demon_learner,
                observation_size::Int,
@@ -62,6 +64,7 @@ function Agent(horde,
     Agent(zeros(behaviour_weight_dims),
           behaviour_lu,
           behaviour_learner,
+          behaviour_horde,
           behaviour_gamma,
 
           horde,
@@ -104,7 +107,8 @@ function get_action(agent, state, obs)
     action_probs = if agent.behaviour_lu isa ESARSA
         get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
     else
-        qs = predict(agent.behaviour_learner, state)
+        # qs = predict(agent.behaviour_learner, state)
+        qs = agent.behaviour_learner(state)
         eps_greedy(qs)
     end
     action = sample(1:agent.num_actions, Weights(action_probs))
@@ -208,7 +212,7 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
             next_action,
             next_behaviour_pis,
             [!is_terminal*agent.behaviour_gamma])
-    else
+    elseif agent.behaviour_learner isa SARSA
         update!(agent.behaviour_lu,
                 agent.behaviour_learner,
                 obs,
@@ -220,6 +224,20 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
                 is_terminal,
                 [agent.behaviour_gamma],
                 [reward])
+    else
+        update!(# update(agent.demon_learner),
+                agent.behaviour_learner,
+                agent.behaviour_demons,
+                obs,
+                next_obs,
+                state,
+                action,
+                next_state,
+                next_action,
+                is_terminal,
+                [reward],
+                [agent.behaviour_gamma],
+                (state, obs) -> get_behaviour_pis(agent, state, obs))
     end
 end
 
