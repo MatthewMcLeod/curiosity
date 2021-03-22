@@ -20,6 +20,8 @@ default_args() =
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
+        "exploration_type" => "epsilon_greedy",
+        "exploration_param" => 0.2,
         "demon_alpha_init" => 0.1,
         "demon_alpha" => 0.5,
         "demon_discounts" => 0.9,
@@ -77,8 +79,6 @@ function construct_agent(parsed)
         DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
         pred_horde = Horde([DummyGVF])
 
-        # behaviour_demons = Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
-        # behaviour_learner = GPI(lambda,feature_size,length(behaviour_demons), action_space,  behaviour_alpha,behaviour_demons.num_tasks)
         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
     else
         nothing
@@ -125,6 +125,12 @@ function construct_agent(parsed)
         GPI(behaviour_lu, feature_size, length(behaviour_demons), action_space, behaviour_demons.num_tasks)
     end
 
+    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
+        EpsilonGreedy(parsed["exploration_param"])
+    else
+        throw(ArgumentError("Not a Valid Exploration Strategy"))
+    end
+
 
     Agent(demons,
           feature_size,
@@ -137,7 +143,8 @@ function construct_agent(parsed)
           action_space,
           intrinsic_reward_type,
           (obs) -> state_constructor(obs, feature_size),
-          use_external_reward)
+          use_external_reward,
+          exploration_strategy)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)

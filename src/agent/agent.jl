@@ -10,7 +10,8 @@ mutable struct Agent{IR<:IntrinsicReward,
                      BLU<:LearningUpdate,
                      O,
                      Φ,
-                     SC} <: AbstractAgent
+                     SC,
+                     ES<:ExplorationStrategy} <: AbstractAgent
 
 
     behaviour_weights::Array{Float64,2}
@@ -31,6 +32,7 @@ mutable struct Agent{IR<:IntrinsicReward,
     intrinsic_reward::IR
     state_constructor::SC
     use_external_reward::Bool
+    exploration::ES
 
 end
 
@@ -45,7 +47,8 @@ function Agent(horde,
                num_actions::Int,
                intrinsic_reward_type,
                state_constructor,
-               use_external_reward)
+               use_external_reward,
+               exploration_strategy)
 
     behaviour_weight_dims = (num_actions, behaviour_feature_size)
 
@@ -82,7 +85,8 @@ function Agent(horde,
           intrinsic_reward,
           state_constructor,
 
-          use_external_reward)
+          use_external_reward,
+          exploration_strategy)
 
 end
 
@@ -90,22 +94,9 @@ function proc_input(agent, obs)
     return agent.state_constructor(obs)
 end
 
-function eps_greedy(qs)
-    epsilon=0.2
-    m = maximum(qs)
-    probs = zeros(length(qs))
-
-    maxes_ind = findall(x-> x==m, qs)
-    for ind in maxes_ind
-        probs[ind] += (1 - epsilon) / size(maxes_ind)[1]
-    end
-    probs .+= epsilon/ length(qs)
-    return probs
-end
-
 function get_action(agent, state, obs)
     qs = agent.behaviour_learner(state)
-    action_probs = eps_greedy(qs)
+    action_probs = agent.exploration(qs)
     action = sample(1:agent.num_actions, Weights(action_probs))
     return action, action_probs
 end

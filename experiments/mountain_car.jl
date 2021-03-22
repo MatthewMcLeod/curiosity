@@ -14,7 +14,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 500,
+        "steps" => 50000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -23,18 +23,18 @@ default_args() =
         "behaviour_alpha" => 0.5/8,
 
         "behaviour_update" => "ESARSA",
-        # "behaviour_learner" => "ESARSA",
         "behaviour_learner" => "Q",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
         "intrinsic_reward" =>"no_reward",
         "behaviour_trace" => "replacing",
         "use_external_reward" => true,
+        "exploration_strategy" => "epsilon_greedy",
+        "exploration_param" => 0.2,
 
         "lambda" => 0.9,
         "demon_alpha" => 1.0/8,
         "demon_alpha_init" => 1.0/8,
-        "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "Q",
         "demon_update" => "TB",
         "exploring_starts"=>true,
@@ -119,11 +119,11 @@ function construct_agent(parsed)
     end
 
     behaviour_lu = if behaviour_lu == "ESARSA"
-        ESARSA(lambda=lambda, opt=Descent(behaviour_alpha))
+        ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "SARSA"
-        SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
+        SARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "TB"
-        TB(lambda=lambda, opt=Descent(behaviour_alpha))
+        TB(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
     else
         throw(ArgumentError("$(behaviour_lu) Not a valid behaviour learning update"))
     end
@@ -140,6 +140,12 @@ function construct_agent(parsed)
         throw(ArgumentError("$(behaviour_learner) Not a valid behaviour learner"))
     end
 
+    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
+        EpsilonGreedy(parsed["exploration_param"])
+    else
+        throw(ArgumentError("Not a Valid Exploration Strategy"))
+    end
+
 
     Agent(demons,
           feature_size,
@@ -152,7 +158,8 @@ function construct_agent(parsed)
           action_space,
           intrinsic_reward_type,
           (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
-          use_external_reward)
+          use_external_reward,
+          exploration_strategy)
 
 end
 

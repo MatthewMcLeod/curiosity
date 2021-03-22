@@ -27,6 +27,10 @@ include("agent/intrinsic_rewards.jl")
 export TabularRoundRobin, update!
 include("updates/TabularRoundRobin.jl")
 
+abstract type ExplorationStrategy end
+export EpsilonGreedy
+include("agent/exploration.jl")
+
 export Agent, agent_end!, step!
 include("agent/agent.jl")
 
