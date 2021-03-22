@@ -36,13 +36,6 @@ update(l::GPI) = l.update
 
 Base.size(learner::GPI) = learner.num_demons
 
-function get_active_action_state_vector(state::SparseVector, action, feature_size, num_actions)
-    vec_length = feature_size * num_actions
-    new_ind = (state.nzind .- 1) * num_actions .+ action
-    active_state_action = sparsevec(new_ind, state.nzval, vec_length)
-    return active_state_action
-end
-
 function predict_SF(learner::GPI, ϕ::SparseVector, action)
     active_state_action = get_active_action_state_vector(ϕ, action, length(ϕ), learner.num_actions)
     learner.ψ[:, active_state_action.nzind] * active_state_action.nzval
@@ -57,8 +50,6 @@ function predict(learner::GPI, ϕ::SparseVector, action)
     reshaped_SF = reshape(SF, length(learner.r_w), :)
 
     Q = learner.r_w * reshaped_SF
-    # @show size(Q), Q
-    # return Q[diagind(Q)]
     return maximum(Q)
 end
 

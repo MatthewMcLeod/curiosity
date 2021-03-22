@@ -15,15 +15,15 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "SARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
         "demon_alpha_init" => 0.1,
         "demon_alpha" => 0.5,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "distractor" => (1.0, 1.0),
@@ -213,15 +213,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
             push!(steps, stp)
             eps += 1
-        end
-
-        if agent.behaviour_learner isa GPI
-            obs = spzeros(21)
-            obs[3] = 1
-            action = 1
-            SF = predict_SF(agent.behaviour_learner, obs, action)
-            println("GPI")
-            @show SF
         end
         println(goal_visitations)
     end

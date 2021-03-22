@@ -46,7 +46,7 @@ export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils
-
+export get_active_action_state_vector
 include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/learners.jl")
