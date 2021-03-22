@@ -15,8 +15,8 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "SARSA",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
@@ -106,8 +106,8 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid demon learner"))
     end
 
-    behaviour_lu = if behaviour_learner == "ESARSA"
-        ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    behaviour_lu = if behaviour_lu == "ESARSA"
+        ESARSA(lambda=lambda, opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "SARSA"
         SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "TB"
@@ -223,17 +223,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             println("GPI")
             @show SF
         end
-
-        #
-        # if agent.demon_learner isa SRLearner
-        #     obs = zeros(5)
-        #     obs[1] = 3
-        #     action = 1
-        #     SF = predict_SF(agent.demon_learner, agent,  agent.demon_weights, obs, action)
-        #     println("SF")
-        #     @show SF
-        # end
-
         println(goal_visitations)
     end
 

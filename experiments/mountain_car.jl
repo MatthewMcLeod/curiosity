@@ -14,7 +14,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 50000,
+        "steps" => 500,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -22,7 +22,7 @@ default_args() =
         "numtiles" => 8,
         "behaviour_alpha" => 0.5/8,
 
-        "behaviour_update" => "SARSA",
+        "behaviour_update" => "ESARSA",
         # "behaviour_learner" => "ESARSA",
         "behaviour_learner" => "Q",
         # "behaviour_rew" => "env",
@@ -60,7 +60,6 @@ function construct_agent(parsed)
     intrinsic_reward_type = parsed["intrinsic_reward"]
     use_external_reward = parsed["use_external_reward"]
 
-
     #Create state constructor
     state_constructor_tc = TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
 
@@ -76,6 +75,15 @@ function construct_agent(parsed)
                        action_space, (obs) ->
                        state_constructor(obs, feature_size, state_constructor_tc))
 
+    behaviour_demons = if behaviour_learner ∈ ["GPI"]
+        get_GPI_horde(parsed,
+                           feature_size,
+                           action_space, (obs) ->
+                           state_constructor(obs, feature_size, state_constructor_tc))
+    else
+        nothing
+    end
+
     demon_lu = if demon_lu == "TB"
         TB(lambda=lambda, opt=Descent(demon_alpha))
     elseif demon_lu == "TBAuto"
@@ -85,7 +93,6 @@ function construct_agent(parsed)
         throw(ArgumentError("$(demon_lu) not a valid demon learner"))
     end
 
-    # (update, num_features, num_actions, num_demons; init=(s...)->zeros(s...)) =
     demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
         LinearQLearner(demon_lu, feature_size, action_space, length(demons))
     elseif demon_learner ∈ ["SR", "SRLearner", "sr"]
@@ -98,24 +105,34 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid demon learner"))
     end
 
-    behaviour_lu = if behaviour_learner == "ESARSA"
-        ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    behaviour_lu = if behaviour_lu == "ESARSA"
+        ESARSA(lambda=lambda, opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "SARSA"
         SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
+    elseif behaviour_lu == "TB"
+        TB(lambda=lambda, opt=Descent(behaviour_alpha))
     else
-        throw(ArgumentError("Not a valid behaviour learner"))
+        throw(ArgumentError("$(behaviour_lu) Not a valid behaviour learning update"))
     end
 
     behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
         LinearQLearner(behaviour_lu, feature_size, action_space, 1)
+    elseif behaviour_learner ∈ ["GPI"]
+        GPI(behaviour_lu,
+                  feature_size,
+                  length(behaviour_demons),
+                  action_space,
+                  behaviour_demons.num_tasks)
+    else
+        throw(ArgumentError("$(behaviour_learner) Not a valid behaviour learner"))
     end
-
 
 
     Agent(demons,
           feature_size,
           behaviour_lu,
           behaviour_learner,
+          behaviour_demons,
           behaviour_gamma,
           demon_learner,
           observation_size,
@@ -124,17 +141,21 @@ function construct_agent(parsed)
           (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
           use_external_reward)
 
-    # Agent(demons,
-    #       feature_size,
-    #       feature_size,
-    #       observation_size,
-    #       action_space,
-    #       demon_learner,
-    #       behaviour_learner,
-    #       intrinsic_reward_type,
-    #       (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
-    #       behaviour_gamma,
-    #       use_external_reward)
+end
+
+function get_GPI_horde(parsed, feature_size, action_space, state_constructor)
+    discount = parsed["behaviour_gamma"]
+    SF_horde = MCU.make_SF_horde(feature_size, action_space, state_constructor)
+    num_SFs = 2
+    #NOTE: Tasks is learning the reward feature vector
+    #Dummy prediction GVF
+    DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
+    pred_horde = Horde([DummyGVF])
+
+    return Curiosity.GVFSRHordes.SRHorde(pred_horde,
+        SF_horde,
+        num_SFs,
+        state_constructor)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)

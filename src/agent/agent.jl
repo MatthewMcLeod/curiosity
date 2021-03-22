@@ -104,13 +104,8 @@ function eps_greedy(qs)
 end
 
 function get_action(agent, state, obs)
-    action_probs = if agent.behaviour_lu isa ESARSA
-        get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
-    else
-        # qs = predict(agent.behaviour_learner, state)
-        qs = agent.behaviour_learner(state)
-        eps_greedy(qs)
-    end
+    qs = agent.behaviour_learner(state)
+    action_probs = eps_greedy(qs)
     action = sample(1:agent.num_actions, Weights(action_probs))
     return action, action_probs
 end
@@ -196,36 +191,13 @@ end
 
 function update_behaviour!(agent, obs, next_obs, state, action, next_state, next_action, is_terminal, reward)
 
-    # behaviour_pis = get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
-    # next_behaviour_pis = get_action_probs(agent.behaviour_lu, next_state, next_obs, agent.behaviour_weights)
-
     behaviour_pis = get_behaviour_pis(agent, state, obs)
     next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
 
-    if agent.behaviour_lu isa ESARSA
-        update!(agent.behaviour_lu,
-            agent.behaviour_weights,
-            [reward],
-            state,
-            action,
-            next_state,
-            next_action,
-            next_behaviour_pis,
-            [!is_terminal*agent.behaviour_gamma])
-    elseif agent.behaviour_learner isa SARSA
-        update!(agent.behaviour_lu,
-                agent.behaviour_learner,
-                obs,
-                next_obs,
-                state,
-                action,
-                next_state,
-                next_action,
-                is_terminal,
-                [agent.behaviour_gamma],
-                [reward])
-    else
+        #NOTE: Different call than demon updates as the reward and environment pseudotermination function
+        # cannot be apart of the behaviour demon horde
         update!(# update(agent.demon_learner),
+                agent.behaviour_lu,
                 agent.behaviour_learner,
                 agent.behaviour_demons,
                 obs,
@@ -238,7 +210,6 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
                 [reward],
                 [agent.behaviour_gamma],
                 (state, obs) -> get_behaviour_pis(agent, state, obs))
-    end
 end
 
 function get_demon_prediction(agent::Agent, obs, action)

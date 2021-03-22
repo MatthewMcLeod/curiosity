@@ -1,73 +1,58 @@
-
-mutable struct ESARSA <: LearningUpdate
+Base.@kwdef mutable struct ESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
-    e::Array{Float64,2}
-    num_gvfs::Int
-    num_actions::Int
-    alpha::Float64
-    trace_type::String
-    function ESARSA(lambda, feature_size, num_gvfs, num_actions, alpha, trace_type)
-        new(lambda, zeros(num_gvfs * num_actions, feature_size), num_gvfs, num_actions, alpha, trace_type)
-    end
+    opt::O
+    trace::T = ReplacingTraces()
+    e::IdDict = IdDict()
+    prev_discounts::IdDict = IdDict()
 end
 
-Base.size(learner::ESARSA) = size(learner.e)
+function update!(lu::ESARSA,
+                 learner::QLearner{M, LU},
+                 demons,
+                 obs,
+                 next_obs,
+                 state,
+                 action,
+                 next_state,
+                 next_action,
+                 is_terminal,
+                 reward,
+                 discount,
+                 behaviour_pi_func) where {M<:AbstractMatrix, LU<:ESARSA}
 
-function update!(learner::ESARSA, weights, C, state, action, next_state, next_action, next_target_pis, next_discounts)
-    # the eligibility trace is for state-action so need to find the exact state action pair per demon and not just the state
-    inds = [action + (i-1)*learner.num_actions for i in 1:learner.num_gvfs]
-    if learner.trace_type == "accumulating"
-        learner.e[inds,:] .+= state'
-    elseif learner.trace_type == "replacing"
-        learner.e[inds, state.nzind] .= 1
-    else
-        throw("Not a valid trace type for ESARSA")
+    if is_terminal
+        discount = [0.0]
     end
 
-    pred = weights * next_state
-    #TODO: FIX assumption that all pseudoterminations occur at the same time.
+    weights = learner.model
+    λ = lu.lambda
+    e = get!(()->zero(weights), lu.e, weights)::typeof(weights)
+    ρ = 1
 
-    target = if next_discounts[1] != 0
-        # expected sarsa backup for TB
-        Qs = row_order_reshape(pred, (learner.num_gvfs, learner.num_actions))'
-        # Target Pi is num_demons  x num_actions
-        backup_est_per_demon = if learner.num_gvfs == 1
-            sum(Qs * next_target_pis)
+    next_target_pis = behaviour_pi_func(next_state, next_obs)
+
+    inds = get_action_inds(action, learner.num_actions, learner.num_demons)
+    state_action_row_ind = inds
+
+    #NOTE: Cant use elibigility traces as the updates for them do not follow the
+    # scaling and then addition (also updating behaviour weights occur between the two steps)
+    e[inds, state.nzind] .= 1
+
+    next_preds = learner(next_state)
+    pred = learner(state, action)
+
+    td_err = reward + discount * sum(next_target_pis .* next_preds) - pred
+    Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err))
+
+    e .*= λ * discount .* ρ
+end
+
+function zero_eligibility_traces!(lu::ESARSA)
+    for (k, v) ∈ lu.e
+        if eltype(v) <: Integer
+            lu.e[k] = Int[]
         else
-            vec(sum((Qs .* next_target_pis ), dims = 2))
+            v .= 0
         end
-        C + next_discounts .* backup_est_per_demon
-     else
-         C
     end
-
-    # TD error per demon is the td error on Q
-    td_err = target - (weights * state)[inds]
-    td_err_across_demons = repeat(td_err, inner=learner.num_actions)
-
-    weights .+= learner.alpha * (learner.e .* td_err_across_demons)
-
-    #Broadcast the policy and pseudotermination of each demon across the actions
-    # Decay eligibility trace
-    learner.e .*= learner.lambda * repeat(next_discounts, inner = learner.num_actions)
-end
-
-function get_action_probs(self::ESARSA, state, obs, weights)
-    qs = weights * state
-    epsilon = 0.2
-
-    # Apply Epsilon Greedy
-    m = maximum(qs)
-    probs = zeros(length(qs))
-
-    maxes_ind = findall(x-> x==m, qs)
-    for ind in maxes_ind
-        probs[ind] += (1 - epsilon) / size(maxes_ind)[1]
-    end
-    probs .+= epsilon/ length(qs)
-    return probs
-end
-
-function zero_eligibility_traces(self::ESARSA)
-    self.e = self.e * 0.0
 end
