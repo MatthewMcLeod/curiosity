@@ -14,7 +14,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 1000,
+        "steps" => 50000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -22,7 +22,9 @@ default_args() =
         "numtiles" => 8,
         "behaviour_alpha" => 0.5/8,
 
-        "behaviour_learner" => "ESARSA",
+        "behaviour_update" => "SARSA",
+        # "behaviour_learner" => "ESARSA",
+        "behaviour_learner" => "Q",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
         "intrinsic_reward" =>"no_reward",
@@ -51,7 +53,7 @@ function construct_agent(parsed)
     demon_learner = parsed["demon_learner"]
     demon_lu = parsed["demon_update"]
     behaviour_learner = parsed["behaviour_learner"]
-    # behaviour_lu = parsed["behaviour_update"]
+    behaviour_lu = parsed["behaviour_update"]
     behaviour_alpha = parsed["behaviour_alpha"]
     behaviour_gamma = parsed["behaviour_gamma"]
     behaviour_trace = parsed["behaviour_trace"]
@@ -98,13 +100,22 @@ function construct_agent(parsed)
 
     behaviour_lu = if behaviour_learner == "ESARSA"
         ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    elseif behaviour_lu == "SARSA"
+        SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
     else
         throw(ArgumentError("Not a valid behaviour learner"))
     end
 
+    behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
+        LinearQLearner(behaviour_lu, feature_size, action_space, 1)
+    end
+
+
+
     Agent(demons,
           feature_size,
           behaviour_lu,
+          behaviour_learner,
           behaviour_gamma,
           demon_learner,
           observation_size,
@@ -161,7 +172,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         while sum(steps) < max_num_steps
             is_terminal = false
 
-            max_episode_steps = min(max_num_steps - sum(steps), 200)
+            max_episode_steps = min(max_num_steps - sum(steps), 1000)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)

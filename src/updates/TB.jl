@@ -59,8 +59,8 @@ function update!(lu::TB,
                   repeat(discounts, inner = learner.num_actions),
                   repeat(target_pis[:,action], inner = learner.num_actions),
                   inds)
-    
-    
+
+
     pred = learner(next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
 
@@ -98,7 +98,7 @@ function update!(lu::TB,
                  next_action,
                  is_terminal,
                  behaviour_pi_func)
-    
+
     ψ = learner.ψ
     w = learner.r_w
 
@@ -121,7 +121,7 @@ function update!(lu::TB,
 
     next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
-    
+
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
     (reward_discounts, SF_discounts) = discounts[1:learner.num_tasks], discounts[learner.num_tasks+1:end]
     (reward_next_discounts, SF_next_discounts) = next_discounts[1:learner.num_tasks], next_discounts[learner.num_tasks+1:end]
@@ -187,7 +187,7 @@ function update!(lu::TB,
     end
 
 
-    
+
 end
 
 function zero_eligibility_traces!(lu::TB)

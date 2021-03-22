@@ -15,14 +15,15 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "ESARSA",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "SARSA",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
         "demon_alpha_init" => 0.1,
         "demon_alpha" => 0.5,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "distractor" => (1.0, 1.0),
@@ -34,7 +35,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 20000,
+        "steps" => 50000,
         "use_external_reward" => true,
     )
 
@@ -51,6 +52,7 @@ function construct_agent(parsed)
     demon_lu = parsed["demon_update"]
 
     behaviour_learner = parsed["behaviour_learner"]
+    behaviour_lu = parsed["behaviour_update"]
     behaviour_alpha = parsed["behaviour_alpha"]
     intrinsic_reward_type = parsed["intrinsic_reward"]
     behaviour_gamma = parsed["behaviour_gamma"]
@@ -91,15 +93,24 @@ function construct_agent(parsed)
 
     behaviour_lu = if behaviour_learner == "ESARSA"
         ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    elseif behaviour_lu == "SARSA"
+        SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
     elseif behaviour_learner == "RoundRobin"
         TabularRoundRobin()
     else
         throw(ArgumentError("Not a valid behaviour learner"))
     end
 
+
+    behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
+        LinearQLearner(behaviour_lu, feature_size, action_space, 1)
+    end
+
+
     Agent(demons,
           feature_size,
           behaviour_lu,
+          behaviour_learner,
           behaviour_gamma,
           demon_learner,
           observation_size,

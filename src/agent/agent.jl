@@ -15,6 +15,7 @@ mutable struct Agent{IR<:IntrinsicReward,
 
     behaviour_weights::Array{Float64,2}
     behaviour_lu::BLU
+    behaviour_learner::Any
     behaviour_gamma::Float64
 
     demons::H
@@ -35,6 +36,7 @@ end
 function Agent(horde,
                behaviour_feature_size::Int,
                behaviour_lu,
+               behaviour_learner,
                behaviour_gamma,
                demon_learner,
                observation_size::Int,
@@ -59,6 +61,7 @@ function Agent(horde,
 
     Agent(zeros(behaviour_weight_dims),
           behaviour_lu,
+          behaviour_learner,
           behaviour_gamma,
 
           horde,
@@ -84,8 +87,26 @@ function proc_input(agent, obs)
     return agent.state_constructor(obs)
 end
 
+function eps_greedy(qs)
+    epsilon=0.2
+    m = maximum(qs)
+    probs = zeros(length(qs))
+
+    maxes_ind = findall(x-> x==m, qs)
+    for ind in maxes_ind
+        probs[ind] += (1 - epsilon) / size(maxes_ind)[1]
+    end
+    probs .+= epsilon/ length(qs)
+    return probs
+end
+
 function get_action(agent, state, obs)
-    action_probs = get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
+    action_probs = if agent.behaviour_lu isa ESARSA
+        get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
+    else
+        qs = predict(agent.behaviour_learner, state)
+        eps_greedy(qs)
+    end
     action = sample(1:agent.num_actions, Weights(action_probs))
     return action, action_probs
 end
@@ -140,14 +161,17 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     agent.last_action = next_action
     agent.last_obs = obs
     zero_eligibility_traces!(agent.demon_learner)
+    # zero_eligibility_traces!(agent.behaviour_learner)
 
     return next_action
 end
 
 
-get_behaviour_pis(agent::Agent, state, obs) =
-    get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
+# get_behaviour_pis(agent::Agent, state, obs) =
+#     get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
 
+get_behaviour_pis(agent::Agent, state, obs) =
+    get_action(agent, state, obs)[2]
 
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
 
@@ -168,10 +192,14 @@ end
 
 function update_behaviour!(agent, obs, next_obs, state, action, next_state, next_action, is_terminal, reward)
 
-    behaviour_pis = get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
-    next_behaviour_pis = get_action_probs(agent.behaviour_lu, next_state, next_obs, agent.behaviour_weights)
+    # behaviour_pis = get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
+    # next_behaviour_pis = get_action_probs(agent.behaviour_lu, next_state, next_obs, agent.behaviour_weights)
 
-    update!(agent.behaviour_lu,
+    behaviour_pis = get_behaviour_pis(agent, state, obs)
+    next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
+
+    if agent.behaviour_lu isa ESARSA
+        update!(agent.behaviour_lu,
             agent.behaviour_weights,
             [reward],
             state,
@@ -180,6 +208,19 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
             next_action,
             next_behaviour_pis,
             [!is_terminal*agent.behaviour_gamma])
+    else
+        update!(agent.behaviour_lu,
+                agent.behaviour_learner,
+                obs,
+                next_obs,
+                state,
+                action,
+                next_state,
+                next_action,
+                is_terminal,
+                [agent.behaviour_gamma],
+                [reward])
+    end
 end
 
 function get_demon_prediction(agent::Agent, obs, action)
