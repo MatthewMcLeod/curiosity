@@ -2,9 +2,11 @@
 abstract type LearningUpdate end
 abstract type Learner end
 
+export QLearner, LinearQLearner, SRLearner, LSTDLearner, GPI, predict
 include("learners/value.jl")
 include("learners/SR.jl")
 include("learners/GPI.jl")
+include("learners/LSTD.jl")
 
 update!(learner::Learner, args...) =
     update!(update(learner), learner, args...)

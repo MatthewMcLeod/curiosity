@@ -15,8 +15,8 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "ESARSA",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",

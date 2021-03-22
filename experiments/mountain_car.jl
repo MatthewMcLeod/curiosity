@@ -47,9 +47,9 @@ default_args() =
 function construct_agent(parsed)
     observation_size = 2
     action_space = 3
-    lambda = parsed["lambda"]
-    demon_alpha = parsed["demon_alpha"]
-    demon_alpha_init = parsed["demon_alpha_init"]
+    # lambda = parsed["lambda"]
+    # demon_alpha = parsed["demon_alpha"]
+    # demon_alpha_init = parsed["demon_alpha_init"]
     demon_learner = parsed["demon_learner"]
     demon_lu = parsed["demon_update"]
     behaviour_learner = parsed["behaviour_learner"]
@@ -85,22 +85,35 @@ function construct_agent(parsed)
     end
 
     demon_lu = if demon_lu == "TB"
-        TB(lambda=lambda, opt=Descent(demon_alpha))
+        TB(lambda=parsed["lambda"],
+           opt=Descent(parsed["demon_alpha"]))
     elseif demon_lu == "TBAuto"
-        TB(lambda=lambda,
-           opt=Auto(demon_alpha, demon_alpha_init))
+        TB(lambda=parsed["lambda"],
+           opt=Auto(parsed["demon_alpha"],
+                    parsed["demon_alpha_init"]))
+    elseif demon_learner ∈ ["LSTD", "lstd"]
+        nothing
     else
         throw(ArgumentError("$(demon_lu) not a valid demon learner"))
     end
 
     demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
-        LinearQLearner(demon_lu, feature_size, action_space, length(demons))
+        LinearQLearner(demon_lu,
+                       feature_size,
+                       action_space,
+                       length(demons))
     elseif demon_learner ∈ ["SR", "SRLearner", "sr"]
         SRLearner(demon_lu,
                   feature_size,
                   length(demons),
                   action_space,
                   demons.num_tasks)
+    elseif demon_learner ∈ ["LSTD", "lstd"]
+        LSTDLearner(parsed["eta"],
+                    parsed["lambda"],
+                    feature_size,
+                    action_space,
+                    length(demons))
     else
         throw(ArgumentError("Not a valid demon learner"))
     end

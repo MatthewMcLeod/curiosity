@@ -283,7 +283,7 @@ function update!(lu::TB,
             abs.(e_w)
         end
         z_r = abs_ϕ_w .* max.(abs_ϕ_w, state_discount_r)
-        update!(lu.opt, w, e_w, pred_err, z)
+        update!(lu.opt, w, e_w, pred_err, z_r)
         # throw("SR + TB + Auto not implemented")
     elseif lu.opt isa Flux.Descent
         α = lu.opt.eta
