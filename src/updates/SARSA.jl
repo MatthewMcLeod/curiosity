@@ -1,4 +1,4 @@
-Base.@kwdef mutable struct ESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
+Base.@kwdef mutable struct SARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
     trace::T = ReplacingTraces()
@@ -6,7 +6,7 @@ Base.@kwdef mutable struct ESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     prev_discounts::IdDict = IdDict()
 end
 
-function update!(lu::ESARSA,
+function update!(lu::SARSA,
                  learner::QLearner{M, LU},
                  demons,
                  obs,
@@ -18,7 +18,7 @@ function update!(lu::ESARSA,
                  is_terminal,
                  reward,
                  discount,
-                 behaviour_pi_func) where {M<:AbstractMatrix, LU<:ESARSA}
+                 behaviour_pi_func) where {M<:AbstractMatrix, LU<:SARSA}
 
     if is_terminal
         discount = [0.0]
@@ -27,27 +27,28 @@ function update!(lu::ESARSA,
     weights = learner.model
     λ = lu.lambda
     e = get!(()->zero(weights), lu.e, weights)::typeof(weights)
-    ρ = 1
-
-    next_target_pis = behaviour_pi_func(next_state, next_obs)
 
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
+
     #NOTE: Cant use elibigility traces as the updates for them do not follow the
     # scaling and then addition (also updating behaviour weights occur between the two steps)
+    ρ = 1
     e[inds, state.nzind] .= 1
 
-    next_preds = learner(next_state)
+
+    next_pred = learner(next_state, next_action)
     pred = learner(state, action)
 
-    td_err = reward + discount * sum(next_target_pis .* next_preds) - pred
+    td_err = reward + discount * next_pred' - pred
+
     Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err))
 
     e .*= λ * discount .* ρ
 end
 
-function zero_eligibility_traces!(lu::ESARSA)
+function zero_eligibility_traces!(lu::SARSA)
     for (k, v) ∈ lu.e
         if eltype(v) <: Integer
             lu.e[k] = Int[]

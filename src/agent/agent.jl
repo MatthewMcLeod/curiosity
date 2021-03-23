@@ -10,11 +10,14 @@ mutable struct Agent{IR<:IntrinsicReward,
                      BLU<:LearningUpdate,
                      O,
                      Φ,
-                     SC} <: AbstractAgent
+                     SC,
+                     ES<:ExplorationStrategy} <: AbstractAgent
 
 
     behaviour_weights::Array{Float64,2}
     behaviour_lu::BLU
+    behaviour_learner::Any
+    behaviour_demons::Any
     behaviour_gamma::Float64
 
     demons::H
@@ -29,19 +32,23 @@ mutable struct Agent{IR<:IntrinsicReward,
     intrinsic_reward::IR
     state_constructor::SC
     use_external_reward::Bool
+    exploration::ES
 
 end
 
 function Agent(horde,
                behaviour_feature_size::Int,
                behaviour_lu,
+               behaviour_learner,
+               behaviour_horde,
                behaviour_gamma,
                demon_learner,
                observation_size::Int,
                num_actions::Int,
                intrinsic_reward_type,
                state_constructor,
-               use_external_reward)
+               use_external_reward,
+               exploration_strategy)
 
     behaviour_weight_dims = (num_actions, behaviour_feature_size)
 
@@ -59,6 +66,8 @@ function Agent(horde,
 
     Agent(zeros(behaviour_weight_dims),
           behaviour_lu,
+          behaviour_learner,
+          behaviour_horde,
           behaviour_gamma,
 
           horde,
@@ -73,7 +82,8 @@ function Agent(horde,
           intrinsic_reward,
           state_constructor,
 
-          use_external_reward)
+          use_external_reward,
+          exploration_strategy)
 
 end
 
@@ -82,7 +92,8 @@ function proc_input(agent, obs)
 end
 
 function get_action(agent, state, obs)
-    action_probs = get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
+    qs = agent.behaviour_learner(state)
+    action_probs = agent.exploration(qs)
     action = sample(1:agent.num_actions, Weights(action_probs))
     return action, action_probs
 end
@@ -143,10 +154,8 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
 end
 
 get_behaviour_pis(agent::Agent, state, obs) =
-    get_action_probs(agent.behaviour_lu,
-                     state,
-                     obs,
-                     agent.behaviour_weights)
+    get_action(agent, state, obs)[2]
+
 
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
 
@@ -165,25 +174,26 @@ end
 
 function update_behaviour!(agent, obs, next_obs, state, action, next_state, next_action, is_terminal, reward)
 
-    behaviour_pis = get_action_probs(agent.behaviour_lu,
-                                     state,
-                                     obs,
-                                     agent.behaviour_weights)
-    
-    next_behaviour_pis = get_action_probs(agent.behaviour_lu,
-                                          next_state,
-                                          next_obs,
-                                          agent.behaviour_weights)
+    behaviour_pis = get_behaviour_pis(agent, state, obs)
+    next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
 
-    update!(agent.behaviour_lu,
-            agent.behaviour_weights,
-            [reward],
-            state,
-            action,
-            next_state,
-            next_action,
-            next_behaviour_pis,
-            [!is_terminal*agent.behaviour_gamma])
+        #NOTE: Different call than demon updates as the reward and environment pseudotermination function
+        # cannot be apart of the behaviour demon horde
+        update!(# update(agent.demon_learner),
+                agent.behaviour_lu,
+                agent.behaviour_learner,
+                agent.behaviour_demons,
+                obs,
+                next_obs,
+                state,
+                action,
+                next_state,
+                next_action,
+                is_terminal,
+                [reward],
+                [agent.behaviour_gamma],
+                (state, obs) -> get_behaviour_pis(agent, state, obs))
+
 end
 
 function get_demon_prediction(agent::Agent, obs, action)

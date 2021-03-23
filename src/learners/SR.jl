@@ -16,7 +16,7 @@ mutable struct SRLearner{F<:Number, LU<:LearningUpdate} <: Learner
 end
 
 function get_weights(learner::SRLearner)
-    return vcat(learner.ψ, learner.r_w) 
+    return vcat(learner.ψ, learner.r_w)
 end
 
 function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks) where {F<:Number}
@@ -35,13 +35,6 @@ SRLearner(lu, feature_size, num_demons, num_actions, num_tasks) =
 update(l::SRLearner) = l.update
 
 Base.size(learner::SRLearner) = learner.num_demons
-
-function get_active_action_state_vector(state::SparseVector, action, feature_size, num_actions)
-    vec_length = feature_size * num_actions
-    new_ind = (state.nzind .- 1) * num_actions .+ action
-    active_state_action = sparsevec(new_ind, state.nzval, vec_length)
-    return active_state_action
-end
 
 function predict_SF(learner::SRLearner, ϕ::SparseVector, action)
     active_state_action = get_active_action_state_vector(ϕ, action, length(ϕ), learner.num_actions)

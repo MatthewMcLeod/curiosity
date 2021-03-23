@@ -15,10 +15,13 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "ESARSA",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "ESARSA",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
+        "exploration_type" => "epsilon_greedy",
+        "exploration_param" => 0.2,
         "demon_alpha_init" => 0.1,
         "demon_alpha" => 0.5,
         "demon_discounts" => 0.9,
@@ -34,7 +37,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 20000,
+        "steps" => 10000,
         "use_external_reward" => true,
     )
 
@@ -51,6 +54,7 @@ function construct_agent(parsed)
     demon_lu = parsed["demon_update"]
 
     behaviour_learner = parsed["behaviour_learner"]
+    behaviour_lu = parsed["behaviour_update"]
     behaviour_alpha = parsed["behaviour_alpha"]
     intrinsic_reward_type = parsed["intrinsic_reward"]
     behaviour_gamma = parsed["behaviour_gamma"]
@@ -65,7 +69,20 @@ function construct_agent(parsed)
     end
 
     demons = get_horde(parsed, feature_size, action_space, (obs) -> state_constructor(obs, feature_size))
-    behaviour_demons = nothing
+
+    behaviour_demons = if behaviour_learner ∈ ["GPI"]
+        discount = parsed["behaviour_gamma"]
+        SF_horde = TTMU.make_SF_horde(discount, feature_size, action_space)
+        num_SFs = 4
+        #NOTE: Tasks is learning the reward feature vector
+        #Dummy prediction GVF
+        DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
+        pred_horde = Horde([DummyGVF])
+
+        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
+    else
+        nothing
+    end
 
     demon_lu = if demon_lu == "TB"
         TB(lambda=lambda, opt=Descent(demon_alpha))
@@ -89,24 +106,45 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid demon learner"))
     end
 
-    behaviour_lu = if behaviour_learner == "ESARSA"
-        ESARSA(lambda, feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    behaviour_lu = if behaviour_lu == "ESARSA"
+        ESARSA(lambda=lambda, opt=Descent(behaviour_alpha))
+    elseif behaviour_lu == "SARSA"
+        SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
+    elseif behaviour_lu == "TB"
+        TB(lambda=lambda, opt=Descent(behaviour_alpha))
     elseif behaviour_learner == "RoundRobin"
         TabularRoundRobin()
     else
         throw(ArgumentError("Not a valid behaviour learner"))
     end
 
+
+    behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
+        LinearQLearner(behaviour_lu, feature_size, action_space, 1)
+    elseif behaviour_learner ∈ ["GPI"]
+        GPI(behaviour_lu, feature_size, length(behaviour_demons), action_space, behaviour_demons.num_tasks)
+    end
+
+    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
+        EpsilonGreedy(parsed["exploration_param"])
+    else
+        throw(ArgumentError("Not a Valid Exploration Strategy"))
+    end
+
+
     Agent(demons,
           feature_size,
           behaviour_lu,
+          behaviour_learner,
+          behaviour_demons,
           behaviour_gamma,
           demon_learner,
           observation_size,
           action_space,
           intrinsic_reward_type,
           (obs) -> state_constructor(obs, feature_size),
-          use_external_reward)
+          use_external_reward,
+          exploration_strategy)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)
@@ -183,26 +221,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             push!(steps, stp)
             eps += 1
         end
-
-        # if agent.behaviour_learner isa GPI
-        #     obs = zeros(5)
-        #     obs[1] = 3
-        #     action = 1
-        #     SF = predict_SF(agent.behaviour_learner, agent,  agent.behaviour_weights, obs, action)
-        #     println("GPI")
-        #     @show SF
-        # end
-
-        #
-        # if agent.demon_learner isa SRLearner
-        #     obs = zeros(5)
-        #     obs[1] = 3
-        #     action = 1
-        #     SF = predict_SF(agent.demon_learner, agent,  agent.demon_weights, obs, action)
-        #     println("SF")
-        #     @show SF
-        # end
-
         println(goal_visitations)
     end
 

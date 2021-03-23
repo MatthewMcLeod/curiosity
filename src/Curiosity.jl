@@ -18,6 +18,8 @@ export Auto
 include("optimizers/Auto.jl")
 
 
+
+export QLearner, LinearQLearner, VLearner, SRLearner, GPI, predict, predict_SF
 include("learner.jl")
 
 abstract type IntrinsicReward end
@@ -25,6 +27,10 @@ include("agent/intrinsic_rewards.jl")
 
 export TabularRoundRobin, update!
 include("updates/TabularRoundRobin.jl")
+
+abstract type ExplorationStrategy end
+export EpsilonGreedy
+include("agent/exploration.jl")
 
 export Agent, agent_end!, step!
 include("agent/agent.jl")
@@ -45,7 +51,7 @@ export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils
-
+export get_active_action_state_vector
 include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/learners.jl")

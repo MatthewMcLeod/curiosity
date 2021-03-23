@@ -2,9 +2,10 @@
 abstract type LearningUpdate end
 abstract type Learner end
 
-export QLearner, LinearQLearner, SRLearner, LSTDLearner, predict
+export QLearner, LinearQLearner, SRLearner, LSTDLearner, GPI, predict
 include("learners/value.jl")
 include("learners/SR.jl")
+include("learners/GPI.jl")
 include("learners/LSTD.jl")
 
 update!(learner::Learner, args...) =
@@ -12,10 +13,13 @@ update!(learner::Learner, args...) =
 
 zero_eligibility_traces!(l::Learner) = zero_eligibility_traces!(l.update)
 
-export TB, ESARSA, update!
+
+export TB, TBAuto, ESARSA, SR, update!, SARSA
 
 include("updates/update_utils.jl")
 include("updates/TB.jl")
+include("updates/SARSA.jl")
+# include("updates/TB_Auto.jl")
 include("updates/ESARSA.jl")
-
+# include("updates/SR.jl")
 

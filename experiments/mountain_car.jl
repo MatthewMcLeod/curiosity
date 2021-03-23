@@ -14,7 +14,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 1000,
+        "steps" => 50000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -22,17 +22,19 @@ default_args() =
         "numtiles" => 8,
         "behaviour_alpha" => 0.5/8,
 
-        "behaviour_learner" => "ESARSA",
+        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "Q",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
         "intrinsic_reward" =>"no_reward",
         "behaviour_trace" => "replacing",
         "use_external_reward" => true,
+        "exploration_strategy" => "epsilon_greedy",
+        "exploration_param" => 0.2,
 
         "lambda" => 0.9,
         "demon_alpha" => 1.0/8,
         "demon_alpha_init" => 1.0/8,
-        "demon_policy_type" => "greedy_to_cumulant",
         "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_opt" => "Auto",
@@ -54,7 +56,6 @@ function construct_agent(parsed)
     behaviour_trace = parsed["behaviour_trace"]
     intrinsic_reward_type = parsed["intrinsic_reward"]
     use_external_reward = parsed["use_external_reward"]
-
 
     #Create state constructor
     state_constructor_tc =
@@ -79,24 +80,64 @@ function construct_agent(parsed)
                                                  action_space,
                                                  demons,
                                                  "demon")
-    
-    behaviour_lu = if behaviour_learner == "ESARSA"
-        ESARSA(parsed["lambda"], feature_size, 1, action_space, behaviour_alpha, behaviour_trace)
+    behaviour_lu = if behaviour_lu == "ESARSA"
+        ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
+    elseif behaviour_lu == "SARSA"
+        SARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
+    elseif behaviour_lu == "TB"
+        TB(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
     else
-        throw(ArgumentError("Not a valid behaviour learner"))
+        throw(ArgumentError("$(behaviour_lu) Not a valid behaviour learning update"))
     end
+
+    behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
+        LinearQLearner(behaviour_lu, feature_size, action_space, 1)
+    elseif behaviour_learner ∈ ["GPI"]
+        GPI(behaviour_lu,
+                  feature_size,
+                  length(behaviour_demons),
+                  action_space,
+                  behaviour_demons.num_tasks)
+    else
+        throw(ArgumentError("$(behaviour_learner) Not a valid behaviour learner"))
+    end
+
+    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
+        EpsilonGreedy(parsed["exploration_param"])
+    else
+        throw(ArgumentError("Not a Valid Exploration Strategy"))
+    end
+
 
     Agent(demons,
           feature_size,
           behaviour_lu,
+          behaviour_learner,
+          behaviour_demons,
           behaviour_gamma,
           demon_learner,
           observation_size,
           action_space,
           intrinsic_reward_type,
           (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
-          use_external_reward)
+          use_external_reward,
+          exploration_strategy)
 
+end
+
+function get_GPI_horde(parsed, feature_size, action_space, state_constructor)
+    discount = parsed["behaviour_gamma"]
+    SF_horde = MCU.make_SF_horde(feature_size, action_space, state_constructor)
+    num_SFs = 2
+    #NOTE: Tasks is learning the reward feature vector
+    #Dummy prediction GVF
+    DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
+    pred_horde = Horde([DummyGVF])
+
+    return Curiosity.GVFSRHordes.SRHorde(pred_horde,
+        SF_horde,
+        num_SFs,
+        state_constructor)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)
@@ -134,7 +175,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         while sum(steps) < max_num_steps
             is_terminal = false
 
-            max_episode_steps = min(max_num_steps - sum(steps), 200)
+            max_episode_steps = min(max_num_steps - sum(steps), 1000)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)

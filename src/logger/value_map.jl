@@ -11,7 +11,6 @@ mutable struct ValueMap <: LoggerKeyData
     function ValueMap(logger_init_info)
         num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL])
         if logger_init_info["ENV"] == "tabular_tmaze"
-            @show logger_init_info["ENV"]
             @load string(pwd(),"/src/data/TTMazeValueSet.jld2") ValueSet
         else
             throw(DomainError("Not a valid env setting for logger"))
