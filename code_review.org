@@ -1,0 +1,22 @@
+#+title: Code Review
+
+
+* March 20, 2021
+** Behaviour Learner
+   - Bring the behaviour learner up-to-date w/ current learner api.
+   - Clean up what a behaviour update looks like. Where do we store the discount? How do we figure out the rewards? etc...
+     
+** Intrinsic rewards
+   - Bring up-to-date with new learner api.
+   - Use references to our advantage.
+   - Does this need to be mutable?
+   - What does the api need to look like? What are the other IRs that we will investigate?
+     
+** Learning Updates
+   - Get update state implemented, so we can track parts of the update for debugging.
+   - Clean up some of the old learning updates
+     
+** Experiment Utilities
+   - Constructing learners and learning updates.
+   - Separate required vs not-required
+   - Logger could use some work, a bit complicated and scary right now, but likely usable.

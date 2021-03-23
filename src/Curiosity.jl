@@ -18,6 +18,7 @@ export Auto
 include("optimizers/Auto.jl")
 
 
+
 export QLearner, LinearQLearner, VLearner, SRLearner, GPI, predict, predict_SF
 include("learner.jl")
 
@@ -55,6 +56,7 @@ include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/learners.jl")
 include("utils/experiment.jl")
+include("utils/agent.jl")
 
 
 using GVFHordes
