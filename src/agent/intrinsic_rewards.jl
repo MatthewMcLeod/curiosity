@@ -18,7 +18,7 @@ function WeightChange(learner::Learner)
 end
 
 function update_reward!(wc::WeightChange, agent)
-    cw = flattenall(get_weights(learner))
+    cw = flattenall(get_weights(agent.demon_learner))
     curiosity_reward = sum(abs.(cw .- wc.previous_weights))
     wc.previous_weights .= cw
     return curiosity_reward
