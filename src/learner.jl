@@ -8,6 +8,8 @@ include("learners/SR.jl")
 include("learners/GPI.jl")
 include("learners/LSTD.jl")
 
+include("LearnedPolicy.jl")
+
 update!(learner::Learner, args...) =
     update!(update(learner), learner, args...)
 

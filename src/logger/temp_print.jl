@@ -8,13 +8,13 @@ mutable struct TempPrint <: LoggerKeyData
     end
 end
 
-function step!(self::TempPrint, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+function lg_step!(self::TempPrint, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
     if cur_step_total % 500 == 0
         println("At step: ", cur_step_total)
     end
 end
 
-function episode_end!(self::TempPrint, cur_step_in_episode, cur_step_total)
+function lg_episode_end!(self::TempPrint, cur_step_in_episode, cur_step_total)
     println("Finished episode: ", cur_step_in_episode)
 end
 
