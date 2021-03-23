@@ -4,6 +4,7 @@ function row_order_reshape(A, reshape_dims)
     return transpose(reshape(transpose(A), reshape_dims...))
 end
 
+
 function get_active_action_state_vector(state::SparseVector, action, feature_size, num_actions)
     vec_length = feature_size * num_actions
     new_ind = (state.nzind .- 1) * num_actions .+ action

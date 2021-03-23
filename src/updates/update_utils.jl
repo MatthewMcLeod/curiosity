@@ -29,7 +29,6 @@ function update_trace!(t::AbstractTraceUpdate, e::AbstractMatrix, s, λ, discoun
     _accumulate_trace(t, e, s, pred_inds)
 end
 
-
 function get_demon_pis(horde::GVFSRHordes.SRHorde, num_actions, state, obs)
     target_pis = zeros(length(horde), num_actions)
     for a in 1:num_actions

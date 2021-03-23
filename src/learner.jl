@@ -13,6 +13,7 @@ update!(learner::Learner, args...) =
 
 zero_eligibility_traces!(l::Learner) = zero_eligibility_traces!(l.update)
 
+
 export TB, TBAuto, ESARSA, SR, update!, SARSA
 
 include("updates/update_utils.jl")
@@ -21,3 +22,4 @@ include("updates/SARSA.jl")
 # include("updates/TB_Auto.jl")
 include("updates/ESARSA.jl")
 # include("updates/SR.jl")
+

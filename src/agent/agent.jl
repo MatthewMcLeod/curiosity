@@ -56,7 +56,7 @@ function Agent(horde,
         #TODO: The intrinsic reward is defined by how the components of the agent are put together. For example, an intrinsic reward
         # could be the model error, which would then require different components that are assembled in the agent
         # Not sure how the construction of intrinisic reward could be abstracted out of this constructor
-        WeightChange(get_weights(demon_learner))
+        WeightChange(demon_learner)
     elseif intrinsic_reward_type == "no_reward"
         NoReward()
     else
@@ -72,15 +72,12 @@ function Agent(horde,
 
           horde,
           demon_learner,
-          # demon_lu,
 
           zeros(observation_size),
           spzeros(behaviour_feature_size),
 
           0, # last_action
           num_actions,
-          # demon_feature_size,
-          # behaviour_feature_size,
 
           intrinsic_reward,
           state_constructor,
@@ -105,8 +102,22 @@ function assign_horde!(agent, horde)
     agent.demons = horde
 end
 
-function MinimalRLCore.end!(agent, obs, reward, is_terminal)
-    return step!(agent, obs, reward, is_terminal)
+MinimalRLCore.end!(agent, obs, reward, is_terminal) = 
+    MinimalRLCore.step!(agent, obs, reward, is_terminal)
+
+
+function MinimalRLCore.start!(agent::Agent, obs, args...)
+    next_state = proc_input(agent, obs)
+    #Always exploring starts
+    next_action = sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
+
+    _, discounts, _ = get(agent.demons, obs, next_action, obs, next_action)
+    agent.last_state = next_state
+    agent.last_action = next_action
+    agent.last_obs = obs
+    zero_eligibility_traces!(agent.demon_learner)
+
+    return next_action
 end
 
 function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
@@ -121,10 +132,11 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
                    next_state,
                    next_action,
                    is_terminal)
+    
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
-
     total_reward = agent.use_external_reward ? r_int + r : r_int
+    
     update_behaviour!(agent,
                       agent.last_obs,
                       obs,
@@ -141,30 +153,11 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     return next_action
 end
 
-function MinimalRLCore.start!(agent::Agent, obs, args...)
-    next_state = proc_input(agent, obs)
-    #Always exploring starts
-    next_action = sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
-
-    _, discounts, _ = get(agent.demons, obs, next_action, obs, next_action)
-    agent.last_state = next_state
-    agent.last_action = next_action
-    agent.last_obs = obs
-    zero_eligibility_traces!(agent.demon_learner)
-    # zero_eligibility_traces!(agent.behaviour_learner)
-
-    return next_action
-end
-
-
-# get_behaviour_pis(agent::Agent, state, obs) =
-#     get_action_probs(agent.behaviour_lu, state, obs, agent.behaviour_weights)
-
 get_behaviour_pis(agent::Agent, state, obs) =
     get_action(agent, state, obs)[2]
 
-function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
 
+function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
 
     update!(agent.demon_learner,
             agent.demons,
@@ -200,6 +193,7 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
                 [reward],
                 [agent.behaviour_gamma],
                 (state, obs) -> get_behaviour_pis(agent, state, obs))
+
 end
 
 function get_demon_prediction(agent::Agent, obs, action)
