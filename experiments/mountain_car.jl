@@ -51,6 +51,7 @@ function construct_agent(parsed)
     action_space = 3
 
     behaviour_learner = parsed["behaviour_learner"]
+    behaviour_lu = parsed["behaviour_update"]
     behaviour_alpha = parsed["behaviour_alpha"]
     behaviour_gamma = parsed["behaviour_gamma"]
     behaviour_trace = parsed["behaviour_trace"]
@@ -80,6 +81,17 @@ function construct_agent(parsed)
                                                  action_space,
                                                  demons,
                                                  "demon")
+
+    behaviour_demons = if behaviour_learner ∈ ["GPI"]
+        get_GPI_horde(parsed,
+                           feature_size,
+                           action_space, (obs) ->
+                           state_constructor(obs, feature_size, state_constructor_tc))
+    else
+        nothing
+    end
+
+    
     behaviour_lu = if behaviour_lu == "ESARSA"
         ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "SARSA"
