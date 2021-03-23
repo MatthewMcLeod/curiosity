@@ -20,19 +20,23 @@ default_args() =
         #Tile coding params used by Rich textbook for mountain car
         "numtilings" => 8,
         "numtiles" => 8,
-        "behaviour_alpha" => 0.5/8,
+
 
         "behaviour_update" => "ESARSA",
         "behaviour_learner" => "Q",
+        "behaviour_eta" => 0.5/8,
+        "behaviour_opt" => "Descent",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
+        "behaviour_lambda" => 0.9,
+        
         "intrinsic_reward" =>"no_reward",
         "behaviour_trace" => "replacing",
         "use_external_reward" => true,
         "exploration_strategy" => "epsilon_greedy",
         "exploration_param" => 0.2,
 
-        "lambda" => 0.9,
+
         "demon_alpha" => 1.0/8,
         "demon_alpha_init" => 1.0/8,
         "demon_learner" => "Q",
@@ -52,7 +56,7 @@ function construct_agent(parsed)
 
     behaviour_learner = parsed["behaviour_learner"]
     behaviour_lu = parsed["behaviour_update"]
-    behaviour_alpha = parsed["behaviour_alpha"]
+
     behaviour_gamma = parsed["behaviour_gamma"]
     behaviour_trace = parsed["behaviour_trace"]
     intrinsic_reward_type = parsed["intrinsic_reward"]
@@ -91,28 +95,34 @@ function construct_agent(parsed)
         nothing
     end
 
-    
-    behaviour_lu = if behaviour_lu == "ESARSA"
-        ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
-    elseif behaviour_lu == "SARSA"
-        SARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
-    elseif behaviour_lu == "TB"
-        TB(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
-    else
-        throw(ArgumentError("$(behaviour_lu) Not a valid behaviour learning update"))
-    end
+    behaviour_learner = Curiosity.get_linear_learner(parsed,
+                                                     feature_size,
+                                                     action_space,
+                                                     behaviour_demons,
+                                                     "behaviour")
 
-    behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
-        LinearQLearner(behaviour_lu, feature_size, action_space, 1)
-    elseif behaviour_learner ∈ ["GPI"]
-        GPI(behaviour_lu,
-                  feature_size,
-                  length(behaviour_demons),
-                  action_space,
-                  behaviour_demons.num_tasks)
-    else
-        throw(ArgumentError("$(behaviour_learner) Not a valid behaviour learner"))
-    end
+    # behaviour_lu = if behaviour_lu == "ESARSA"
+    #     ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
+    # elseif behaviour_lu == "SARSA"
+    #     SARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
+    # elseif behaviour_lu == "TB"
+    #     TB(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
+    # else
+    #     throw(ArgumentError("$(behaviour_lu) Not a valid behaviour learning update"))
+    # end
+
+    # behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
+    #     LinearQLearner(behaviour_lu, feature_size, action_space, 1)
+    # elseif behaviour_learner ∈ ["GPI"]
+    #     GPI(behaviour_lu,
+    #               feature_size,
+    #               length(behaviour_demons),
+    #               action_space,
+    #               behaviour_demons.num_tasks)
+    # else
+    #     throw(ArgumentError("$(behaviour_learner) Not a valid behaviour learner"))
+    # end
+    
 
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
         EpsilonGreedy(parsed["exploration_param"])
@@ -120,10 +130,20 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
-
+# function Agent(horde,
+#                behaviour_feature_size::Int,
+#                behaviour_learner,
+#                behaviour_horde,
+#                behaviour_gamma,
+#                demon_learner,
+#                observation_size::Int,
+#                num_actions::Int,
+#                intrinsic_reward_type,
+#                state_constructor,
+#                use_external_reward,
+#                exploration_strategy)
     Agent(demons,
           feature_size,
-          behaviour_lu,
           behaviour_learner,
           behaviour_demons,
           behaviour_gamma,

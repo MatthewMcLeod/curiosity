@@ -87,6 +87,12 @@ function get_linear_learner(parsed::Dict,
                             demons,
                             prefix="")
 
+    num_demons = if demons isa Nothing
+        1
+    else
+        length(demons)
+    end
+    
     learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
     if  parsed[learner_key] ∈ ["LSTD", "LSTDLearner", "lstd"]
         learner_type = LSTDLearner
@@ -97,7 +103,7 @@ function get_linear_learner(parsed::Dict,
                         parsed[lambda_str],
                         feature_size,
                         num_actions,
-                        length(demons))
+                        num_demons)
         catch
             throw("LSTDLearner needs: $(eta_str) (float), $(lambda_str) (float)")
         end
@@ -110,13 +116,19 @@ function get_linear_learner(parsed::Dict,
             LinearQLearner(lu,
                            feature_size,
                            num_actions,
-                           length(demons))
+                           num_demons)
         elseif learner_str ∈ ["SR", "SRLearner", "sr"]
             SRLearner(lu,
                       feature_size,
-                      length(demons),
+                      num_demons,
                       num_actions,
                       demons.num_tasks)
+        elseif learner_str ∈ ["GPI", "gpi"]
+            GPI(lu,
+                feature_size,
+                num_demons,
+                num_actions,
+                demons.num_tasks)
         else
             throw(ArgumentError("Not a valid demon learner"))
         end
@@ -132,7 +144,12 @@ end
 _init_learning_update(lu_type, args...) =
     throw("$(string(lu_type)) does not have an init function.")
 
-function _init_learning_update(lu_type::Union{Type{TB}}, opt, parsed::Dict, prefix)
+function _init_learning_update(lu_type::Union{Type{TB},
+                                              Type{SARSA},
+                                              Type{ESARSA}},
+                               opt,
+                               parsed::Dict,
+                               prefix)
     λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
     try
         λ = parsed[λ_str]
