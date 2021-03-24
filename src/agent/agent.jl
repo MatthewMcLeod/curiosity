@@ -182,8 +182,6 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
     behaviour_pis = get_behaviour_pis(agent, state, obs)
     next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
 
-        #NOTE: Different call than demon updates as the reward and environment pseudotermination function
-        # cannot be apart of the behaviour demon horde
         update!(# update(agent.demon_learner),
                 agent.behaviour_learner,
                 agent.behaviour_demons,
@@ -194,25 +192,8 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
                 next_state,
                 next_action,
                 is_terminal,
-                [agent.behaviour_gamma],
                 (state, obs) -> get_behaviour_pis(agent, state, obs),
                 reward)
-
-                # update!(# update(agent.demon_learner),
-                #         agent.behaviour_lu,
-                #         agent.behaviour_learner,
-                #         agent.behaviour_demons,
-                #         obs,
-                #         next_obs,
-                #         state,
-                #         action,
-                #         next_state,
-                #         next_action,
-                #         is_terminal,
-                #         [reward],
-                #         [agent.behaviour_gamma],
-                #         (state, obs) -> get_behaviour_pis(agent, state, obs))
-
 end
 
 function get_demon_prediction(agent::Agent, obs, action)

@@ -76,15 +76,6 @@ struct TTMazeStateActionCumulant <: GVFParamFuncs.AbstractCumulant
     action::Int
 end
 
-# function Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred)
-#     state = obs
-#     if state.nzind[1] == cumulant.state_num && action == cumulant.action
-#         return 1
-#     else
-#         return 0
-#     end
-# end
-
 function Base.get(cumulant::TTMazeStateActionCumulant; kwargs...)
     # @show kwargs
     # @show kwargs[:action_t]
@@ -97,6 +88,15 @@ function Base.get(cumulant::TTMazeStateActionCumulant; kwargs...)
     end
 end
 
+function make_behaviour_gvf(discount, state_constructor_func, learner, exploration_strategy)
+    function b_π(state_constructor, learner, exploration_strategy; kwargs...)
+        s = state_constructor_func(kwargs[:state_t])
+        preds = learner(s)
+        return exploration_strategy(preds)[kwargs[:action_t]]
+    end
+    GVF_policy = GVFParamFuncs.FunctionalPolicy((;kwargs...) -> b_π(state_constructor_func, learner, exploration_strategy; kwargs...))
+    BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVF_policy)
+end
 
 function make_SR_for_policy(policy,discount,pseudoterm, num_features, num_actions)
     return GVFSRHordes.SFHorde([GVF(TTMazeStateActionCumulant(s,a),

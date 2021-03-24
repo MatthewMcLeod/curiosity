@@ -6,6 +6,15 @@ Base.@kwdef mutable struct ESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     prev_discounts::IdDict = IdDict()
 end
 
+function get_demon_parameters(lu::ESARSA, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
+    # C, next_discounts, _ = get(demons, obs, action, next_obs, next_action)
+    C, next_discounts, _ = get(demons; state_t = obs, action_t = action, state_tp1 = next_obs, action_tp1 = next_action, reward = env_reward)
+    target_pis = get_demon_pis(demons, learner.num_actions, state, obs)
+    next_target_pis = get_demon_pis(demons, learner.num_actions, next_state, next_obs)
+    C, next_discounts, target_pis, next_target_pis
+end
+
+
 function update!(lu::ESARSA,
                  learner::QLearner{M, LU},
                  demons,
@@ -16,20 +25,18 @@ function update!(lu::ESARSA,
                  next_state,
                  next_action,
                  is_terminal,
-                 discount,
+                 # discount_OLD,
                  behaviour_pi_func,
                  reward) where {M<:AbstractMatrix, LU<:ESARSA}
 
-    if is_terminal
-        discount = [0.0]
-    end
 
     weights = learner.model
     λ = lu.lambda
     e = get!(()->zero(weights), lu.e, weights)::typeof(weights)
     ρ = 1
 
-    next_target_pis = behaviour_pi_func(next_state, next_obs)
+    # next_target_pis = behaviour_pi_func(next_state, next_obs)
+    C, discount, target_pis, next_target_pis = get_demon_parameters(lu, learner, demons, obs, state, action, next_obs, next_state, next_action, reward)    
 
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
@@ -41,7 +48,8 @@ function update!(lu::ESARSA,
     next_preds = learner(next_state)
     pred = learner(state, action)
 
-    td_err = reward .+ discount * sum(next_target_pis .* next_preds) - pred
+    td_err = C .+ discount * sum(next_target_pis * next_preds) - pred
+
     Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err))
 
     e .*= λ * discount .* ρ

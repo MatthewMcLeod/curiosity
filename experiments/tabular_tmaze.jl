@@ -15,8 +15,8 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "ESARSA",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
@@ -56,8 +56,9 @@ function construct_agent(parsed)
     behaviour_learner = parsed["behaviour_learner"]
     behaviour_lu = parsed["behaviour_update"]
     behaviour_alpha = parsed["behaviour_alpha"]
+    behaviour_discount = parsed["behaviour_gamma"]
+
     intrinsic_reward_type = parsed["intrinsic_reward"]
-    behaviour_gamma = parsed["behaviour_gamma"]
     behaviour_trace = parsed["behaviour_trace"]
     use_external_reward = parsed["use_external_reward"]
 
@@ -70,28 +71,10 @@ function construct_agent(parsed)
 
     demons = get_horde(parsed, feature_size, action_space, (obs) -> state_constructor(obs, feature_size))
 
-    behaviour_demons = if behaviour_learner ∈ ["GPI"]
-        discount = parsed["behaviour_gamma"]
-        SF_horde = TTMU.make_SF_horde(discount, feature_size, action_space)
-        num_SFs = 4
-        #NOTE: Tasks is learning the reward feature vector
-        #Dummy prediction GVF
-        function term_func(;kwargs)
-            return kwargs[:is_terminal]
-        end
-
-        function b_π(state_constructor, learner, exploration_strategy, obs, action)
-            s = state_constructor(obs)
-            preds = learner(s)
-            return exploration_strategy(preds)[action]
-        end
-
-        DummyGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(discount, TTMU.pseudoterm), GVFParamFuncs.NullPolicy())
-        pred_horde = Horde([DummyGVF])
-
-        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
+    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
+        EpsilonGreedy(parsed["exploration_param"])
     else
-        nothing
+        throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
     demon_lu = if demon_lu == "TB"
@@ -135,10 +118,16 @@ function construct_agent(parsed)
         GPI(behaviour_lu, feature_size, length(behaviour_demons), action_space, behaviour_demons.num_tasks)
     end
 
-    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
-        EpsilonGreedy(parsed["exploration_param"])
-    else
-        throw(ArgumentError("Not a Valid Exploration Strategy"))
+    behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, (obs) -> state_constructor(obs, feature_size), behaviour_learner, exploration_strategy)
+    behaviour_demons = if behaviour_learner isa GPI
+        SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space)
+        num_SFs = 4
+
+        pred_horde = Horde([behaviour_gvf])
+
+        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
+    elseif behaviour_learner isa QLearner
+        Horde([behaviour_gvf])
     end
 
 
@@ -147,7 +136,7 @@ function construct_agent(parsed)
           behaviour_lu,
           behaviour_learner,
           behaviour_demons,
-          behaviour_gamma,
+          behaviour_discount,
           demon_learner,
           observation_size,
           action_space,
