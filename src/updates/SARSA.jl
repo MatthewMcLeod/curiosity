@@ -16,9 +16,9 @@ function update!(lu::SARSA,
                  next_state,
                  next_action,
                  is_terminal,
-                 reward,
                  discount,
-                 behaviour_pi_func) where {M<:AbstractMatrix, LU<:SARSA}
+                 behaviour_pi_func,
+                 reward) where {M<:AbstractMatrix, LU<:SARSA}
 
     if is_terminal
         discount = [0.0]

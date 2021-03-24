@@ -76,7 +76,11 @@ function construct_agent(parsed)
         num_SFs = 4
         #NOTE: Tasks is learning the reward feature vector
         #Dummy prediction GVF
-        DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
+        function term_func(;kwargs)
+            return kwargs[:is_terminal]
+        end
+
+        DummyGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(discount, TTMU.pseudoterm), GVFParamFuncs.NullPolicy())
         pred_horde = Horde([DummyGVF])
 
         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
@@ -157,7 +161,7 @@ function get_horde(parsed, feature_size, action_space, state_constructor)
 
     #TODO: Sort out the if-else block so that demon_policy_type and horde_type is not blocking eachother.
     horde = if parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["horde_type"] == "regular"
-        Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((obs,a) -> TTMU.demon_target_policy(i,obs,a))) for i in 1:num_demons])
+        Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(i;kwargs...))) for i in 1:num_demons])
     elseif parsed["demon_policy_type"] == "random" && parsed["horde_type"] == "regular"
         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 1:num_demons])
     else

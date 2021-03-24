@@ -11,7 +11,8 @@ using GVFHordes
 import Flux
 import Flux.Optimise: update!
 
-
+# export GVFHordes
+# include("GVFHordes/GVFHordes.jl")
 include("utils/SRHorde.jl")
 
 export Auto

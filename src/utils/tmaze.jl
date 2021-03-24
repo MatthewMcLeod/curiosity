@@ -43,7 +43,8 @@ function get_cumulant_schedule(parsed)
     end
 end
 
-function pseudoterm(obs)
+function pseudoterm(;kwargs...)
+    obs = kwargs[:state_tp1]
     term = false
     if obs[1] == 1 || obs[1] == 5 || obs[1] == 17 || obs[1] == 21
         term = true
@@ -75,8 +76,20 @@ struct TTMazeStateActionCumulant <: GVFParamFuncs.AbstractCumulant
     action::Int
 end
 
-function Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred)
-    state = obs
+# function Base.get(cumulant::TTMazeStateActionCumulant,obs,action,pred)
+#     state = obs
+#     if state.nzind[1] == cumulant.state_num && action == cumulant.action
+#         return 1
+#     else
+#         return 0
+#     end
+# end
+
+function Base.get(cumulant::TTMazeStateActionCumulant; kwargs...)
+    # @show kwargs
+    # @show kwargs[:action_t]
+    state = kwargs[:constructed_state_t]
+    action = kwargs[:action_t]
     if state.nzind[1] == cumulant.state_num && action == cumulant.action
         return 1
     else
@@ -92,16 +105,22 @@ function make_SR_for_policy(policy,discount,pseudoterm, num_features, num_action
 end
 
 function make_SF_horde(discount, num_features, num_actions)
-    horde = make_SR_for_policy((obs,a) -> demon_target_policy(1,obs,a),discount,pseudoterm, num_features, num_actions)
+    # horde = make_SR_for_policy((obs,a) -> demon_target_policy(1,obs,a),discount,pseudoterm, num_features, num_actions)
+    horde = make_SR_for_policy((;kwargs...) -> demon_target_policy(1;kwargs...),discount,pseudoterm, num_features, num_actions)
     for policy_i in 2:4
-        new_horde = make_SR_for_policy((obs,a) -> demon_target_policy(policy_i,obs,a),discount,pseudoterm, num_features, num_actions)
+        # GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(i; kwargs...))
+        new_horde = make_SR_for_policy((;kwargs...) -> demon_target_policy(policy_i; kwargs...), discount,pseudoterm, num_features, num_actions)
         horde = GVFSRHordes.merge(horde,new_horde)
     end
     return horde
 end
 
-function demon_target_policy(gvf_i, observation, action)
-    state = convert(Int,observation[1])
+# function demon_target_policy(gvf_i, observation, action)
+function demon_target_policy(gvf_i; kwargs...)
+
+    # state = convert(Int,observation[1])
+    state = convert(Int,kwargs[:state_t][1])
+    action = kwargs[:action_t]
 
     policy_1 =  [1 0 0 0 0 0 3;
                  1 0 0 0 0 0 3;

@@ -16,9 +16,9 @@ function update!(lu::ESARSA,
                  next_state,
                  next_action,
                  is_terminal,
-                 reward,
                  discount,
-                 behaviour_pi_func) where {M<:AbstractMatrix, LU<:ESARSA}
+                 behaviour_pi_func,
+                 reward) where {M<:AbstractMatrix, LU<:ESARSA}
 
     if is_terminal
         discount = [0.0]
@@ -41,7 +41,7 @@ function update!(lu::ESARSA,
     next_preds = learner(next_state)
     pred = learner(state, action)
 
-    td_err = reward + discount * sum(next_target_pis .* next_preds) - pred
+    td_err = reward .+ discount * sum(next_target_pis .* next_preds) - pred
     Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err))
 
     e .*= λ * discount .* ρ
