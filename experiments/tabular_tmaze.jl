@@ -23,10 +23,10 @@ default_args() =
         "exploration_strategy" => "epsilon_greedy",
         "exploration_param" => 0.2,
         "demon_alpha_init" => 0.1,
-        "demon_alpha" => 0.5,
+        "demon_alpha" => 0.1,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
-        "demon_update" => "TB",
+        "demon_learner" => "Q",
+        "demon_update" => "ESARSA",
         "demon_policy_type" => "greedy_to_cumulant",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
@@ -83,6 +83,8 @@ function construct_agent(parsed)
         TB(lambda,
            Auto(demon_alpha, demon_alpha_init),
            feature_size, length(demons), action_space)
+    elseif demon_lu == "ESARSA"
+        ESARSA(lambda=lambda, opt = Descent(demon_alpha))
     else
         throw(ArgumentError("Not a valid demon learner"))
     end

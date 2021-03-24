@@ -33,10 +33,10 @@ default_args() =
         "exploration_param" => 0.2,
 
         "lambda" => 0.9,
-        "demon_alpha" => 1.0/8,
-        "demon_alpha_init" => 1.0/8,
+        "demon_alpha" => 0.1/8,
+        "demon_alpha_init" => 0.1/8,
         "demon_learner" => "Q",
-        "demon_update" => "TB",
+        "demon_update" => "ESARSA",
         "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
         "exploring_starts"=>true,
@@ -91,7 +91,7 @@ function construct_agent(parsed)
         nothing
     end
 
-    
+
     behaviour_lu = if behaviour_lu == "ESARSA"
         ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "SARSA"
@@ -120,6 +120,17 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
+    behaviour_gvf = MCU.make_behaviour_gvf(behaviour_gamma, (obs) -> state_constructor(obs, feature_size, state_constructor_tc), behaviour_learner, exploration_strategy)
+    behaviour_demons = if behaviour_learner isa GPI
+        SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space)
+        num_SFs = 4
+
+        pred_horde = Horde([behaviour_gvf])
+
+        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size, state_constructor_tc))
+    elseif behaviour_learner isa QLearner
+        Horde([behaviour_gvf])
+    end
 
     Agent(demons,
           feature_size,

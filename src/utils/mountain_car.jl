@@ -13,17 +13,24 @@ struct MountainCarStateActionCumulant <: GVFParamFuncs.AbstractCumulant
     state_constructor::Any
 end
 
-function Base.get(cumulant::MountainCarStateActionCumulant,obs,action,pred)
-    # @show obs
-    # state = cumulant.state_constructor(obs)
-    state = obs
-    # state = ones(4000)
+function Base.get(cumulant::MountainCarStateActionCumulant; kwargs...)
+    state = kwargs[:state_t]
+    action = kwargs[:action_t]
     if state[cumulant.state_num] == 1 && action == cumulant.action
-        # @show state
         return 1
     else
         return 0
     end
+end
+
+function make_behaviour_gvf(discount, state_constructor_func, learner, exploration_strategy)
+    function b_π(state_constructor, learner, exploration_strategy; kwargs...)
+        s = state_constructor_func(kwargs[:state_t])
+        preds = learner(s)
+        return exploration_strategy(preds)[kwargs[:action_t]]
+    end
+    GVF_policy = GVFParamFuncs.FunctionalPolicy((;kwargs...) -> b_π(state_constructor_func, learner, exploration_strategy; kwargs...))
+    BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm), GVF_policy)
 end
 
 function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_actions, state_constructor)
@@ -83,15 +90,16 @@ else
     0.0
 end
 
-Base.get(π::EnergyPumpPolicy, state_t, action_t) =
-    if state_t[2] >= vel_0(π)
-        MountainCarConst.Accelerate == action_t ? 1.0 : 0.0 # Go Right/Accelerate
+# NOTE IS THIS TP1 or just T
+Base.get(π::EnergyPumpPolicy; kwargs...) =
+    if kwargs[:state_t][2] >= vel_0(π)
+        MountainCarConst.Accelerate == kwargs[:action_t] ? 1.0 : 0.0 # Go Right/Accelerate
     else
-        MountainCarConst.Reverse == action_t ? 1.0 : 0.0 # Go left/Reverse
+        MountainCarConst.Reverse == kwargs[:action_t] ? 1.0 : 0.0 # Go left/Reverse
     end
 
-StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t) =
-    if state_t[2] >= vel_0(π)
+StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy; kwargs...) =
+    if kwargs[:state_t] state_t[2] >= vel_0(π)
         MountainCarConst.Accelerate # Go Right/Accelerate
     else
         MountainCarConst.Reverse # Go left/Reverse
@@ -101,38 +109,38 @@ StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t, actions
 StatsBase.sample(π::EnergyPumpPolicy, args...) =
     StatsBase.sample(Random.GLOBAL_RNG, π::EnergyPumpPolicy, args...)
 
-function steps_to_wall_pseudoterm(obs)
+function steps_to_wall_pseudoterm(;kwargs...)
     normed_wall_pos = 0.0
     # return obs[1] <= MountainCarConst.pos_limit[1]
-    return obs[1] <= normed_wall_pos
+    return kwargs[:state_tp1][1] <= normed_wall_pos
 end
-function steps_to_wall_cumulant(obs, action, pred)
+function steps_to_wall_cumulant(;kwargs...)
     normed_wall_pos = 0.0
     # return obs[1] <= MountainCarConst.pos_limit[1] ? 1.0 : 0.0
-    return obs[1] <= normed_wall_pos ? 1.0 : 0.0
+    return kwargs[:state_tp1][1] <= normed_wall_pos ? 1.0 : 0.0
 end
 
-function steps_to_goal_pseudoterm(obs)
+function steps_to_goal_pseudoterm(;kwargs...)
     normed_goal_pos = 1.0
     # return obs[1] >= MountainCarConst.pos_limit[2]
-    return obs[1] >= normed_goal_pos
+    return kwargs[:state_tp1][1] >= normed_goal_pos
 end
 
-function steps_to_goal_cumulant(obs, action, pred)
+function steps_to_goal_cumulant(;kwargs...)
     normed_goal_pos = 1.0
     # return obs[1] >= MountainCarConst.pos_limit[2] ? 1.0 : 0.0
-    return obs[1] >= normed_goal_pos ? 1.0 : 0.0
+    return kwargs[:state_tp1][1] >= normed_goal_pos ? 1.0 : 0.0
 end
 
-function task_pseudoterm(obs)
+function task_pseudoterm(;kwargs...)
     normed_goal_pos = 1.0
-    return obs[1] >= normed_goal_pos
+    return kwargs[:state_tp1][1] >= normed_goal_pos
 end
 
-function task_cumulant(obs, action, pred)
+function task_cumulant(;kwargs...)
     normed_goal_pos = 1.0
     # return obs[1] >= MountainCarConst.pos_limit[2] ? 1.0 : 0.0
-    return obs[1] >= normed_goal_pos ? 0.0 : -1.0
+    return kwargs[:state_tp1][1] >= normed_goal_pos ? 0.0 : -1.0
 end
 
 end #end MountainCarUtils

@@ -16,7 +16,7 @@ function get_optimizer(opt_string, parsed::Dict, prefix)
     _init_optimizer(opt_type, parsed, prefix)
 end
 
-_init_optimizer(opt, ::Dict) = 
+_init_optimizer(opt, ::Dict) =
     throw("$(string(opt)) optimizer initialization not found.")
 
 function _init_optimizer(opt_type::Union{Type{Descent}, Type{ADAGrad}, Type{ADADelta}}, parsed::Dict, prefix = "")
@@ -104,7 +104,7 @@ function get_linear_learner(parsed::Dict,
     else
         opt = get_optimizer(parsed, prefix)
         lu = get_learning_update(parsed, opt, prefix)
-        
+
         learner_str = parsed[learner_key]
         demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
             LinearQLearner(lu,
@@ -132,7 +132,7 @@ end
 _init_learning_update(lu_type, args...) =
     throw("$(string(lu_type)) does not have an init function.")
 
-function _init_learning_update(lu_type::Union{Type{TB}}, opt, parsed::Dict, prefix)
+function _init_learning_update(lu_type::Union{Type{TB}, Type{ESARSA}}, opt, parsed::Dict, prefix)
     λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
     try
         λ = parsed[λ_str]
@@ -141,4 +141,3 @@ function _init_learning_update(lu_type::Union{Type{TB}}, opt, parsed::Dict, pref
         throw("$(lu_type) needs: $(λ_str) (float).")
     end
 end
-
