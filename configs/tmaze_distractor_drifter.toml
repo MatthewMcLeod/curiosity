@@ -13,24 +13,28 @@ behaviour_alpha = 0.2
 behaviour_gamma = 0.9
 behaviour_learner = "RoundRobin"
 behaviour_trace = "accumulating"
-constant_target = 1.0
+constant_target= 1.0
 cumulant_schedule = "DrifterDistractor"
-demon_alpha = 0.5
 demon_alpha_init = 0.1
+# "demon_alpha" = 0.5
 demon_discounts = 0.9
-demon_learner = "TBAuto"
+demon_learner = "Q"
 demon_policy_type = "greedy_to_cumulant"
+demon_update = "TB"
 distractor = "(1.0, 1.0)"
 drifter = "(1.0, sqrt(0.01))"
 exploring_starts = true
 horde_type = "regular"
 intrinsic_reward = "weight_change"
-lambda = 0.9
+# "lambda" = 0.9
 logger_keys = ["TTMAZE_ERROR"]
 save_dir = "TabularTMazeExperiment"
-# seed = 1
-steps = 2000
+# "seed" = 1
+steps = 20000
 use_external_reward = true
 
 [sweep_args]
-seed = [1]
+seed = "1:30"
+demon_alpha = "[2^-0, 2^-1, 2^-2, 2^-3, 2^-4, 2^-5]"
+lambda = [0.0, 0.3, 0.6, 0.9]
+

@@ -7,6 +7,8 @@ using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
+using ProgressMeter
+
 
 
 const TTMU = Curiosity.TabularTMazeUtils
@@ -15,16 +17,16 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "ESARSA",
+        "behaviour_learner" => "RoundRobin",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
-        "demon_alpha_init" => 0.1,
+        "demon_alpha_init" => 1.0,
         "demon_alpha" => 0.5,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
-        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
+        "demon_update" => "TB",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>true,
@@ -161,6 +163,9 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         max_num_steps = num_steps
         steps = Int[]
 
+        if progress
+            p = Progress(max_num_steps)
+        end
         while sum(steps) < max_num_steps
             cur_step = 0
             max_episode_steps = min(max_num_steps - sum(steps), 1000)
@@ -182,6 +187,10 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
             push!(steps, stp)
             eps += 1
+
+            if progress
+                ProgressMeter.update!(p, sum(steps))
+            end
         end
 
         # if agent.behaviour_learner isa GPI
