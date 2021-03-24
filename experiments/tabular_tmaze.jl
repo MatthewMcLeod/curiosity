@@ -15,8 +15,8 @@ default_args() =
     Dict(
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
@@ -78,6 +78,12 @@ function construct_agent(parsed)
         #Dummy prediction GVF
         function term_func(;kwargs)
             return kwargs[:is_terminal]
+        end
+
+        function b_π(state_constructor, learner, exploration_strategy, obs, action)
+            s = state_constructor(obs)
+            preds = learner(s)
+            return exploration_strategy(preds)[action]
         end
 
         DummyGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(discount, TTMU.pseudoterm), GVFParamFuncs.NullPolicy())
