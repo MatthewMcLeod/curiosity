@@ -5,19 +5,18 @@ using GVFHordes
 using MinimalRLCore
 
 mutable struct Agent{IR<:IntrinsicReward,
-                     H<:GVFHordes.AbstractHorde,
+                     H,
+                     BH,
                      DL<:Learner,
-                     BLU<:LearningUpdate,
+                     BL<:Learner,
                      O,
                      Φ,
                      SC,
                      ES<:ExplorationStrategy} <: AbstractAgent
 
 
-    behaviour_weights::Array{Float64,2}
-    behaviour_lu::BLU
-    behaviour_learner::Any
-    behaviour_demons::Any
+    behaviour_learner::BL
+    behaviour_demons::BH
     behaviour_gamma::Float64
 
     demons::H
@@ -38,7 +37,6 @@ end
 
 function Agent(horde,
                behaviour_feature_size::Int,
-               behaviour_lu,
                behaviour_learner,
                behaviour_horde,
                behaviour_gamma,
@@ -63,10 +61,7 @@ function Agent(horde,
         throw(ArgumentError("Not a valid intrinsic reward"))
     end
 
-
-    Agent(zeros(behaviour_weight_dims),
-          behaviour_lu,
-          behaviour_learner,
+    Agent(behaviour_learner,
           behaviour_horde,
           behaviour_gamma,
 
@@ -178,10 +173,7 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
     next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
 
         #NOTE: Different call than demon updates as the reward and environment pseudotermination function
-        # cannot be apart of the behaviour demon horde
-        update!(# update(agent.demon_learner),
-                agent.behaviour_lu,
-                agent.behaviour_learner,
+        update!(agent.behaviour_learner,
                 agent.behaviour_demons,
                 obs,
                 next_obs,
