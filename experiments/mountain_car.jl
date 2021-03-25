@@ -154,7 +154,6 @@ function construct_agent(parsed)
           (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
           use_external_reward,
           exploration_strategy)
-
 end
 
 function get_GPI_horde(parsed, feature_size, action_space, state_constructor)

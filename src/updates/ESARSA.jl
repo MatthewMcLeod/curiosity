@@ -35,12 +35,18 @@ function update!(lu::ESARSA,
     # next_target_pis = behaviour_pi_func(next_state, next_obs)
     C, discount, target_pis, next_target_pis = get_demon_parameters(lu, learner, demons, obs, state, action, next_obs, next_state, next_action, reward)
     b_πs = behaviour_pi_func(state, obs)
-    ρ = target_pis[:,action] ./ b_πs[action]
+
+    #NOTE: With exploring starts an action could be taken that goes against b_π with prob 0.
+    ρ = if b_πs[action] == 0
+        zeros(length(target_pis[:,action]))
+    else
+        target_pis[:,action] ./ b_πs[action]
+    end
 
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    #TODO: Change eligibility trace 
+    #TODO: Change eligibility trace
     e[inds, state.nzind] .= 1
 
     next_preds = learner(next_state)

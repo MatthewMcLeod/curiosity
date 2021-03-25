@@ -87,8 +87,13 @@ function proc_input(agent, obs)
 end
 
 function get_action(agent, state, obs)
-    qs = agent.behaviour_learner(state)
-    action_probs = agent.exploration(qs)
+    action_probs = if agent.behaviour_learner.update isa TabularRoundRobin
+        p = get_action_probs(agent.behaviour_learner.update, state, obs)
+        p
+    else
+        qs = agent.behaviour_learner(state)
+        agent.exploration(qs)
+    end
     action = sample(1:agent.num_actions, Weights(action_probs))
     return action, action_probs
 end

@@ -16,7 +16,7 @@ default_args() =
         "behaviour_alpha" => 0.2,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
-        "behaviour_update" => "ESARSA",
+        "behaviour_update" => "RoundRobin",
         "behaviour_trace" => "accumulating",
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
@@ -37,7 +37,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 5000,
         "use_external_reward" => true,
     )
 
@@ -107,10 +107,10 @@ function construct_agent(parsed)
         SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
     elseif behaviour_lu == "TB"
         TB(lambda=lambda, opt=Descent(behaviour_alpha))
-    elseif behaviour_learner == "RoundRobin"
+    elseif behaviour_lu == "RoundRobin"
         TabularRoundRobin()
     else
-        throw(ArgumentError("Not a valid behaviour learner"))
+        throw(ArgumentError("Not a valid behaviour learning update"))
     end
 
 
@@ -135,7 +135,7 @@ function construct_agent(parsed)
 
     Agent(demons,
           feature_size,
-          behaviour_lu,
+          # behaviour_lu,
           behaviour_learner,
           behaviour_demons,
           behaviour_discount,
