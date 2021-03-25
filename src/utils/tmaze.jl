@@ -77,8 +77,6 @@ struct TTMazeStateActionCumulant <: GVFParamFuncs.AbstractCumulant
 end
 
 function Base.get(cumulant::TTMazeStateActionCumulant; kwargs...)
-    # @show kwargs
-    # @show kwargs[:action_t]
     state = kwargs[:constructed_state_t]
     action = kwargs[:action_t]
     if state.nzind[1] == cumulant.state_num && action == cumulant.action

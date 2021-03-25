@@ -6,7 +6,6 @@ Base.@kwdef mutable struct SARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     prev_discounts::IdDict = IdDict()
 end
 
-
 function update!(lu::SARSA,
                  learner::QLearner{M, LU},
                  demons,
@@ -17,7 +16,6 @@ function update!(lu::SARSA,
                  next_state,
                  next_action,
                  is_terminal,
-                 discount,
                  behaviour_pi_func,
                  reward) where {M<:AbstractMatrix, LU<:SARSA}
 

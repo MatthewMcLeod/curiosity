@@ -21,6 +21,8 @@ _init_optimizer(opt, ::Dict) =
 
 function _init_optimizer(opt_type::Union{Type{Descent}, Type{ADAGrad}, Type{ADADelta}}, parsed::Dict, prefix = "")
     eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    @show prefix
+    @show eta_str
     try
         η = parsed[eta_str]
         opt_type(η)
@@ -137,12 +139,18 @@ end
 
 function get_learning_update(parsed::Dict, opt, prefix="")
     lu_key = prefix == "" ? "update" : join([prefix, "update"], "_")
+    @show lu_key
     lu = getproperty(Curiosity, Symbol(parsed[lu_key]))
+    @show lu
     _init_learning_update(lu, opt, parsed, prefix)
 end
 
 _init_learning_update(lu_type, args...) =
     throw("$(string(lu_type)) does not have an init function.")
+
+function _init_learning_update(lu_type::Union{Type{TabularRoundRobin}}, args...)
+    lu_type()
+end
 
 function _init_learning_update(lu_type::Union{Type{TB},
                                               Type{SARSA},

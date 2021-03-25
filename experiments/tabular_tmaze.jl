@@ -13,27 +13,37 @@ const TTMU = Curiosity.TabularTMazeUtils
 
 default_args() =
     Dict(
-        "behaviour_alpha" => 0.2,
+        # Behaviour Items
+        "behaviour_eta" => 0.2,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
-        "behaviour_update" => "RoundRobin",
+        "behaviour_update" => "TabularRoundRobin",
         "behaviour_trace" => "accumulating",
-        "constant_target"=> 1.0,
-        "cumulant_schedule" => "DrifterDistractor",
-        "exploration_strategy" => "epsilon_greedy",
+        "behaviour_opt" => "Descent",
+        "behaviour_lambda" => 0.9,
         "exploration_param" => 0.2,
+        "exploration_strategy" => "epsilon_greedy",
+
+        # Demon Attributes
         "demon_alpha_init" => 0.1,
-        "demon_alpha" => 0.1,
+        "demon_eta" => 0.1,
         "demon_discounts" => 0.9,
         "demon_learner" => "Q",
         "demon_update" => "SARSA",
         "demon_policy_type" => "greedy_to_cumulant",
+        "demon_opt" => "Descent",
+        "demon_lambda" => 0.9,
+
+        # Environment Config
+        "constant_target"=> 1.0,
+        "cumulant_schedule" => "DrifterDistractor",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>true,
+
+        # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "lambda" => 0.9,
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
@@ -47,15 +57,12 @@ function construct_agent(parsed)
     feature_size = 21
     action_space = 4
     observation_size = 5
-    lambda = parsed["lambda"]
-    demon_alpha = parsed["demon_alpha"]
     demon_alpha_init = parsed["demon_alpha_init"]
     demon_learner = parsed["demon_learner"]
     demon_lu = parsed["demon_update"]
 
     behaviour_learner = parsed["behaviour_learner"]
     behaviour_lu = parsed["behaviour_update"]
-    behaviour_alpha = parsed["behaviour_alpha"]
     behaviour_discount = parsed["behaviour_gamma"]
 
     intrinsic_reward_type = parsed["intrinsic_reward"]
@@ -77,50 +84,16 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
-    demon_lu = if demon_lu == "TB"
-        TB(lambda=lambda, opt=Descent(demon_alpha))
-    elseif demon_learner == "TBAuto"
-        TB(lambda,
-           Auto(demon_alpha, demon_alpha_init),
-           feature_size, length(demons), action_space)
-    elseif demon_lu == "ESARSA"
-        ESARSA(lambda=lambda, opt = Descent(demon_alpha))
-    elseif demon_lu == "SARSA"
-        ESARSA(lambda=lambda, opt = Descent(demon_alpha))
-    else
-        throw(ArgumentError("Not a valid demon learner"))
-    end
-
-    demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
-        LinearQLearner(demon_lu, feature_size, action_space, length(demons))
-    elseif demon_learner ∈ ["SR", "SRLearner", "sr"]
-        SRLearner(demon_lu,
-                  feature_size,
-                  length(demons),
-                  action_space,
-                  demons.num_tasks)
-    else
-        throw(ArgumentError("Not a valid demon learner"))
-    end
-
-    behaviour_lu = if behaviour_lu == "ESARSA"
-        ESARSA(lambda=lambda, opt=Descent(behaviour_alpha))
-    elseif behaviour_lu == "SARSA"
-        SARSA(lambda=lambda, opt=Descent(behaviour_alpha))
-    elseif behaviour_lu == "TB"
-        TB(lambda=lambda, opt=Descent(behaviour_alpha))
-    elseif behaviour_lu == "RoundRobin"
-        TabularRoundRobin()
-    else
-        throw(ArgumentError("Not a valid behaviour learning update"))
-    end
-
-
-    behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
-        LinearQLearner(behaviour_lu, feature_size, action_space, 1)
-    elseif behaviour_learner ∈ ["GPI"]
-        GPI(behaviour_lu, feature_size, length(behaviour_demons), action_space, behaviour_demons.num_tasks)
-    end
+    demon_learner = Curiosity.get_linear_learner(parsed,
+                                                 feature_size,
+                                                 action_space,
+                                                 demons,
+                                                 "demon")
+    behaviour_learner = Curiosity.get_linear_learner(parsed,
+                                                 feature_size,
+                                                 action_space,
+                                                 demons,
+                                                 "behaviour")
 
     behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, (obs) -> state_constructor(obs, feature_size), behaviour_learner, exploration_strategy)
     behaviour_demons = if behaviour_learner isa GPI
@@ -137,7 +110,6 @@ function construct_agent(parsed)
 
     Agent(demons,
           feature_size,
-          # behaviour_lu,
           behaviour_learner,
           behaviour_demons,
           behaviour_discount,
