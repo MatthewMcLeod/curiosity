@@ -56,3 +56,10 @@ function get_demon_pis(horde, num_actions, state, obs)
     end
     return target_pis
 end
+
+function get_demon_parameters(lu::LearningUpdate, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
+    C, next_discounts, _ = get(demons; state_t = obs, action_t = action, state_tp1 = next_obs, action_tp1 = next_action, reward = env_reward)
+    target_pis = get_demon_pis(demons, learner.num_actions, state, obs)
+    next_target_pis = get_demon_pis(demons, learner.num_actions, next_state, next_obs)
+    C, next_discounts, target_pis, next_target_pis
+end

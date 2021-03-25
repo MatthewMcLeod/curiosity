@@ -26,7 +26,7 @@ default_args() =
         "demon_alpha" => 0.1,
         "demon_discounts" => 0.9,
         "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
+        "demon_update" => "SARSA",
         "demon_policy_type" => "greedy_to_cumulant",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
@@ -84,6 +84,8 @@ function construct_agent(parsed)
            Auto(demon_alpha, demon_alpha_init),
            feature_size, length(demons), action_space)
     elseif demon_lu == "ESARSA"
+        ESARSA(lambda=lambda, opt = Descent(demon_alpha))
+    elseif demon_lu == "SARSA"
         ESARSA(lambda=lambda, opt = Descent(demon_alpha))
     else
         throw(ArgumentError("Not a valid demon learner"))
