@@ -7,7 +7,7 @@ mutable struct GoalVisitation <: LoggerKeyData
     end
 end
 
-function step!(self::GoalVisitation, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+function lg_step!(self::GoalVisitation, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
     C,_,_ = get(agent.demons, s, a, s_next)
     if sum(C) != 0
         gvf_i = findfirst(!iszero,C)
@@ -15,7 +15,7 @@ function step!(self::GoalVisitation, env, agent, s, a, s_next, r, is_terminal, c
     end
 end
 
-function episode_end!(self::GoalVisitation, cur_step_in_episode, cur_step_total)
+function lg_episode_end!(self::GoalVisitation, cur_step_in_episode, cur_step_total)
 end
 
 function save_log(self::GoalVisitation, save_dict::Dict)

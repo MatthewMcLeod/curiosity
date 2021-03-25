@@ -25,7 +25,7 @@ mutable struct ValueMap <: LoggerKeyData
     end
 end
 
-function step!(self::ValueMap, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+function lg_step!(self::ValueMap, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
     if rem(cur_step_total, self.log_interval) == 0
         ind = fld(cur_step_total, self.log_interval)
         for (state_ind,(state,action)) in enumerate(zip(self.state_action_set["states"], self.state_action_set["actions"]))
@@ -37,7 +37,7 @@ function step!(self::ValueMap, env, agent, s, a, s_next, r, is_terminal, cur_ste
     end
 end
 
-function episode_end!(self::ValueMap, cur_step_in_episode, cur_step_total)
+function lg_episode_end!(self::ValueMap, cur_step_in_episode, cur_step_total)
 end
 
 function save_log(self::ValueMap, save_dict::Dict)

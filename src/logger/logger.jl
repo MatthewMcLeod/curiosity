@@ -2,11 +2,11 @@ import Reproduce
 
 abstract type LoggerKeyData end
 
-function step!(self::LoggerKeyData, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+function lg_step!(self::LoggerKeyData, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
     error("step! for this logger is unimplemented")
 end
 
-function episode_end!(self::LoggerKeyData, cur_step_in_episode, cur_step_total)
+function lg_episode_end!(self::LoggerKeyData, cur_step_in_episode, cur_step_total)
     error("episode_end! for this logger is unimplemented")
 end
 
@@ -86,13 +86,13 @@ function logger_step!(self::Logger, env, agent, s, a, s_next, r, is_terminal)
     self.cur_step_total += 1;
 
     for data in self.logger_key_data
-        step!(data, env, agent, s, a, s_next, r, is_terminal, self.cur_step_in_episode, self.cur_step_total)
+        lg_step!(data, env, agent, s, a, s_next, r, is_terminal, self.cur_step_in_episode, self.cur_step_total)
     end
 end
 
 function logger_episode_end!(self::Logger)
     for data in self.logger_key_data
-        episode_end!(data, self.cur_step_in_episode, self.cur_step_total)
+        lg_episode_end!(data, self.cur_step_in_episode, self.cur_step_total)
     end
 
     self.cur_step_in_episode = 0

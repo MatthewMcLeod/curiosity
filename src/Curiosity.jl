@@ -8,7 +8,7 @@ using GVFHordes
 
 @reexport using MinimalRLCore
 
-import Flux
+using Flux
 import Flux.Optimise: update!
 
 # export GVFHordes

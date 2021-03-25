@@ -14,7 +14,7 @@ mutable struct MCError <: LoggerKeyData
     end
 end
 
-function step!(self::MCError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+function lg_step!(self::MCError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
 
     if rem(cur_step_total, self.log_interval) == 0
         ind = fld(cur_step_total, self.log_interval)
@@ -24,7 +24,7 @@ function step!(self::MCError, env, agent, s, a, s_next, r, is_terminal, cur_step
     end
 end
 
-function episode_end!(self::MCError, cur_step_in_episode, cur_step_total)
+function lg_episode_end!(self::MCError, cur_step_in_episode, cur_step_total)
 end
 
 function save_log(self::MCError, save_dict::Dict)
