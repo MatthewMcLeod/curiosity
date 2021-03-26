@@ -16,8 +16,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "TabularRoundRobin",
         "behaviour_trace" => "accumulating",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -26,7 +26,7 @@ default_args() =
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
-        "demon_eta" => 0.1,
+        "demon_eta" => 0.5,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
         "demon_update" => "TB",
@@ -47,7 +47,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 5000,
+        "steps" => 2000,
         "use_external_reward" => true,
     )
 
@@ -75,8 +75,30 @@ function construct_agent(parsed)
         s[convert(Int64,observation[1])] = 1
         return s
     end
+    state_constructor_func = (obs) -> state_constructor(obs, feature_size)
 
-    demons = get_horde(parsed, feature_size, action_space, (obs) -> state_constructor(obs, feature_size))
+    function compressed_state_constructor(obs)
+        s = spzeros(4)
+        if obs[1] < 5
+            s[1] = 1
+        elseif obs[1] < 8
+            s[2] = 1
+        elseif obs[1] < 15
+            s[3] = 1
+        elseif obs[1] < 17
+            s[2] = 1
+        else
+            s[4] = 1
+        end
+        return s
+    end
+
+    behaviour_feature_projector = ActionValueFeatureProjector(state_constructor_func, feature_size)
+    # behaviour_feature_projector = ActionValueFeatureProjector(compressed_state_constructor, 4)
+    demon_feature_projector = behaviour_feature_projector
+
+
+    demons = get_horde(parsed, length(demon_feature_projector), action_space, demon_feature_projector)
 
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
         EpsilonGreedy(parsed["exploration_param"])
@@ -88,7 +110,9 @@ function construct_agent(parsed)
                                                  feature_size,
                                                  action_space,
                                                  demons,
-                                                 "demon")
+                                                 "demon",
+                                                 demon_feature_projector)
+
 
 
     # TODO: Behaviour horde needs access to the behaviour learner to condition the behaviour policy
@@ -106,16 +130,16 @@ function construct_agent(parsed)
                                                  action_space,
                                                  num_demons,
                                                  behaviour_num_tasks,
-                                                 "behaviour")
+                                                 "behaviour",
+                                                 behaviour_feature_projector)
 
     behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, (obs) -> state_constructor(obs, feature_size), behaviour_learner, exploration_strategy)
     behaviour_demons = if behaviour_learner isa GPI
-        SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space)
-
+        SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space, behaviour_feature_projector)
 
         pred_horde = Horde([behaviour_gvf])
 
-        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
+        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_feature_projector)
     elseif behaviour_learner isa QLearner
         Horde([behaviour_gvf])
     else
@@ -137,7 +161,7 @@ function construct_agent(parsed)
           exploration_strategy)
 end
 
-function get_horde(parsed, feature_size, action_space, state_constructor)
+function get_horde(parsed, feature_size, action_space, projected_feature_constructor)
 
     discount = parsed["demon_discounts"]
     pseudoterm = TTMU.pseudoterm
@@ -156,9 +180,9 @@ function get_horde(parsed, feature_size, action_space, state_constructor)
 
     if parsed["demon_learner"] == "SR"
         num_SFs = 4
-        SF_horde = TTMU.make_SF_horde(discount, feature_size, action_space)
+        SF_horde = TTMU.make_SF_horde(discount, length(projected_feature_constructor), action_space, projected_feature_constructor)
 
-        horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, state_constructor)
+        horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, projected_feature_constructor)
     end
 
     return horde

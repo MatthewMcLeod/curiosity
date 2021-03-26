@@ -12,25 +12,26 @@ mutable struct SRLearner{F<:Number, LU<:LearningUpdate} <: Learner
     feature_size::Int
 
     num_tasks::Int
+    feature_projector::AbstractFeatureProjector
 
 end
 
 function get_weights(learner::SRLearner)
-    return vcat(learner.ψ, learner.r_w)
+    return [learner.ψ, learner.r_w]
 end
 
-function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks) where {F<:Number}
+function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp) where {F<:Number}
     SRLearner(zeros(F, num_demons-num_tasks, feature_size * num_actions),
-              zeros(F, num_tasks, feature_size * num_actions),
+              zeros(F, num_tasks, length(fp) * num_actions),
               lu,
               num_demons,
               num_actions,
               feature_size,
-              num_tasks)
+              num_tasks, fp)
 end
 
-SRLearner(lu, feature_size, num_demons, num_actions, num_tasks) =
-    SRLearner{Float64}(lu, feature_size, num_demons, num_actions, num_tasks)
+SRLearner(lu, feature_size, num_demons, num_actions, num_tasks, fp) =
+    SRLearner{Float64}(lu, feature_size, num_demons, num_actions, num_tasks, fp)
 
 update(l::SRLearner) = l.update
 

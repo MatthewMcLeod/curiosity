@@ -13,24 +13,26 @@ mutable struct GPI{F<:Number, LU<:LearningUpdate} <: Learner
 
     num_tasks::Int
 
+    feature_projector::AbstractFeatureProjector
 end
 
 function get_weights(learner::GPI)
     return vcat(learner.ψ, learner.r_w)
 end
 
-function GPI{F}(lu, feature_size, num_demons, num_actions, num_tasks) where {F<:Number}
+function GPI{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp) where {F<:Number}
     GPI(zeros(F, num_demons-num_tasks, feature_size * num_actions),
-              zeros(F, num_tasks, feature_size * num_actions),
+              zeros(F, num_tasks, length(fp) * num_actions),
               lu,
               num_demons,
               num_actions,
               feature_size,
-              num_tasks)
+              num_tasks,
+              fp)
 end
 
-GPI(lu, feature_size, num_demons, num_actions, num_tasks) =
-    GPI{Float64}(lu, feature_size, num_demons, num_actions, num_tasks)
+GPI(lu, feature_size, num_demons, num_actions, num_tasks, fp) =
+    GPI{Float64}(lu, feature_size, num_demons, num_actions, num_tasks, fp)
 
 update(l::GPI) = l.update
 

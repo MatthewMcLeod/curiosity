@@ -85,7 +85,8 @@ function get_linear_learner(parsed::Dict,
                             num_actions::Int,
                             num_demons::Int,
                             num_tasks::Int,
-                            prefix="")
+                            prefix="",
+                            feature_projector = nothing)
 
     learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
     if  parsed[learner_key] ∈ ["LSTD", "LSTDLearner", "lstd"]
@@ -116,13 +117,15 @@ function get_linear_learner(parsed::Dict,
                       feature_size,
                       num_demons,
                       num_actions,
-                      num_tasks)
+                      num_tasks,
+                      feature_projector)
         elseif learner_str ∈ ["GPI", "gpi"]
             GPI(lu,
                 feature_size,
                 num_demons,
                 num_actions,
-                num_tasks)
+                num_tasks,
+                feature_projector)
         else
             throw(ArgumentError("Not a valid demon learner"))
         end
@@ -133,7 +136,8 @@ function get_linear_learner(parsed::Dict,
                             feature_size,
                             num_actions,
                             demons,
-                            prefix="")
+                            prefix="",
+                            feature_projector=nothing)
 
     num_demons = if demons isa Nothing
         1
@@ -170,13 +174,15 @@ function get_linear_learner(parsed::Dict,
                       feature_size,
                       num_demons,
                       num_actions,
-                      demons.num_tasks)
+                      demons.num_tasks,
+                      feature_projector)
         elseif learner_str ∈ ["GPI", "gpi"]
             GPI(lu,
                 feature_size,
                 num_demons,
                 num_actions,
-                demons.num_tasks)
+                demons.num_tasks,
+                feature_projector)
         else
             throw(ArgumentError("Not a valid demon learner"))
         end

@@ -3,6 +3,7 @@ import Lazy: @forward
 
 export SFHorde, SRHorde
 using GVFHordes
+using ..Curiosity: AbstractFeatureProjector
 
 struct SFHorde{T<:AbstractGVF} <: GVFHordes.AbstractHorde
     gvfs::Vector{T}
@@ -14,7 +15,8 @@ mutable struct SRHorde <: GVFHordes.AbstractHorde
     SFHorde::SFHorde
     num_tasks::Int
     num_SFs::Int
-    state_constructor::Function
+    state_constructor::AbstractFeatureProjector
+    # state_constructor::Function
     function SRHorde(prediction_horde::GVFHordes.AbstractHorde, successor_feature_horde::SFHorde, num_SFs, state_constructor)
         new(prediction_horde, successor_feature_horde, length(prediction_horde), num_SFs, state_constructor)
     end
