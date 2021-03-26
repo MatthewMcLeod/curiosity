@@ -8,6 +8,7 @@ using Curiosity
 using MinimalRLCore
 using SparseArrays
 using ProgressMeter
+using LinearAlgebra
 
 
 
@@ -26,14 +27,14 @@ default_args() =
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_update" => "TB",
+        "demon_update" => "TBAuto",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>true,
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
         "lambda" => 0.9,
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.AUTOSTEP_STEPSIZE],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 20000,
@@ -71,14 +72,14 @@ function construct_agent(parsed)
 
     demon_lu = if demon_lu == "TB"
         TB(lambda=lambda, opt=Descent(demon_alpha))
-    elseif demon_learner == "TBAuto"
-        TB(lambda,
-           Auto(demon_alpha, demon_alpha_init),
-           feature_size, length(demons), action_space)
+    elseif demon_lu == "TBAuto"
+        TB(lambda=lambda,
+           opt=Auto(demon_alpha, demon_alpha_init))
     else
-        throw(ArgumentError("Not a valid demon learner"))
+        throw(ArgumentError("$(demon_lu) not a valid demon learner"))
     end
 
+    # (update, num_features, num_actions, num_demons; init=(s...)->zeros(s...)) =
     demon_learner = if demon_learner ∈ ["Q", "QLearner", "q"]
         LinearQLearner(demon_lu, feature_size, action_space, length(demons))
     elseif demon_learner ∈ ["SR", "SRLearner", "sr"]
@@ -139,6 +140,8 @@ function get_horde(parsed, feature_size, action_space, state_constructor)
 end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
+
+    LinearAlgebra.BLAS.set_num_threads(1) 
 
     num_steps = parsed["steps"]
     Random.seed!(parsed["seed"])
@@ -212,7 +215,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         #     @show SF
         # end
 
-        println(goal_visitations)
+        # println(goal_visitations)
     end
 
 end
