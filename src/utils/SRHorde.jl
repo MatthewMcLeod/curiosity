@@ -20,6 +20,10 @@ mutable struct SRHorde <: GVFHordes.AbstractHorde
     end
 end
 
+function assign_prediction_horde!(h::SRHorde, new_pred_horde)
+    SRHorde.PredHorde = new_pred_horde
+end
+
 function Base.length(h::SRHorde)
     return length(h.PredHorde) + length(h.SFHorde)
 end

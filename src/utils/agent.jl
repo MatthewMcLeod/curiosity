@@ -21,8 +21,6 @@ _init_optimizer(opt, ::Dict) =
 
 function _init_optimizer(opt_type::Union{Type{Descent}, Type{ADAGrad}, Type{ADADelta}}, parsed::Dict, prefix = "")
     eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
-    @show prefix
-    @show eta_str
     try
         η = parsed[eta_str]
         opt_type(η)
@@ -81,7 +79,55 @@ function _init_optimizer(opt_type::Union{Type{Auto}}, parsed::Dict, prefix="")
         throw("$(opt_type) needs: $(α_str) (float), and $(α_init_str) (float).")
     end
 end
+#
+function get_linear_learner(parsed::Dict,
+                            feature_size::Int,
+                            num_actions::Int,
+                            num_demons::Int,
+                            num_tasks::Int,
+                            prefix="")
 
+    learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
+    if  parsed[learner_key] ∈ ["LSTD", "LSTDLearner", "lstd"]
+        learner_type = LSTDLearner
+        eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+        lambda_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
+        try
+            LSTDLearner(parsed[eta_str],
+                        parsed[lambda_str],
+                        feature_size,
+                        num_actions,
+                        num_demons)
+        catch
+            throw("LSTDLearner needs: $(eta_str) (float), $(lambda_str) (float)")
+        end
+    else
+        opt = get_optimizer(parsed, prefix)
+        lu = get_learning_update(parsed, opt, prefix)
+
+        learner_str = parsed[learner_key]
+        demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
+            LinearQLearner(lu,
+                           feature_size,
+                           num_actions,
+                           num_demons)
+        elseif learner_str ∈ ["SR", "SRLearner", "sr"]
+            SRLearner(lu,
+                      feature_size,
+                      num_demons,
+                      num_actions,
+                      num_tasks)
+        elseif learner_str ∈ ["GPI", "gpi"]
+            GPI(lu,
+                feature_size,
+                num_demons,
+                num_actions,
+                num_tasks)
+        else
+            throw(ArgumentError("Not a valid demon learner"))
+        end
+    end
+end
 
 function get_linear_learner(parsed::Dict,
                             feature_size,
@@ -139,9 +185,7 @@ end
 
 function get_learning_update(parsed::Dict, opt, prefix="")
     lu_key = prefix == "" ? "update" : join([prefix, "update"], "_")
-    @show lu_key
     lu = getproperty(Curiosity, Symbol(parsed[lu_key]))
-    @show lu
     _init_learning_update(lu, opt, parsed, prefix)
 end
 

@@ -16,8 +16,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "TabularRoundRobin",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_trace" => "accumulating",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -28,8 +28,8 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
-        "demon_update" => "SARSA",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
@@ -89,22 +89,37 @@ function construct_agent(parsed)
                                                  action_space,
                                                  demons,
                                                  "demon")
+
+
+    # TODO: Behaviour horde needs access to the behaviour learner to condition the behaviour policy
+    # BUT behaviour learner needs access the horde to know things like how many demons there are.
+    behaviour_num_tasks = 1
+    num_SFs = 4
+    num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
+        num_SFs * feature_size * action_space + 1
+    elseif parsed["behaviour_learner"] ∈ ["Q"]
+        1
+    end
+
     behaviour_learner = Curiosity.get_linear_learner(parsed,
                                                  feature_size,
                                                  action_space,
-                                                 demons,
+                                                 num_demons,
+                                                 behaviour_num_tasks,
                                                  "behaviour")
 
     behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, (obs) -> state_constructor(obs, feature_size), behaviour_learner, exploration_strategy)
     behaviour_demons = if behaviour_learner isa GPI
         SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space)
-        num_SFs = 4
+
 
         pred_horde = Horde([behaviour_gvf])
 
         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size))
     elseif behaviour_learner isa QLearner
         Horde([behaviour_gvf])
+    else
+        throw(ArgumentError("goes with which horde? " ))
     end
 
 

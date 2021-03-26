@@ -87,7 +87,7 @@ function Base.get(cumulant::TTMazeStateActionCumulant; kwargs...)
 end
 
 function make_behaviour_gvf(discount, state_constructor_func, learner, exploration_strategy)
-    function b_π(state_constructor, learner, exploration_strategy; kwargs...)
+    function b_π(state_constructor_func, learner, exploration_strategy; kwargs...)
         s = state_constructor_func(kwargs[:state_t])
         preds = learner(s)
         return exploration_strategy(preds)[kwargs[:action_t]]
