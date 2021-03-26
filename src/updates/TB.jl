@@ -81,7 +81,7 @@ function update!(lu::TB,
         state_discount[state_action_row_ind,:] .+= state'
         state_discount[next_state_action_row_ind,:] .-= next_discounts * next_state'
         abs_phi = abs.(e)
-        update!(lu.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
+        update!(lu.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi), learner.num_demons, learner.num_actions)
     else
         Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err_across_demons))
     end
@@ -160,7 +160,7 @@ function update!(lu::TB,
             abs.(e_ψ)
         end
         z = abs_ϕ_ψ .* max.(abs_ϕ_ψ, state_discount)
-        update!(lu.opt, ψ, e_ψ, td_err, z)
+        update!(lu.opt, ψ, e_ψ, td_err, z, learner.num_demons, 1)
 
         state_discount_r = -reward_next_discounts * next_active_state_action'
         state_discount_r .+= active_state_action'
@@ -170,7 +170,7 @@ function update!(lu::TB,
             abs.(e_w)
         end
         z_r = abs_ϕ_w .* max.(abs_ϕ_w, state_discount_r)
-        update!(lu.opt, w, e_w, pred_err, z)
+        update!(lu.opt, w, e_w, pred_err, z, learner.num_demons, 1)
         # throw("SR + TB + Auto not implemented")
     elseif lu.opt isa Flux.Descent
         α = lu.opt.eta
@@ -273,7 +273,7 @@ function update!(lu::TB,
             abs.(e_ψ)
         end
         z = abs_ϕ_ψ .* max.(abs_ϕ_ψ, state_discount)
-        update!(lu.opt, ψ, e_ψ, td_err, z)
+        update!(lu.opt, ψ, e_ψ, td_err, z, learner.num_demons, 1)
 
         state_discount_r = -reward_next_discounts * next_active_state_action'
         state_discount_r .+= active_state_action'
@@ -283,7 +283,7 @@ function update!(lu::TB,
             abs.(e_w)
         end
         z_r = abs_ϕ_w .* max.(abs_ϕ_w, state_discount_r)
-        update!(lu.opt, w, e_w, pred_err, z_r)
+        update!(lu.opt, w, e_w, pred_err, z_r, learner.num_demons, 1)
         # throw("SR + TB + Auto not implemented")
     elseif lu.opt isa Flux.Descent
         α = lu.opt.eta
