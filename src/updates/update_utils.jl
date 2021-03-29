@@ -4,9 +4,9 @@ abstract type AbstractTraceUpdate end
 struct ReplacingTraces <: AbstractTraceUpdate end
 struct AccumulatingTraces <: AbstractTraceUpdate end
 
-_accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds::Nothing) = 
+_accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds::Nothing) =
     e .+= s'
-_accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds) = 
+_accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds) =
     e[pred_inds,:] .+= s'
 
 _accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_inds::Nothing) =
@@ -14,9 +14,9 @@ _accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractMatrix, pr
 _accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_inds) =
     e[pred_inds,:] .+= s
 
-_accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds::Nothing) = 
+_accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds::Nothing) =
     e .= s'
-_accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds) = 
+_accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds) =
     e[pred_inds,:] .= s'
 
 _accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_inds::Nothing) =
@@ -31,9 +31,17 @@ end
 
 function get_demon_pis(horde::GVFSRHordes.SRHorde, num_actions, state, obs)
     target_pis = zeros(length(horde), num_actions)
-    for a in 1:num_actions
-        _, _, pi = get(horde, obs, a, obs, a)
-        target_pis[:,a] = pi
+    for i in 1:length(horde.PredHorde)
+        for a in 1:num_actions
+        # _, _, pi = get(horde, obs, a, obs, a)
+            target_pis[i, a] = get(GVFHordes.policy(horde.PredHorde.gvfs[i]); state_t = obs, action_t = a)
+        end
+    end
+    for i in 1:length(horde.SFHorde)
+        for a in 1:num_actions
+        # _, _, pi = get(horde, obs, a, obs, a)
+            target_pis[length(horde.PredHorde) + i, a] = get(GVFHordes.policy(horde.SFHorde.gvfs[i]); state_t = obs, action_t = a)
+        end
     end
     return target_pis
 end
@@ -42,8 +50,16 @@ function get_demon_pis(horde, num_actions, state, obs)
     target_pis = zeros(length(horde), num_actions)
     for i in 1:length(horde)
         for a in 1:num_actions
-            target_pis[i, a] = get(GVFHordes.policy(horde.gvfs[i]), obs, a)
+            # target_pis[i, a] = get(GVFHordes.policy(horde.gvfs[i]), obs, a)
+            target_pis[i, a] = get(GVFHordes.policy(horde.gvfs[i]); state_t = obs, action_t = a)
         end
     end
     return target_pis
+end
+
+function get_demon_parameters(lu::LearningUpdate, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
+    C, next_discounts, _ = get(demons; state_t = obs, action_t = action, state_tp1 = next_obs, action_tp1 = next_action, reward = env_reward)
+    target_pis = get_demon_pis(demons, learner.num_actions, state, obs)
+    next_target_pis = get_demon_pis(demons, learner.num_actions, next_state, next_obs)
+    C, next_discounts, target_pis, next_target_pis
 end

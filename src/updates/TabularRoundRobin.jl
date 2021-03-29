@@ -1,5 +1,5 @@
 # include("../utils/env_utils.jl")
-mutable struct TabularRoundRobin <: Learner
+mutable struct TabularRoundRobin <: LearningUpdate
 end
 function update!(self::TabularRoundRobin, reward, action, next_action, state, next_state, args...)
 end

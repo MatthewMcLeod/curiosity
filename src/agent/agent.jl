@@ -87,8 +87,13 @@ function proc_input(agent, obs)
 end
 
 function get_action(agent, state, obs)
-    qs = agent.behaviour_learner(state)
-    action_probs = agent.exploration(qs)
+    action_probs = if agent.behaviour_learner.update isa TabularRoundRobin
+        p = get_action_probs(agent.behaviour_learner.update, state, obs)
+        p
+    else
+        qs = agent.behaviour_learner(state)
+        agent.exploration(qs)
+    end
     action = sample(1:agent.num_actions, Weights(action_probs))
     return action, action_probs
 end
@@ -97,7 +102,7 @@ function assign_horde!(agent, horde)
     agent.demons = horde
 end
 
-MinimalRLCore.end!(agent, obs, reward, is_terminal) = 
+MinimalRLCore.end!(agent, obs, reward, is_terminal) =
     MinimalRLCore.step!(agent, obs, reward, is_terminal)
 
 
@@ -106,7 +111,10 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     #Always exploring starts
     next_action = sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
 
-    _, discounts, _ = get(agent.demons, obs, next_action, obs, next_action)
+    # NOTE: IS THIS RIGHT, seems wierd!?
+    _, discounts, _ = get(agent.demons; state_t = obs, action_t = next_action, state_tp1 = obs, action_tp1 = next_action)
+
+    # _, discounts, _ = get(agent.demons, obs, next_action, obs, next_action)
     agent.last_state = next_state
     agent.last_action = next_action
     agent.last_obs = obs
@@ -126,12 +134,13 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
                    agent.last_action,
                    next_state,
                    next_action,
-                   is_terminal)
-    
+                   is_terminal,
+                   r)
+
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
     total_reward = agent.use_external_reward ? r_int + r : r_int
-    
+
     update_behaviour!(agent,
                       agent.last_obs,
                       obs,
@@ -152,7 +161,7 @@ get_behaviour_pis(agent::Agent, state, obs) =
     get_action(agent, state, obs)[2]
 
 
-function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal)
+function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal, env_reward)
 
     update!(agent.demon_learner,
             agent.demons,
@@ -163,7 +172,8 @@ function update_demons!(agent,obs, next_obs, state, action, next_state, next_act
             next_state,
             next_action,
             is_terminal,
-            (state, obs) -> get_behaviour_pis(agent, state, obs))
+            (state, obs) -> get_behaviour_pis(agent, state, obs),
+            env_reward)
 
 end
 
@@ -182,10 +192,8 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
                 next_state,
                 next_action,
                 is_terminal,
-                [reward],
-                [agent.behaviour_gamma],
-                (state, obs) -> get_behaviour_pis(agent, state, obs))
-
+                (state, obs) -> get_behaviour_pis(agent, state, obs),
+                reward)
 end
 
 function get_demon_prediction(agent::Agent, obs, action)

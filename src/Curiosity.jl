@@ -11,7 +11,12 @@ using GVFHordes
 using Flux
 import Flux.Optimise: update!
 
-
+# Abstract type of FeatureProjector used in the learner utils
+abstract type AbstractFeatureProjector end
+export ValueFeatureProjector,ActionValueFeatureProjector
+include("utils/learners.jl")
+# export GVFHordes
+# include("GVFHordes/GVFHordes.jl")
 include("utils/SRHorde.jl")
 
 export Auto
@@ -51,10 +56,9 @@ export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils
-export get_active_action_state_vector
+export get_active_action_state_vector, ValueFeatureProjector
 include("utils/tmaze.jl")
 include("utils/mountain_car.jl")
-include("utils/learners.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")
 
