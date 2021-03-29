@@ -202,9 +202,7 @@ function _init_learning_update(lu_type::Union{Type{TabularRoundRobin}}, args...)
     lu_type()
 end
 
-function _init_learning_update(lu_type::Union{Type{TB},
-                                              Type{SARSA},
-                                              Type{ESARSA}},
+function _init_learning_update(lu_type::Union{Type{TB}},
                                opt,
                                parsed::Dict,
                                prefix)
@@ -212,6 +210,26 @@ function _init_learning_update(lu_type::Union{Type{TB},
     try
         λ = parsed[λ_str]
         lu_type(lambda=λ, opt=opt)
+    catch
+        throw("$(lu_type) needs: $(λ_str) (float).")
+    end
+end
+
+function _init_learning_update(lu_type::Union{Type{ESARSA}, Type{SARSA}},
+                                opt,
+                                parsed::Dict,
+                                prefix)
+    λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
+    trace_str = prefix == "" ? "trace" : join([prefix, "trace"], "_")
+    trace = try
+        getproperty(Curiosity, Symbol(parsed[trace_str]))
+    catch
+        throw("$(lu_type) needs trace type")
+    end
+
+    try
+        λ = parsed[λ_str]
+        lu_type(lambda=λ, opt=opt, trace=trace())
     catch
         throw("$(lu_type) needs: $(λ_str) (float).")
     end

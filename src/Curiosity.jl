@@ -37,7 +37,7 @@ abstract type ExplorationStrategy end
 export EpsilonGreedy
 include("agent/exploration.jl")
 
-export Agent, agent_end!, step!
+export Agent, agent_end!, step!, get_demon_prediction
 include("agent/agent.jl")
 
 export TileCoder, create_features

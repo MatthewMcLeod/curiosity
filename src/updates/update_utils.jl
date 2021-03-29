@@ -1,5 +1,4 @@
 
-abstract type AbstractTraceUpdate end
 
 struct ReplacingTraces <: AbstractTraceUpdate end
 struct AccumulatingTraces <: AbstractTraceUpdate end

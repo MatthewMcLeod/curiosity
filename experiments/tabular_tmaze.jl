@@ -18,7 +18,7 @@ default_args() =
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
         "behaviour_update" => "TabularRoundRobin",
-        "behaviour_trace" => "accumulating",
+        "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
         "exploration_param" => 0.2,
@@ -26,13 +26,14 @@ default_args() =
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
-        "demon_eta" => 0.5,
+        "demon_eta" => 0.2,
         "demon_discounts" => 0.9,
         "demon_learner" => "Q",
-        "demon_update" => "TB",
+        "demon_update" => "ESARSA",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
+        "demon_trace"=> "AccumulatingTraces",
 
         # Environment Config
         "constant_target"=> 1.0,
@@ -47,7 +48,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 2000,
+        "steps" => 10000,
         "use_external_reward" => true,
     )
 
@@ -231,7 +232,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     cur_step+=1
                 end
                 logger_episode_end!(logger)
-
             push!(steps, stp)
             eps += 1
         end
