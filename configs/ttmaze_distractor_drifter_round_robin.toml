@@ -1,0 +1,52 @@
+[config]
+save_dir = "TMazeDrifterDistractor"
+exp_file = "experiments/tabular_tmaze.jl"
+exp_module_name = "TabularTMazeExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+save_keys=["demon_learner", "seed", "demon_eta", "runs"]
+
+# Behaviour Items
+behaviour_eta = 0.2
+behaviour_gamma = 0.9
+behaviour_learner = "Q"
+behaviour_update = "TabularRoundRobin"
+behaviour_trace = "accumulating"
+behaviour_opt = "Descent"
+behaviour_lambda = 0.9
+exploration_param = 0.0
+exploration_strategy = "epsilon_greedy"
+
+# Demon Attributes
+demon_alpha_init = 1.0
+# demon_eta = 0.5
+demon_discounts = 0.9
+demon_learner = "Q"
+demon_update = "TB"
+demon_policy_type = "greedy_to_cumulant"
+demon_opt = "Descent"
+demon_lambda = 0.9
+
+# Environment Config
+constant_target= 1.0
+cumulant_schedule = "DrifterDistractor"
+distractor = "(1.0, 1.0)"
+drifter = "(1.0, sqrt(0.01))"
+exploring_starts=true
+
+# Agent and Logger
+horde_type = "regular"
+intrinsic_reward = "weight_change"
+logger_keys = ["TTMAZE_ERROR"]
+save_dir = "TabularTMazeExperiment"
+seed = 1
+steps = 100
+use_external_reward = true
+
+[sweep_args]
+seed = ["1"]
+runs = "1:30"
+demon_eta = "2.0 .^ (-3:0)"

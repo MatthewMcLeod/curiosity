@@ -16,8 +16,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "TabularRoundRobin",
         "behaviour_trace" => "accumulating",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -28,7 +28,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.5,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
@@ -221,7 +221,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     #This is a callback for every timestep where logger can go
                     # agent is accesible in this scope
 
-                    if t == true
+                    if t == true && working==true
                         goals = s_next[2:end]
                         f = findfirst(!iszero, goals)
                         goal_visitations[f] += 1
@@ -235,7 +235,9 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             push!(steps, stp)
             eps += 1
         end
-        println(goal_visitations)
+        if working == true
+            println(goal_visitations)
+        end
     end
 
 end
