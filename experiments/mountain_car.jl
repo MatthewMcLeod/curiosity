@@ -14,12 +14,16 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 50000,
+        "steps" => 100,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
         "numtilings" => 8,
         "numtiles" => 8,
+        "behaviourtilings" => 3,
+        "behaviourtiles" => 7,
+        "demontilings" => 8,
+        "demontiles" => 4,
 
 
         "behaviour_update" => "ESARSA",
@@ -36,12 +40,12 @@ default_args() =
         "exploration_strategy" => "epsilon_greedy",
         "exploration_param" => 0.2,
 
-        "lambda" => 0.9,
-        "demon_alpha" => 0.1/8,
+        "lambda" => 0.0,
+        "demon_eta" => 0.1/8,
         "demon_alpha_init" => 0.1/8,
-        "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
-        "demon_opt" => "Auto",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
+        "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
@@ -66,40 +70,76 @@ function construct_agent(parsed)
     state_constructor_tc =
         TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
 
+    demon_tc =
+        TileCoder(parsed["demontilings"], parsed["demontiles"], observation_size)
+    behaviour_tc =
+        TileCoder(parsed["behaviourtilings"], parsed["behaviourtiles"], observation_size)
+
     feature_size = size(state_constructor_tc)
-    function state_constructor(obs, feature_size, tc)
-        s = spzeros(Int, feature_size)
+    demon_feature_size = size(demon_tc)
+    behaviour_feature_size = size(behaviour_tc)
+
+    function state_constructor(obs, tc)
+        s = spzeros(Int, size(tc))
         s[tc(obs)] .= 1
         return s
     end
 
-    demons = get_horde(parsed,
-                       feature_size,
-                       action_space,
-                       (obs) -> state_constructor(obs,
-                                                  feature_size,
-                                                  state_constructor_tc))
+    base_state_constructor_func = (obs) -> state_constructor(obs,
+                               state_constructor_tc)
+    demon_state_constructor_func = (obs) -> state_constructor(obs, demon_tc)
+    behaviour_state_constructor_func = (obs) -> state_constructor(obs, behaviour_tc)
+
+    demon_feature_projector = ActionValueFeatureProjector(demon_state_constructor_func, size(demon_tc))
+    behaviour_feature_projector = ActionValueFeatureProjector(behaviour_state_constructor_func, size(behaviour_tc))
+
+
+    # demons = get_horde(parsed,
+    #                    feature_size,
+    #                    action_space,
+    #                    (obs) -> state_constructor(obs,
+    #                                               feature_size,
+    #                                               state_constructor_tc))
+      demons = get_horde(parsed,
+                         feature_size,
+                         action_space,
+                         demon_feature_projector)
 
     demon_learner = Curiosity.get_linear_learner(parsed,
                                                  feature_size,
                                                  action_space,
                                                  demons,
-                                                 "demon")
+                                                 "demon",
+                                                 demon_feature_projector)
 
-    behaviour_demons = if behaviour_learner ∈ ["GPI"]
-        get_GPI_horde(parsed,
-                           feature_size,
-                           action_space, (obs) ->
-                           state_constructor(obs, feature_size, state_constructor_tc))
+     behaviour_num_tasks = 1
+     num_SFs = 2
+     num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
+         num_SFs * length(behaviour_feature_projector) * action_space + 1
+     elseif parsed["behaviour_learner"] ∈ ["Q"]
+         1
     else
-        nothing
-    end
+        throw(ArgumentError("Hacky thing not working"))
+     end
 
-    behaviour_learner = Curiosity.get_linear_learner(parsed,
-                                                     feature_size,
-                                                     action_space,
-                                                     behaviour_demons,
-                                                     "behaviour")
+     behaviour_learner = Curiosity.get_linear_learner(parsed,
+                                                      feature_size,
+                                                      action_space,
+                                                      num_demons,
+                                                      behaviour_num_tasks,
+                                                      "behaviour",
+                                                      behaviour_feature_projector)
+
+    # behaviour_demons = if behaviour_learner ∈ ["GPI"]
+    #     get_GPI_horde(parsed,
+    #                        feature_size,
+    #                        action_space,
+    #                        behaviour_feature_projector)
+    # else
+    #     nothing
+    # end
+
+
 
     # behaviour_lu = if behaviour_lu == "ESARSA"
     #     ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
@@ -130,14 +170,13 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
-    behaviour_gvf = MCU.make_behaviour_gvf(behaviour_gamma, (obs) -> state_constructor(obs, feature_size, state_constructor_tc), behaviour_learner, exploration_strategy)
+    behaviour_gvf = MCU.make_behaviour_gvf(behaviour_gamma, base_state_constructor_func, behaviour_learner, exploration_strategy)
     behaviour_demons = if behaviour_learner isa GPI
-        SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space)
-        num_SFs = 4
+        SF_horde = MCU.make_SF_horde(behaviour_gamma, length(behaviour_feature_projector), action_space, behaviour_feature_projector)
 
         pred_horde = Horde([behaviour_gvf])
 
-        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, (obs) -> state_constructor(obs, feature_size, state_constructor_tc))
+        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_feature_projector)
     elseif behaviour_learner isa QLearner
         Horde([behaviour_gvf])
     end
@@ -151,7 +190,7 @@ function construct_agent(parsed)
           observation_size,
           action_space,
           intrinsic_reward_type,
-          (obs) -> state_constructor(obs, feature_size, state_constructor_tc),
+          base_state_constructor_func,
           use_external_reward,
           exploration_strategy)
 end
@@ -174,7 +213,7 @@ end
 function get_horde(parsed, feature_size, action_space, state_constructor)
     horde = Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
     if parsed["demon_learner"] == "SR"
-         SF_horde = MCU.make_SF_horde(feature_size, action_space, state_constructor)
+         SF_horde = MCU.make_SF_horde(parsed["behaviour_gamma"], length(state_constructor), action_space, state_constructor)
          num_SFs = 2
          horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, state_constructor)
     end

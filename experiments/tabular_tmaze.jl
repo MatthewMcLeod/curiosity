@@ -16,8 +16,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "TabularRoundRobin",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_trace" => "accumulating",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -133,7 +133,7 @@ function construct_agent(parsed)
                                                  "behaviour",
                                                  behaviour_feature_projector)
 
-    behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, (obs) -> state_constructor(obs, feature_size), behaviour_learner, exploration_strategy)
+    behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
     behaviour_demons = if behaviour_learner isa GPI
         SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space, behaviour_feature_projector)
 

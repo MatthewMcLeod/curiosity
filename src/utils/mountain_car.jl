@@ -14,7 +14,7 @@ struct MountainCarStateActionCumulant <: GVFParamFuncs.AbstractCumulant
 end
 
 function Base.get(cumulant::MountainCarStateActionCumulant; kwargs...)
-    state = kwargs[:state_t]
+    state = kwargs[:constructed_state_t]
     action = kwargs[:action_t]
     if state[cumulant.state_num] == 1 && action == cumulant.action
         return 1
@@ -39,7 +39,7 @@ function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_action
                     gvf_policy) for s in 1:num_features for a in 1:num_actions])
 end
 
-function make_SF_horde(num_features, num_actions, state_constructor)
+function make_SF_horde(discount, num_features, num_actions, state_constructor)
     steps_to_wall_horde = make_SF_for_policy(EnergyPumpPolicy(true),
                 GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0),
                 num_features, num_actions, state_constructor)
