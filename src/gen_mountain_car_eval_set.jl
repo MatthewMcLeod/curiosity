@@ -2,12 +2,16 @@ using Curiosity
 using MinimalRLCore
 using Statistics
 using GVFHordes
+using StatsBase
+using JLD2
+const MCU = Curiosity.MountainCarUtils
 
 include("../experiments/mountain_car.jl")
 
 function gen_eval_set()
     parsed = MountainCarExperiment.default_args()
-    horde = MountainCarExperiment.get_horde(parsed)
+    # horde = MountainCarExperiment.get_horde(parsed)
+    gvfs = [MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()]
 
     normalized = true
     env = MountainCar(0.0,0.0, normalized)
@@ -18,11 +22,12 @@ function gen_eval_set()
 
 
     task_gvf = Curiosity.MountainCarUtils.task_gvf()
-    gvfs = [horde.gvfs..., task_gvf]
+    # gvfs = [horde.gvfs..., task_gvf]
+    # gvfs = [horde.gvfs..., task_gvf]
 
 
-    num_start_states = 100
-    gvf_rets = Array{Float64, 2}(undef, length(horde),num_start_states)
+    num_start_states = 400
+    gvf_rets = Array{Float64, 2}(undef, length(gvfs),num_start_states)
     start_states = []
 
     for i in 1:num_start_states
@@ -30,9 +35,12 @@ function gen_eval_set()
         s = MinimalRLCore.get_state(env)
         push!(start_states,s)
     end
+    possible_actions = MinimalRLCore.get_actions(env)
+    action_probs = ones(length(possible_actions)) / length(possible_actions)
+    start_actions = [sample(possible_actions, Weights(action_probs)) for i in 1:num_start_states]
 
-    for (gvf_i,gvf) in enumerate(horde.gvfs)
-        rets = monte_carlo_returns(env, gvf, start_states, num_returns, γ_thresh)
+    for (gvf_i,gvf) in enumerate(gvfs)
+        rets = monte_carlo_returns(env, gvf, start_states, start_actions,num_returns, γ_thresh)
 
         x = [x for (x,y) in start_states]
         y = [y for (x,y) in start_states]
@@ -44,7 +52,15 @@ function gen_eval_set()
         gvf_rets[gvf_i,:] = rets
 
     end
-    return start_states, ones(num_start_states) * 3.0, gvf_rets
+    return start_states, start_actions, gvf_rets
+end
+
+function save_data(rets,obs,actions)
+    MCEvalSet = Dict()
+    MCEvalSet["ests"] = rets
+    MCEvalSet["actions"] = actions
+    MCEvalSet["states"] = obs
+    @save "./src/data/MCEvalSet.jld2" MCEvalSet
 end
 
 # using Plots

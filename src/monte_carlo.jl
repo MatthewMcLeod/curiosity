@@ -45,7 +45,8 @@ function monte_carlo_return(env,
             next_action = StatsBase.sample(rng, GVFHordes.policy(gvf), next_state, get_actions(env))
 
             # Update Return
-            c, γ, pi_prob = get(gvf, cur_state, action, next_state, next_action, nothing)
+            # c, γ, pi_prob = get(gvf, cur_state, action, next_state, next_action, nothing)
+            c, γ, pi_prob = get(gvf; state_t = cur_state, action_t = action, state_tp1 = next_state, action_tp1 = next_action)
             returns[ret] += cumulative_gamma*c
             cumulative_gamma *= γ*(1-term)
 

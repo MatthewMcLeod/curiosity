@@ -76,11 +76,18 @@ cumulant(gvf::GVF) = gvf.cumulant
 discount(gvf::GVF) = gvf.discount
 policy(gvf::GVF) = gvf.policy
 
-function Base.get(gvf::GVF, state_t, action_t, state_tp1, action_tp1, preds_tp1)
-    c = get(gvf.cumulant, state_tp1, action_tp1, preds_tp1)
-    γ = get(gvf.discount, state_t, action_t, state_tp1, action_tp1, preds_tp1)
-    π_prob = get(gvf.policy, state_t, action_t)
+function Base.get(gvf::GVF; kwargs...)
+    c = get(gvf.cumulant; kwargs...)
+    γ = get(gvf.discount; kwargs...)
+    π_prob = get(gvf.policy; kwargs...)
     return c, γ, π_prob
+end
+
+function Base.get(gvf::GVF, state_t, action_t, state_tp1, action_tp1, preds_tp1)
+    # c = get(gvf.cumulant, state_tp1, action_tp1, preds_tp1)
+    # γ = get(gvf.discount, state_t, action_t, state_tp1, action_tp1, preds_tp1)
+    # π_prob = get(gvf.policy, state_t, action_t)
+    return get(gvf; state_t = state_t, action_t = action_t, state_tp1 = state_tp1, action_tp1 = action_tp1, preds_tp1 = preds_tp1)
 end
 
 

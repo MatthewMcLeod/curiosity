@@ -14,7 +14,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 100,
+        "steps" => 30000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -43,7 +43,7 @@ default_args() =
         "lambda" => 0.0,
         "demon_eta" => 0.1/8,
         "demon_alpha_init" => 0.1/8,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,

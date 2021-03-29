@@ -1,6 +1,7 @@
 module MountainCarUtils
 using GVFHordes
-import StatsBase
+# import StatsBase
+using StatsBase
 import Random
 
 const discount = 0.99
@@ -105,9 +106,12 @@ StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy; kwargs...) =
         MountainCarConst.Reverse # Go left/Reverse
     end
 StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t, actions) =
-    StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t)
+    sample(rng, Weights([get(π; state_t = state_t, action_t=a) for a in actions]))
 StatsBase.sample(π::EnergyPumpPolicy, args...) =
     StatsBase.sample(Random.GLOBAL_RNG, π::EnergyPumpPolicy, args...)
+
+# StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t) =
+#     sample(rng, Weights([get(π; state_t = state_t, action_t=a) for a in actions]))
 
 function steps_to_wall_pseudoterm(;kwargs...)
     normed_wall_pos = 0.0
