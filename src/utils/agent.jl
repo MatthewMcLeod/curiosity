@@ -69,7 +69,7 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
 end
 
 function _init_optimizer(opt_type::Union{Type{Auto}}, parsed::Dict, prefix="")
-    α_str = prefix == "" ? "alpha" : join([prefix, "alpha"], "_")
+    α_str = prefix == "" ? "alpha" : join([prefix, "eta"], "_")
     α_init_str = prefix == "" ?  "alpha_init" : join([prefix, "alpha_init"], "_")
     try
         α = parsed[α_str]
