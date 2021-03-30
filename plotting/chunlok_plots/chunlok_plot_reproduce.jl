@@ -9,7 +9,7 @@ include("chunlok_plot_utils.jl")
 ic = ItemCollection("./TMazeDrifterDIstractor")
 
 ic = search(ic, Dict(
-    "demon_learner" => "SR",
+    "demon_learner" => "Q",
     "demon_update" => "TBAuto"
 ))
 
@@ -31,16 +31,16 @@ println(size(data))
 
 p = plot()
 for i in 1:4
-    if i == 3
-        continue
-    end
+    # if i == 3
+    #     continue
+    # end
     line = mean(data[i, :, :], dims=2)
-    print(line[1:5])
+    # print(line[1:5])
     line = line .^0.5 
-    print(line[1:5])
-    print(size(line))
+    # print(line[1:5])
+    # print(size(line))
     plot!(p, 1:400, line)
 end
 
 # println("done")
-savefig("plotting/chunlok_plots/generated_plots/test_plot_reproduce_SR.svg")
+savefig("plotting/chunlok_plots/generated_plots/test_plot_reproduce.svg")

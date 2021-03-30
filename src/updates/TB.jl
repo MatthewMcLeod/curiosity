@@ -1,5 +1,4 @@
 
-
 Base.@kwdef mutable struct TB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
@@ -59,8 +58,8 @@ function update!(lu::TB,
                   repeat(discounts, inner = learner.num_actions),
                   repeat(target_pis[:,action], inner = learner.num_actions),
                   inds)
-    
-    
+
+
     pred = learner(next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
 
@@ -81,7 +80,7 @@ function update!(lu::TB,
         state_discount[state_action_row_ind,:] .+= state'
         state_discount[next_state_action_row_ind,:] .-= next_discounts * next_state'
         abs_phi = abs.(e)
-        update!(lu.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi))
+        update!(lu.opt, weights, e, td_err_across_demons, abs_phi .* max.(state_discount, abs_phi), learner.num_demons, learner.num_actions)
     else
         Flux.Optimise.update!(lu.opt, weights,  -(e .* td_err_across_demons))
     end
@@ -98,7 +97,7 @@ function update!(lu::TB,
                  next_action,
                  is_terminal,
                  behaviour_pi_func)
-    
+
     ψ = learner.ψ
     w = learner.r_w
 
@@ -121,7 +120,7 @@ function update!(lu::TB,
 
     next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
-    
+
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
     (reward_discounts, SF_discounts) = discounts[1:learner.num_tasks], discounts[learner.num_tasks+1:end]
     (reward_next_discounts, SF_next_discounts) = next_discounts[1:learner.num_tasks], next_discounts[learner.num_tasks+1:end]
@@ -160,7 +159,7 @@ function update!(lu::TB,
             abs.(e_ψ)
         end
         z = abs_ϕ_ψ .* max.(abs_ϕ_ψ, state_discount)
-        update!(lu.opt, ψ, e_ψ, td_err, z)
+        update!(lu.opt, ψ, e_ψ, td_err, z, learner.num_demons - learner.num_tasks, 1)
 
         state_discount_r = -reward_next_discounts * next_active_state_action'
         state_discount_r .+= active_state_action'
@@ -170,7 +169,7 @@ function update!(lu::TB,
             abs.(e_w)
         end
         z_r = abs_ϕ_w .* max.(abs_ϕ_w, state_discount_r)
-        update!(lu.opt, w, e_w, pred_err, z_r)
+        update!(lu.opt, w, e_w, pred_err, z, learner.num_tasks, 1)
         # throw("SR + TB + Auto not implemented")
     elseif lu.opt isa Flux.Descent
         α = lu.opt.eta
@@ -187,7 +186,7 @@ function update!(lu::TB,
     end
 
 
-    
+
 end
 
 function zero_eligibility_traces!(lu::TB)

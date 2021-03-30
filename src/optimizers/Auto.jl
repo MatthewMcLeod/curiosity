@@ -14,7 +14,7 @@ end
 Auto(μ, α_init, τ=10000, M_Δ=1.0) = Auto(μ, τ, M_Δ, α_init, IdDict(), IdDict(), IdDict())
 
 # Assumes ϕ and θ are the same size!!!!
-function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z) where {F<:AbstractFloat}
+function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z, num_demons, num_rows_per_demon) where {F<:AbstractFloat}
     α = get!(()->zero(θ) .+ F(opt.α_init), opt.α, θ)::typeof(θ)
     h = get!(()->zero(θ), opt.h, θ)::typeof(θ)
     n = get!(()->zero(θ) .+ 1, opt.n, θ)::typeof(θ)
@@ -37,11 +37,15 @@ function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z) where
     Δβ = clamp.(abs.(hδϕ_ϕ_nz./n_ϕ_nz), -1, 1)
     α_ϕ_nz .= clamp.(α_ϕ_nz .* exp.(μ * Δβ), 1e-6, 1 ./ (abs_ϕ[ϕ_nz_idx]))
 
-
-    if dot(α, z) > 1
-        z_nz_idx = z .!= 0.0
-        α_z_nz = @view α[z_nz_idx]
-        α_z_nz .= min.(α_z_nz, 1 ./sum(abs.(z)))
+    for d ∈ 1:num_demons
+        rr = ((d-1)*num_rows_per_demon + 1):(d*num_rows_per_demon)
+        α_d = @view α[rr, :]
+        z_d = @view z[rr, :]
+        if dot(α_d, z_d) > 1
+            z_nz_idx = z_d .!= 0.0
+            α_z_nz = @view α_d[z_nz_idx]
+            α_z_nz .= min.(α_z_nz, 1 ./sum(abs.(z_d)))
+        end
     end
 
     θ .+= α.*δϕ
