@@ -136,7 +136,7 @@ Base.get(gvfh::Horde, state_tp1, preds_tp1) =
     action_t = nothing,
     state_tp1 = state_tp1,
     action_tp1 = nothing,
-    preds_tp1)
+    preds_tp1 = nothing)
 
 Base.get(gvfh::Horde, state_t, action_t, state_tp1) =
     get(gvfh::Horde;

@@ -66,7 +66,7 @@ Base.get(gvfh::SRHorde, state_tp1, preds_tp1) =
     action_t = nothing,
     state_tp1 = state_tp1,
     action_tp1 = nothing,
-    preds_tp1)
+    preds_tp1 = nothing)
 
 Base.get(gvfh::SRHorde, state_t, action_t, state_tp1) =
     get(gvfh::SRHorde;
@@ -116,7 +116,7 @@ Base.get(gvfh::SFHorde, state_tp1, preds_tp1) =
     action_t = nothing,
     state_tp1 = state_tp1,
     action_tp1 = nothing,
-    preds_tp1)
+    preds_tp1 = nothing)
 
 Base.get(gvfh::SFHorde, state_t, action_t, state_tp1) =
     get(gvfh::SFHorde;
