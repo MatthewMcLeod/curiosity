@@ -21,17 +21,17 @@ default_args() =
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
-        "exploration_param" => 0.2,
+        "exploration_param" => 0.0,
         "exploration_strategy" => "epsilon_greedy",
 
         # Demon Attributes
-        "demon_alpha_init" => 0.1,
-        "demon_eta" => 0.2,
+        "demon_alpha_init" => 1.0,
+        "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Descent",
+        "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
 
@@ -39,7 +39,7 @@ default_args() =
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
         "distractor" => (1.0, 1.0),
-        "drifter" => (1.0, sqrt(0.01)),
+        "drifter" => (sqrt(0.01), 1.0),
         "exploring_starts"=>true,
 
         # Agent and Logger
@@ -48,7 +48,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 2000,
         "use_external_reward" => true,
     )
 
