@@ -7,7 +7,7 @@ using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
-
+using ProgressMeter
 
 const TTMU = Curiosity.TabularTMazeUtils
 
@@ -29,9 +29,9 @@ default_args() =
         "demon_eta" => 0.2,
         "demon_discounts" => 0.9,
         "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
+        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Descent",
+        "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
 
@@ -45,7 +45,7 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.AUTOSTEP_STEPSIZE],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 10000,
@@ -214,6 +214,10 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         max_num_steps = num_steps
         steps = Int[]
 
+        if progress
+            p = Progress(max_num_steps)
+        end
+
         while sum(steps) < max_num_steps
             cur_step = 0
             max_episode_steps = min(max_num_steps - sum(steps), 1000)
@@ -234,6 +238,10 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                 logger_episode_end!(logger)
             push!(steps, stp)
             eps += 1
+
+            if progress
+                ProgressMeter.update!(p, sum(steps))
+            end
         end
         if working == true
             println(goal_visitations)
