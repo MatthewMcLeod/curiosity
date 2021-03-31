@@ -19,6 +19,9 @@ function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z, num_d
     h = get!(()->zero(θ), opt.h, θ)::typeof(θ)
     n = get!(()->zero(θ) .+ 1, opt.n, θ)::typeof(θ)
 
+    # @show length(findall(!iszero, α .- opt.α_init))
+    # @show size(α)
+
     M_Δ, μ, τ = opt.M_Δ, opt.μ, opt.τ
 
     δϕ = δ .* ϕ
@@ -34,7 +37,7 @@ function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z, num_d
 
     # Δβ = sign.(hδϕ_ϕ_nz) .* min.(abs.(hδϕ_ϕ_nz./n_ϕ_nz), M_Δ)
     # α_ϕ_nz .= min.(α_ϕ_nz .* exp.(μ * Δβ), 1.0 ./(abs_ϕ[ϕ_nz_idx]))
-    Δβ = clamp.(abs.(hδϕ_ϕ_nz./n_ϕ_nz), -1, 1)
+    Δβ = clamp.(hδϕ_ϕ_nz./n_ϕ_nz, -1, 1)
     α_ϕ_nz .= clamp.(α_ϕ_nz .* exp.(μ * Δβ), 1e-6, 1 ./ (abs_ϕ[ϕ_nz_idx]))
 
     for d ∈ 1:num_demons
@@ -45,6 +48,8 @@ function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z, num_d
             z_nz_idx = z_d .!= 0.0
             α_z_nz = @view α_d[z_nz_idx]
             α_z_nz .= min.(α_z_nz, 1 ./sum(abs.(z_d)))
+        # else
+        #     # @show "Not Triggered for $(d)"
         end
     end
 

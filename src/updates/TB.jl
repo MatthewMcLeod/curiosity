@@ -142,8 +142,9 @@ function update!(lu::TB,
     # Update Traces: See update_utils.jl
     if λ !== 0.0
         update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
-        # @show size(e_w), size(reward_discounts), size(reward_target_pis[:, action])
-        update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
+        # update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
+        #Reward learning is a supervised learning problem so discounts = 0
+        update_trace!(lu.trace, e_w, projected_state_action, λ, zeros(size(reward_discounts)), reward_target_pis[:, action])
         e_nz = e_nz ∪ active_state_action.nzind
         e_w_nz = e_w_nz ∪ projected_state_action.nzind
     end
@@ -197,6 +198,7 @@ function update!(lu::TB,
         update!(lu.opt, ψ, -td_err .* e_ψ)
         update!(lu.opt, w, -pred_err * e_w)
     end
+    discounts .= next_discounts
 end
 
 
