@@ -30,3 +30,5 @@ docs/site/
 /plotting/.ipynb_checkpoints/
 /plotting/plots/
 /data
+
+/plotting/chunlok/generated_plots
