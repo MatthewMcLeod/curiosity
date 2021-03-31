@@ -2,7 +2,7 @@ using GVFHordes
 
 
 StatsBase.sample(rng::Random.AbstractRNG, p::GVFHordes.GVFParamFuncs.FunctionalPolicy, s, actions) =
-    sample(rng, Weights([p.func(s, a) for a in actions]))
+    sample(rng, Weights([p.func(state_t = s, action_t = a) for a in actions]))
 
 
 """

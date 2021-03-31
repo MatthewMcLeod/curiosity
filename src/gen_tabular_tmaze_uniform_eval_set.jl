@@ -34,50 +34,50 @@ function gen_dataset()
     end
     #NOTE: This lets the agent start in terminal states. This is not normally possible.
     # Work backwards with index so you dont have to reindex due to shifting
-    ind_to_delete = [21, 17, 5, 1]
-    for i in ind_to_delete
-        start_states = del!(start_states, i)
-    end
+    # ind_to_delete = [21, 17, 5, 1]
+    # for i in ind_to_delete
+    #     start_states = del!(start_states, i)
+    # end
     observations = []
-    start_states_all = []
+    actions = []
+    total_start_states = []
     for s in start_states
         MinimalRLCore.reset!(env,s)
-        push!(observations, MinimalRLCore.get_state(env))
-        push!(start_states_all, s)
+        for a in get_actions(env)
+            push!(observations, MinimalRLCore.get_state(env))
+            push!(actions, a)
+            push!(total_start_states, s)
+        end
     end
-    total_observations = []
-    total_start_states = []
-    total_actions = []
-    for (obs_ind,obs) in enumerate(observations)
-            unique_actions = unique([StatsBase.sample(GVFHordes.policy(gvf), obs, get_actions(env)) for gvf in horde.gvfs])
-            for ua in unique_actions
-                push!(total_actions, ua)
-                push!(total_observations, obs)
-                push!(total_start_states, start_states[obs_ind])
-            end
-    end
-
-
     num_returns = 2
     γ_thresh=1e-6
-    actions = zeros(Int,length(horde.gvfs), length(total_observations))
-    horde_rets = zeros(length(horde.gvfs), length(total_observations))
+    horde_rets = zeros(length(horde.gvfs), length(observations))
     for (gvf_i,gvf) in enumerate(horde.gvfs)
-        rets = monte_carlo_returns(env, gvf, total_start_states, total_actions, num_returns, γ_thresh)
+        rets = monte_carlo_returns(env, gvf, total_start_states, actions, num_returns, γ_thresh)
         rets_avg = mean(hcat(rets...),dims=1) # stack horizontally and then average over runs
         horde_rets[gvf_i,:] = rets_avg
     end
 
-
-    return horde_rets, total_observations, total_actions
+    # For tabular tmaze, the goal indices are implemented in such a way
+    #the MC rollout doesnot trigger end episode until 1 step later.
+    ind_to_zero = []
+    for ind in 1:length(observations)
+        if sum(observations[ind][2:end]) != 0.0
+            push!(ind_to_zero, ind)
+        end
+    end
+    for ind in ind_to_zero
+        horde_rets[:,ind] .= 0.0
+    end
+    return horde_rets, observations, actions
 end
 
 function save_data(rets,obs,actions)
-    TTMazeEvalSet = Dict()
-    TTMazeEvalSet["ests"] = rets
-    TTMazeEvalSet["actions"] = actions
-    TTMazeEvalSet["states"] = obs
-    @save "./src/data/TTMazeEvalSet.jld2" TTMazeEvalSet
+    TTMazeUniformEvalSet = Dict()
+    TTMazeUniformEvalSet["ests"] = rets
+    TTMazeUniformEvalSet["actions"] = actions
+    TTMazeUniformEvalSet["states"] = obs
+    @save "./src/data/TTMazeUniformEvalSet.jld2" TTMazeUniformEvalSet
 end
 
 end

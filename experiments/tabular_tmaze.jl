@@ -14,21 +14,21 @@ const TTMU = Curiosity.TabularTMazeUtils
 default_args() =
     Dict(
         # Behaviour Items
-        "behaviour_eta" => 0.2,
+        "behaviour_eta" => 0.55,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
-        "behaviour_update" => "TabularRoundRobin",
-        "behaviour_trace" => "AccumulatingTraces",
+        "behaviour_update" => "TB",
+        "behaviour_trace" => "ReplacingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
-        "exploration_param" => 0.0,
+        "exploration_param" => 0.3,
         "exploration_strategy" => "epsilon_greedy",
 
         # Demon Attributes
         "demon_alpha_init" => 1.0,
-        "demon_eta" => 0.25,
+        "demon_eta" => 0.5,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -45,10 +45,11 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.AUTOSTEP_STEPSIZE],
+        # "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.AUTOSTEP_STEPSIZE, Logger],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 2000,
+        "steps" => 15000,
         "use_external_reward" => true,
     )
 
@@ -226,7 +227,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     #This is a callback for every timestep where logger can go
                     # agent is accesible in this scope
 
-                    if t == true && working==true
+                    if t == true && working==true && t
                         goals = s_next[2:end]
                         f = findfirst(!iszero, goals)
                         goal_visitations[f] += 1
