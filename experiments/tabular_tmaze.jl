@@ -45,8 +45,7 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        # "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.AUTOSTEP_STEPSIZE, Logger],
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.AUTOSTEP_STEPSIZE],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 15000,
