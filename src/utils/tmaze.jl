@@ -2,9 +2,9 @@
 module TabularTMazeUtils
 using Curiosity
 using GVFHordes
-import ..TabularTMazeCumulantSchedules
+import ..TMazeCumulantSchedules
 import ..GVFSRHordes
-const TTMCS = TabularTMazeCumulantSchedules
+const TTMCS = TMazeCumulantSchedules
 
 const NUM_DEMONS = 4
 const NUM_ACTIONS = 4

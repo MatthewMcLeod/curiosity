@@ -8,6 +8,8 @@ using GVFHordes
 
 @reexport using MinimalRLCore
 
+range_check(v, min, max) = v >= min && v <= max
+
 using Flux
 import Flux.Optimise: update!
 
@@ -43,13 +45,10 @@ include("agent/agent.jl")
 export TileCoder, create_features
 include("./agent/tile_coder.jl")
 
-abstract type CumulantSchedule end
-function update! end
-function get_cumulants end
 
-export TabularTMaze, MountainCar, valid_state_mask
-include("environments/tabular_tmaze.jl")
-include("environments/mountain_car.jl")
+export TabularTMaze, MountainCar, OneDTMaze, valid_state_mask
+include("environments.jl")
+
 
 # logger
 export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
