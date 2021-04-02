@@ -150,6 +150,8 @@ function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRN
         env.pos[2] = clamp(y_mov + cur_y, 0.0, 0.8)
     end
 
+    update!(env.cumulant_schedule, env.pos)
+
 end
 
 
