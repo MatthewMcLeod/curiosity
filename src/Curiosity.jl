@@ -57,9 +57,13 @@ include("logger/logger.jl")
 #utils
 export get_active_action_state_vector, ValueFeatureProjector
 include("utils/tmaze.jl")
+include("utils/1d-tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")
+include("utils/features.jl")
+
+
 
 
 using GVFHordes

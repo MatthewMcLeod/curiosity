@@ -130,39 +130,6 @@ function construct_agent(parsed)
                                                       "behaviour",
                                                       behaviour_feature_projector)
 
-    # behaviour_demons = if behaviour_learner ∈ ["GPI"]
-    #     get_GPI_horde(parsed,
-    #                        feature_size,
-    #                        action_space,
-    #                        behaviour_feature_projector)
-    # else
-    #     nothing
-    # end
-
-
-
-    # behaviour_lu = if behaviour_lu == "ESARSA"
-    #     ESARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
-    # elseif behaviour_lu == "SARSA"
-    #     SARSA(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
-    # elseif behaviour_lu == "TB"
-    #     TB(lambda=parsed["lambda"], opt=Descent(behaviour_alpha))
-    # else
-    #     throw(ArgumentError("$(behaviour_lu) Not a valid behaviour learning update"))
-    # end
-
-    # behaviour_learner = if behaviour_learner ∈ ["Q", "QLearner", "q"]
-    #     LinearQLearner(behaviour_lu, feature_size, action_space, 1)
-    # elseif behaviour_learner ∈ ["GPI"]
-    #     GPI(behaviour_lu,
-    #               feature_size,
-    #               length(behaviour_demons),
-    #               action_space,
-    #               behaviour_demons.num_tasks)
-    # else
-    #     throw(ArgumentError("$(behaviour_learner) Not a valid behaviour learner"))
-    # end
-
 
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
         EpsilonGreedy(parsed["exploration_param"])
