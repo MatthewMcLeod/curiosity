@@ -48,7 +48,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 15000,
+        "steps" => 2000,
         "use_external_reward" => true,
     )
 
