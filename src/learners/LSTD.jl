@@ -10,7 +10,7 @@ mutable struct LSTDLearner{AF<:AbstractFloat} <: Learner
 
     w::Vector{Matrix{AF}}
     w_real::Vector{Vector{AF}}
-    
+
     λ::Float64
     γ_t::Vector{Float64}
 
@@ -54,6 +54,10 @@ function get_demon_parameters(learner::LSTDLearner,
     C, next_discounts, π_t, next_target_pis
 end
 
+function get_weights(l::LSTDLearner)
+    return l.w_real
+end
+
 function update!(learner::LSTDLearner,
                  demons,
                  obs,
@@ -63,7 +67,8 @@ function update!(learner::LSTDLearner,
                  next_state,
                  next_action,
                  is_terminal,
-                 behaviour_pi_func)
+                 behaviour_pi_func,
+                 reward)
 
 
     C, γ_tp1, π_t, π_tp1 =
@@ -87,7 +92,7 @@ function update!(learner::LSTDLearner,
     ρ_tp1 = π_tp1 ./ μ_tp1'
 
     γ_t = learner.γ_t
-    
+
     ϕ_t = state
     ϕ_tp1 = next_state
 
@@ -101,10 +106,10 @@ function update!(learner::LSTDLearner,
         e = learner.e[gvf]
         b = learner.b[gvf]
         c = C[gvf]
-        
+
         e .= γ_t[gvf]*λ*ρ_t[gvf] * e + x_t
         b .+= (c*e - b)/(t+1)
-    
+
         u = sum(ρ_tp1[gvf, a] .* get_active_action_state_vector(ϕ_tp1, a, fs, na) for a ∈ 1:na)
         v = transpose(transpose(x_t - γ_tp1[gvf]*u) * A_inv)
 
@@ -118,11 +123,11 @@ function update!(learner::LSTDLearner,
             ve = dot(v, e)
             A_inv .-= Aev/(1 + ve)
         end
-    
+
         learner.w_real[gvf] .= A_inv * b
 
     end
-    
+
     learner.γ_t .= γ_tp1
     learner.t += 1
 
