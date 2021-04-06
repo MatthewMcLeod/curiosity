@@ -3,11 +3,15 @@ module OneDTMazeUtils
 import ..TMazeCumulantSchedules
 import ..OneDTmazeConst
 import ..OneDTMaze
+import ..Learner
 import ..check_goal
 import ..range_check
+import ..get_action_probs
+
+import ..Curiosity
+
 const TMCS = TMazeCumulantSchedules
 const ODTMC = OneDTmazeConst
-
 
 
 #####
@@ -30,68 +34,104 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
     if π.goal == 1
         if cur_x == 0.5
             if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
-                ODTMC.LEFT
+                ODTMC.LEFT == action_t
             else
-                ODTMC.UP
+                ODTMC.UP == action_t
             end
         elseif range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON)
-            ODTMC.UP
+            ODTMC.UP == action_t
         else
-            ODTMC.LEFT
+            ODTMC.LEFT == action_t
         end
     elseif π.goal == 2
         if cur_x == 0.5
             if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
-                ODTMC.LEFT
+                ODTMC.LEFT == action_t
             else
-                ODTMC.UP
+                ODTMC.UP == action_t
             end
         elseif range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON)
-            ODTMC.DOWN
+            ODTMC.DOWN == action_t
         else
-            ODTMC.LEFT
+            ODTMC.LEFT == action_t
         end
     elseif π.goal == 3
         if cur_x == 0.5
             if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
-                ODTMC.RIGHT
+                ODTMC.RIGHT == action_t
             else
-                ODTMC.UP
+                ODTMC.UP == action_t
             end
         elseif range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
-            ODTMC.UP
+            ODTMC.UP == action_t
         else
-            ODTMC.RIGHT
+            ODTMC.RIGHT == action_t
         end
     elseif π.goal == 4
         if cur_x == 0.5
             if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
-                ODTMC.RIGHT
+                ODTMC.RIGHT == action_t
             else
-                ODTMC.UP
+                ODTMC.UP == action_t
             end
         elseif range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
-            ODTMC.DOWN
+            ODTMC.DOWN == action_t
         else
-            ODTMC.RIGHT
+            ODTMC.RIGHT == action_t
         end
     end
 end
+
+
 
 
 ####
 # Behaviour policies
 ####
 
-mutable struct RoundRobinPolicy
-    cur_goal::Int
+struct RoundRobinPolicy <: Learner end
+
+Base.get(π::RoundRobinPolicy; state_t, action_t, kwargs...) =
+    get_action_probs(π, state_t, nothing)[action_t]
+
+
+function Curiosity.get_action_probs(π::RoundRobinPolicy, state, obs=nothing)
+    cur_x = state[1]
+    cur_y = state[2]
+    ret = zeros(4)
+
+    if cur_x == 0.5
+        if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON) # Middle Junction
+            ret[ODTMC.LEFT] = 0.5
+            ret[ODTMC.RIGHT] = 0.5
+        else # Middle Hallway
+            ret[ODTMC.UP] = 1.0
+        end
+    elseif cur_y == 0.8 && range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON) # Left Junction
+        ret[ODTMC.UP] = 0.5
+        ret[ODTMC.DOWN] = 0.5
+    elseif cur_y == 0.8 && range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
+        ret[ODTMC.UP] = 0.5
+        ret[ODTMC.DOWN] = 0.5
+    elseif cur_x == 0.0
+        if cur_y > 0.8
+            ret[ODTMC.UP] = 1.0
+        else
+            ret[ODTMC.DOWN] = 1.0
+        end
+    elseif cur_x == 1.0
+        if cur_y > 0.8
+            ret[ODTMC.UP] = 1.0
+        else
+            ret[ODTMC.DOWN] = 1.0
+        end
+    elseif cur_x < 0.5
+        ret[ODTMC.LEFT] = 1.0
+    else
+        ret[ODTMC.RIGHT] = 1.0
+    end
+    ret
 end
-
-Base.get(π::RoundRobinPolicy; kwargs...) =
-    Base.get(GoalPolicy(π.cur_goal); kwargs...)
-
-get_action_probs(π::RoundRobinPolicy, state, obs) =
-    [Base.get(π; state_t = state, action_t=a) for a ∈ 1:4]
 
 
 

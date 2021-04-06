@@ -102,6 +102,9 @@ function construct_agent(parsed)
                                                  nothing)
 
 
+    # behaviour_learner = LinearQLearning()
+    behaviour_learner = ODTMU.RoundRobinPolicy()
+
 
     # TODO: Behaviour horde needs access to the behaviour learner to condition the behaviour policy
     # BUT behaviour learner needs access the horde to know things like how many demons there are.
@@ -196,7 +199,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
         LoggerInitKey.INTERVAL => 50,
-        LoggerInitKey.ENV => "tabular_tmaze"
+        # LoggerInitKey.ENV => "tabular_tmaze"
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
