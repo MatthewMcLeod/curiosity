@@ -1,6 +1,6 @@
 module TabularTMazeExperiment
 
-import Flux: Descent
+import Flux: Descent, ADAM
 import Random
 
 using GVFHordes
@@ -17,7 +17,7 @@ default_args() =
         "behaviour_eta" => 0.55,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
-        "behaviour_update" => "TB",
+        "behaviour_update" => "TabularRoundRobin",
         "behaviour_trace" => "ReplacingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -26,12 +26,12 @@ default_args() =
 
         # Demon Attributes
         "demon_alpha_init" => 1.0,
-        "demon_eta" => 0.5,
+        "demon_eta" => 0.4,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "LSTD",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Auto",
+        "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
 
@@ -45,10 +45,10 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.AUTOSTEP_STEPSIZE],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 15000,
+        "steps" => 1000,
         "use_external_reward" => true,
     )
 

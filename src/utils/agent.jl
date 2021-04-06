@@ -202,7 +202,7 @@ function _init_learning_update(lu_type::Union{Type{TabularRoundRobin}}, args...)
     lu_type()
 end
 
-function _init_learning_update(lu_type::Union{Type{TB}},
+function _init_learning_update(lu_type::Union{Type{TB}, Type{TBTrueOnline}},
                                opt,
                                parsed::Dict,
                                prefix)

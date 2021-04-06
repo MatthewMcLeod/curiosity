@@ -35,7 +35,7 @@ default_args() =
         "behaviour_lambda" => 0.9,
 
         "intrinsic_reward" =>"no_reward",
-        "behaviour_trace" => "replacing",
+        "behaviour_trace" => "ReplacingTraces",
         "use_external_reward" => true,
         "exploration_strategy" => "epsilon_greedy",
         "exploration_param" => 0.2,
