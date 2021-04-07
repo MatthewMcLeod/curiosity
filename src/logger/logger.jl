@@ -24,6 +24,7 @@ include("tabular_tmaze_uniform_error.jl")
 include("temp_print.jl")
 include("value_map.jl")
 include("autostep_stepsize.jl")
+include("tabular_tmaze_old_error.jl")
 
 # Module for scoping key names
 module LoggerKey
@@ -35,6 +36,7 @@ module LoggerKey
     const VALUE_MAP = "VALUE_MAP"
     const AUTOSTEP_STEPSIZE = "AutostepStepSize"
     const TTMAZE_UNIFORM_ERROR = "TTMAZE_UNIFORM_ERROR"
+    const TTMAZE_OLD_ERROR = "TTMAZE_OLD_ERROR"
 end
 
 module LoggerInitKey
@@ -51,7 +53,8 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TEMP_PRINT => TempPrint,
     LoggerKey.VALUE_MAP => ValueMap,
     LoggerKey.AUTOSTEP_STEPSIZE => AutostepStepSize,
-    LoggerKey.TTMAZE_UNIFORM_ERROR => TTMazeUniformError
+    LoggerKey.TTMAZE_UNIFORM_ERROR => TTMazeUniformError,
+    LoggerKey.TTMAZE_OLD_ERROR => TTMazeOldError
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
