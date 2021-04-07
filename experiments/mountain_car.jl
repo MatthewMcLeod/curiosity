@@ -18,8 +18,8 @@ default_args() =
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
-        "numtilings" => 8,
-        "numtiles" => 8,
+        "numtilings" => 4,
+        "numtiles" => 20,
         "behaviourtilings" => 3,
         "behaviourtiles" => 7,
         "demontilings" => 8,

@@ -7,7 +7,8 @@ import ..Learner
 import ..check_goal
 import ..range_check
 import ..get_action_probs
-
+import ..GVFHordes
+import ..update
 import ..Curiosity
 
 const TMCS = TMazeCumulantSchedules
@@ -18,13 +19,15 @@ const ODTMC = OneDTmazeConst
 # GVF Parameter Functions
 ####
 
-struct GoalTermination end
-
-function Base.get(::GoalTermination; state_t, kwargs...)
-    any([check_goal(OneDTMaze, i, state_t) for i in 1:4])
+struct GoalTermination <: GVFHordes.GVFParamFuncs.AbstractDiscount
+    γ::Float64
 end
 
-struct GoalPolicy
+function Base.get(gt::GoalTermination; state_tp1, kwargs...)
+    any([check_goal(OneDTMaze, i, state_tp1) for i in 1:4]) ? 0.0 : gt.γ
+end
+
+struct GoalPolicy <: GVFHordes.GVFParamFuncs.AbstractPolicy
     goal::Int
 end
 
@@ -89,13 +92,18 @@ end
 # Behaviour policies
 ####
 
-struct RoundRobinPolicy <: Learner end
+Base.@kwdef struct RoundRobinPolicy <: Learner
+    update = Nothing
+end
+
+Curiosity.update!(learner::RoundRobinPolicy, args...) = nothing
 
 Base.get(π::RoundRobinPolicy; state_t, action_t, kwargs...) =
     get_action_probs(π, state_t, nothing)[action_t]
 
 
-function Curiosity.get_action_probs(π::RoundRobinPolicy, state, obs=nothing)
+
+function Curiosity.get_action_probs(π::RoundRobinPolicy, features, state)
     cur_x = state[1]
     cur_y = state[2]
     ret = zeros(4)

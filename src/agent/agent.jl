@@ -87,9 +87,10 @@ function proc_input(agent, obs)
 end
 
 function get_action(agent, state, obs)
-    action_probs = if agent.behaviour_learner.update isa TabularRoundRobin
-        p = get_action_probs(agent.behaviour_learner.update, state, obs)
-        p
+    action_probs = if agent.behaviour_learner isa OneDTMazeUtils.RoundRobinPolicy
+        get_action_probs(agent.behaviour_learner, state, obs)
+    elseif agent.behaviour_learner.update isa TabularRoundRobin 
+        get_action_probs(agent.behaviour_learner.update, state, obs)
     else
         qs = agent.behaviour_learner(state)
         agent.exploration(qs)

@@ -74,7 +74,6 @@ function update!(lu::TB,
      # TD error per demon is the td error on Q
     td_err = target - (weights * state)[inds]
     td_err_across_demons = repeat(td_err, inner=learner.num_actions)
-
     # update discounts
     discounts .= next_discounts
 

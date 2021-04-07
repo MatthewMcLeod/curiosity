@@ -8,6 +8,8 @@ using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
+using ProgressMeter
+
 
 
 # const TTMU = Curiosity.TabularTMazeUtils
@@ -18,8 +20,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.2,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "TabularRoundRobin",
+        "behaviour_learner" => "RoundRobin",
+        "behaviour_update" => "none",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -28,18 +30,23 @@ default_args() =
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
-        "demon_eta" => 0.2,
+        "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
         "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
+        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
 
+        #shared
+        "num_tiles" => 4,
+        "num_tilings" =>20,
+
         # Environment Config
         "constant_target"=> 1.0,
-        "cumulant_schedule" => "DrifterDistractor",
+        "cumulant"=>1.0,
+        "cumulant_schedule" => "Constant",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"beg",
@@ -50,8 +57,10 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 100000,
         "use_external_reward" => true,
+
+        "logger_keys"=>[]
     )
 
 
@@ -84,7 +93,7 @@ function construct_agent(parsed)
 
     demons = Horde(
         [GVF(GVFParamFuncs.FeatureCumulant(i+2),
-             ODTMU.GoalTermination(),
+             ODTMU.GoalTermination(0.9),
              ODTMU.GoalPolicy(i)) for i in 1:4])
 
     
@@ -138,10 +147,21 @@ function construct_agent(parsed)
     # end
 
     
-
+    # Agent(demons,
+    #       feature_size,
+    #       behaviour_learner,
+    #       behaviour_demons,
+    #       behaviour_discount,
+    #       demon_learner,
+    #       observation_size,
+    #       action_space,
+    #       intrinsic_reward_type,
+    #       (obs) -> state_constructor(obs, feature_size),
+    #       use_external_reward,
+    #       exploration_strategy)
 
     Agent(demons,
-          feature_size,
+          feat_size,
           behaviour_learner,
           # behaviour_demons,
           nothing,
@@ -187,7 +207,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     num_steps = parsed["steps"]
     Random.seed!(parsed["seed"])
 
-    cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
+    cumulant_schedule = ODTMU.get_cumulant_schedule(parsed)
 
     # exploring_starts = parsed["exploring_starts"]
     env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"])
@@ -207,6 +227,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         max_num_steps = num_steps
         steps = Int[]
 
+        prg_bar = ProgressMeter.Progress(num_steps, "Step: ")
         while sum(steps) < max_num_steps
             cur_step = 0
             max_episode_steps = min(max_num_steps - sum(steps), 1000)
@@ -221,6 +242,10 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                         goal_visitations[f] += 1
                     end
 
+                    if progress
+                        next!(prg_bar)
+                    end
+
                     logger_step!(logger, env, agent, s, a, s_next, r, t)
                     cur_step+=1
                 end
@@ -231,6 +256,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         if working == true
             println(goal_visitations)
         end
+        agent
     end
 
 end

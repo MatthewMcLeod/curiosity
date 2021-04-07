@@ -43,6 +43,7 @@ MinimalRLCore.get_reward(env::OneDTMaze) = 0.0 # -> determines if the agent_stat
 MinimalRLCore.is_terminal(env::OneDTMaze, pos=env.pos) = any(check_goal.([env], 1:4, [pos]))
 
 check_goal(env::OneDTMaze, goal, pos=env.pos) = check_goal(OneDTMaze, goal, pos)
+
 function check_goal(env::Type{OneDTMaze}, goal, pos)
     ODTMC = OneDTmazeConst
     cur_x = pos[1]
