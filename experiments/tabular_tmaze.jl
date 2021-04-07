@@ -26,7 +26,7 @@ default_args() =
 
         # Demon Attributes
         "demon_alpha_init" => 1.0,
-        "demon_eta" => 0.5,
+        "demon_eta" => 0.2,
         "demon_discounts" => 0.9,
         "demon_learner" => "LSTD",
         "demon_update" => "TB",
@@ -48,7 +48,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 2000,
+        "steps" => 10000,
         "use_external_reward" => true,
     )
 
@@ -245,6 +245,9 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         end
         if working == true
             println(goal_visitations)
+            obs = ones(5,)
+            obs[1] = 6
+            @show get_demon_prediction(agent, obs, 4)
         end
     end
 
