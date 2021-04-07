@@ -245,9 +245,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         end
         if working == true
             println(goal_visitations)
-            obs = ones(5,)
-            obs[1] = 6
-            @show get_demon_prediction(agent, obs, 4)
         end
     end
 
