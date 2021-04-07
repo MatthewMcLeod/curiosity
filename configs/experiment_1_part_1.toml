@@ -52,7 +52,7 @@ use_external_reward = true
 [sweep_args]
 seed = "1:50"
 # runs = "1:2"
-demon_eta = "2.0 .^ (-5:0)"
+demon_eta = "2.0 .^ (-6:0)"
 demon_opt = ["Auto", "Descent"]
 demon_learner = ["SR", "Q"]
 exploration_param = [0.0]

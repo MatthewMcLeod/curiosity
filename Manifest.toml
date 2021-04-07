@@ -535,7 +535,7 @@ version = "0.5.0"
 deps = ["CommonRLInterface", "Lazy", "LinearAlgebra", "Random", "StatsBase"]
 git-tree-sha1 = "0e13b3968a1247f5578d104f44c74545678c108a"
 repo-rev = "master"
-repo-url = "https://github.com:mkschleg/MinimalRLCore.jl.git"
+repo-url = "https://github.com/mkschleg/MinimalRLCore.jl.git"
 uuid = "4557a151-568a-41c4-844f-9d8069264cea"
 version = "0.2.1"
 
