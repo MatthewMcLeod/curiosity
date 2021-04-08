@@ -14,7 +14,7 @@ function main()
         default=4
     end
     parsed = parse_args(as)
-    
+
     experiment = Experiment(parsed["config"])
 
     create_experiment_dir(experiment; tldr="")

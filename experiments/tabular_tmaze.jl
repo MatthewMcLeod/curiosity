@@ -1,6 +1,6 @@
 module TabularTMazeExperiment
 
-import Flux: Descent
+import Flux: Descent, ADAM
 import Random
 
 using GVFHordes
@@ -31,9 +31,11 @@ default_args() =
         "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Auto",
+        "demon_opt" => "ADAM",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
+        "demon_beta_m" => 0.9,
+        "demon_beta_v" => 0.9,
 
         # Environment Config
         "constant_target"=> 1.0,

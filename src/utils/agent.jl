@@ -55,7 +55,7 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
     eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
     beta_str = prefix == "" ? "beta" : join([prefix, "beta"], "_")
     try
-        η = parsed[beta_str]
+        η = parsed[eta_str]
         β = if beta_str ∈ keys(parsed)
             parsed[beta_str]
         else

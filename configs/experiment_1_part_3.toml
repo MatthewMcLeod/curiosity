@@ -27,7 +27,7 @@ demon_alpha_init = 1.0
 # demon_eta = 0.5
 demon_discounts = 0.9
 # demon_learner = "SR"
-demon_update = "ESARSA"
+demon_update = "TB"
 demon_policy_type = "greedy_to_cumulant"
 # demon_opt = "Descent"
 demon_lambda = 0.9
@@ -52,9 +52,9 @@ use_external_reward = true
 [sweep_args]
 seed = "1:100"
 # runs = "1:2"
-demon_eta = "2.0 .^ (-6:0)"
-demon_opt = ["Descent", "Auto"]
-demon_learner = ["Q"]
+demon_eta = "2.0 .^ (-2:-1)"
+demon_opt = ["Descent"]
+demon_learner = ["LSTD"]
 exploration_param = [0.0]
 behaviour_eta = "2.0 .^ (-2:-2)"
 

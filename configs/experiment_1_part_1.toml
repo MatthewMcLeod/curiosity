@@ -50,7 +50,7 @@ steps = 2000
 use_external_reward = true
 
 [sweep_args]
-seed = "1:50"
+seed = "51:75"
 # runs = "1:2"
 demon_eta = "2.0 .^ (-6:0)"
 demon_opt = ["Auto", "Descent"]
