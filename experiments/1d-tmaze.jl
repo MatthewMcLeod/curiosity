@@ -57,10 +57,10 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 100000,
+        "steps" => 10000,
         "use_external_reward" => true,
 
-        "logger_keys"=>[]
+        "logger_keys"=>[LoggerKey.ONEDTMAZEERROR]
     )
 
 
@@ -86,8 +86,8 @@ function construct_agent(parsed)
         Curiosity.SparseTileCoder(parsed["num_tilings"], parsed["num_tiles"], 2),
         1:2)
     feat_size = size(fc)
-    
-    
+
+
     # demons = get_horde(parsed, length(demon_feature_projector), action_space, demon_feature_projector)
     # Lets make a simple horde
 
@@ -96,7 +96,7 @@ function construct_agent(parsed)
              ODTMU.GoalTermination(0.9),
              ODTMU.GoalPolicy(i)) for i in 1:4])
 
-    
+
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
         EpsilonGreedy(parsed["epsilon"])
     else
@@ -146,7 +146,7 @@ function construct_agent(parsed)
     #     throw(ArgumentError("goes with which horde? " ))
     # end
 
-    
+
     # Agent(demons,
     #       feature_size,
     #       behaviour_learner,

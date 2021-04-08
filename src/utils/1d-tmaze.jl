@@ -180,5 +180,14 @@ function get_cumulant_schedule(parsed)
     end
 end
 
+function get_true_values(env::Curiosity.OneDTMaze, eval_set)
+    copy_eval_est = deepcopy(eval_set)
+    num_gvfs = 4
+    goal_cumulants = TMCS.get_cumulant_eval_values(env.cumulant_schedule)
+    for i in 1:num_gvfs
+        copy_eval_est[i, :] .*= goal_cumulants[i]
+    end
+    return copy_eval_est
+end
 
 end

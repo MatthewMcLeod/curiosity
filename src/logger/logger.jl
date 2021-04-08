@@ -15,7 +15,7 @@ function save_log(self::LoggerKeyData, save_dict::Dict)
 end
 
 
-
+include("one_d_tmaze_error.jl")
 include("goal_visitation.jl")
 include("episode_length.jl")
 include("mountain_car_error.jl")
@@ -31,6 +31,7 @@ module LoggerKey
     const TEMP_PRINT = "TEMP_PRINT"
     const TTMAZE_ERROR = "TTMAZE_ERROR"
     const VALUE_MAP = "VALUE_MAP"
+    const ONEDTMAZEERROR = "OneDTMazeError"
 end
 
 module LoggerInitKey
@@ -45,7 +46,8 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.MC_ERROR => MCError,
     LoggerKey.TTMAZE_ERROR => TTMazeError,
     LoggerKey.TEMP_PRINT => TempPrint,
-    LoggerKey.VALUE_MAP => ValueMap
+    LoggerKey.VALUE_MAP => ValueMap,
+    LoggerKey.ONEDTMAZEERROR => OneDTMazeError
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
