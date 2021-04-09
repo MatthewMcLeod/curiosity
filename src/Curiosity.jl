@@ -8,11 +8,13 @@ using GVFHordes
 
 @reexport using MinimalRLCore
 
+range_check(v, min, max) = v >= min && v <= max
+
 using Flux
 import Flux.Optimise: update!
 
 # Abstract type of FeatureProjector used in the learner utils
-abstract type AbstractFeatureProjector end
+abstract type FeatureCreator end
 export ValueFeatureProjector,ActionValueFeatureProjector
 include("utils/learners.jl")
 # export GVFHordes
@@ -43,13 +45,10 @@ include("agent/agent.jl")
 export TileCoder, create_features
 include("./agent/tile_coder.jl")
 
-abstract type CumulantSchedule end
-function update! end
-function get_cumulants end
 
-export TabularTMaze, MountainCar, valid_state_mask
-include("environments/tabular_tmaze.jl")
-include("environments/mountain_car.jl")
+export TabularTMaze, MountainCar, OneDTMaze, valid_state_mask
+include("environments.jl")
+
 
 # logger
 export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
@@ -57,10 +56,15 @@ include("logger/logger.jl")
 
 #utils
 export get_active_action_state_vector, ValueFeatureProjector
+include("utils/SRCreation.jl")
 include("utils/tmaze.jl")
+include("utils/1d-tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")
+include("utils/features.jl")
+
+
 
 
 using GVFHordes

@@ -74,7 +74,6 @@ function update!(lu::TB,
      # TD error per demon is the td error on Q
     td_err = target - (weights * state)[inds]
     td_err_across_demons = repeat(td_err, inner=learner.num_actions)
-
     # update discounts
     discounts .= next_discounts
 
@@ -129,7 +128,7 @@ function update!(lu::TB,
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
 
     projected_state = learner.feature_projector(obs)
-    projected_state_action = get_active_action_state_vector(projected_state, action, length(learner.feature_projector), learner.num_actions)
+    projected_state_action = get_active_action_state_vector(projected_state, action, size(learner.feature_projector), learner.num_actions)
     # projected_next_state_next_action = learner.feature_projector(next_state,next_action)
 
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
@@ -142,9 +141,7 @@ function update!(lu::TB,
     # Update Traces: See update_utils.jl
     if λ !== 0.0
         update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
-        # update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
-        #Reward learning is a supervised learning problem so discounts = 0
-        update_trace!(lu.trace, e_w, projected_state_action, λ, zeros(size(reward_discounts)), reward_target_pis[:, action])
+        update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
         e_nz = e_nz ∪ active_state_action.nzind
         e_w_nz = e_w_nz ∪ projected_state_action.nzind
     end
@@ -160,6 +157,9 @@ function update!(lu::TB,
     td_err = target - ψ * active_state_action
 
     pred_err = reward_C - w * projected_state_action
+
+    # This should always be true as this is immediate next step prediction which is equivalent to having discounts of 0 for all states
+    @assert sum(reward_discounts) == 0
     #td_err is (336x1)
     # TD err is applied across rows
 

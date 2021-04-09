@@ -76,7 +76,7 @@ function tileswrap!(ihtORsize, numtilings, floats, wrapwidths, ints=[], readonly
     return tiles
 end
 
-end
+end # End TileCoding
 
 # using MimimalRLCore
 """

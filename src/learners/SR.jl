@@ -12,7 +12,7 @@ mutable struct SRLearner{F<:Number, LU<:LearningUpdate} <: Learner
     feature_size::Int
 
     num_tasks::Int
-    feature_projector::AbstractFeatureProjector
+    feature_projector::FeatureCreator
 
 end
 
@@ -22,7 +22,7 @@ end
 
 function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp) where {F<:Number}
     SRLearner(zeros(F, num_demons-num_tasks, feature_size * num_actions),
-              zeros(F, num_tasks, length(fp) * num_actions),
+              zeros(F, num_tasks, size(fp) * num_actions),
               lu,
               num_demons,
               num_actions,

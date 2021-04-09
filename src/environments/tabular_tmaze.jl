@@ -84,8 +84,32 @@ returns a mask for the state-action mask (63,4)
     return valid_states
 end
 
-function is_terminal(env::TabularTMaze, pos)
-    return env.world[pos[1]][pos[2]] in env.goal_states
+
+MinimalRLCore.get_reward(env::TabularTMaze) = 0.0
+is_terminal(env::TabularTMaze, pos) = env.world[pos[1]][pos[2]] in env.goal_states
+MinimalRLCore.is_terminal(env::TabularTMaze) = is_terminal(env, env.current_state)
+MinimalRLCore.get_actions(env::TabularTMaze) = 1:4
+
+function MinimalRLCore.get_state(env::TabularTMaze)
+    obs = generate_obs(env.current_state)
+    cumulants = get_cumulants(env, env.cumulant_schedule, env.current_state)
+
+    return vcat(obs,cumulants)
+end
+
+function get_cumulants(env::TabularTMaze, cs::CumulantSchedule, pos)
+    num_cumulants = 4
+    cumulants = zeros(num_cumulants)
+    if env.world[pos[1]][pos[2]] == "G1"
+        cumulants[1] = get_cumulant(cs, "G1")
+    elseif env.world[pos[1]][pos[2]] == "G2"
+        cumulants[2] = get_cumulant(cs, "G2")
+    elseif env.world[pos[1]][pos[2]] == "G3"
+        cumulants[3] = get_cumulant(cs, "G3")
+    elseif env.world[pos[1]][pos[2]] == "G4"
+        cumulants[4] = get_cumulant(cs, "G4")
+    end
+    return cumulants
 end
 
 function MinimalRLCore.reset!(environment::TabularTMaze, rng::AbstractRNG=Random.GLOBAL_RNG)
@@ -120,24 +144,6 @@ function MinimalRLCore.environment_step!(environment::TabularTMaze, action, rng:
         environment.current_state = potential_state
         terminal = true
     end
-    update!(environment, environment.cumulant_schedule, environment.current_state)
+    # update!(environment, environment.cumulant_schedule, environment.current_state)
+    update!(environment.cumulant_schedule, environment.current_state)
 end
-
-function MinimalRLCore.get_reward(env::TabularTMaze)
-    return 0.0
-end
-
-function MinimalRLCore.is_terminal(env::TabularTMaze) # -> determines if the agent_state is terminal
-    return is_terminal(env, env.current_state)
-end
-
-function MinimalRLCore.get_state(env::TabularTMaze)
-    obs = generate_obs(env.current_state)
-    cumulants = get_cumulants(env, env.cumulant_schedule, env.current_state)
-
-    return vcat(obs,cumulants)
-end
-
-MinimalRLCore.get_actions(env::TabularTMaze) = 1:4
-
-include("./tabular_tmaze_cumulants.jl")

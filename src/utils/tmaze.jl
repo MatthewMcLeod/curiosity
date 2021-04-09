@@ -2,9 +2,9 @@
 module TabularTMazeUtils
 using Curiosity
 using GVFHordes
-import ..TabularTMazeCumulantSchedules
+import ..TMazeCumulantSchedules
 import ..GVFSRHordes
-const TTMCS = TabularTMazeCumulantSchedules
+const TTMCS = TMazeCumulantSchedules
 
 const NUM_DEMONS = 4
 const NUM_ACTIONS = 4
@@ -57,14 +57,14 @@ function valid_state_mask()
     return a mask of valid states that is 9x7
     """
     world = [["G1", "0", "0", "0", "0", "0", "G3"],
-                      ["1", "0", "0", "0", "0", "0", "1"],
-                      ["1", "1", "1", "1", "1", "1", "1"],
-                      ["1", "0", "0", "1", "0", "0", "1"],
-                      ["G2", "0", "0", "1", "0", "0", "G4"],
-                      ["0", "0", "0", "1", "0", "0", "0"],
-                      ["0", "0", "0", "1", "0", "0", "0"],
-                      ["0", "0", "0", "1", "0", "0", "0"],
-                      ["0", "0", "0", "1", "0", "0", "0"]]
+             ["1", "0", "0", "0", "0", "0", "1"],
+             ["1", "1", "1", "1", "1", "1", "1"],
+             ["1", "0", "0", "1", "0", "0", "1"],
+             ["G2", "0", "0", "1", "0", "0", "G4"],
+             ["0", "0", "0", "1", "0", "0", "0"],
+             ["0", "0", "0", "1", "0", "0", "0"],
+             ["0", "0", "0", "1", "0", "0", "0"],
+             ["0", "0", "0", "1", "0", "0", "0"]]
 
     world = permutedims(hcat(world...))
     valid_states = findall(x-> x!="0", world)

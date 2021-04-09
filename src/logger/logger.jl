@@ -15,7 +15,7 @@ function save_log(self::LoggerKeyData, save_dict::Dict)
 end
 
 
-
+include("one_d_tmaze_error.jl")
 include("goal_visitation.jl")
 include("episode_length.jl")
 include("mountain_car_error.jl")
@@ -35,6 +35,7 @@ module LoggerKey
     const TEMP_PRINT = "TEMP_PRINT"
     const TTMAZE_ERROR = "TTMAZE_ERROR"
     const VALUE_MAP = "VALUE_MAP"
+    const ONEDTMAZEERROR = "OneDTMazeError"
     const AUTOSTEP_STEPSIZE = "AutostepStepSize"
     const TTMAZE_UNIFORM_ERROR = "TTMAZE_UNIFORM_ERROR"
     const TTMAZE_OLD_ERROR = "TTMAZE_OLD_ERROR"
@@ -54,6 +55,7 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TTMAZE_ERROR => TTMazeError,
     LoggerKey.TEMP_PRINT => TempPrint,
     LoggerKey.VALUE_MAP => ValueMap,
+    LoggerKey.ONEDTMAZEERROR => OneDTMazeError,
     LoggerKey.AUTOSTEP_STEPSIZE => AutostepStepSize,
     LoggerKey.TTMAZE_UNIFORM_ERROR => TTMazeUniformError,
     LoggerKey.TTMAZE_OLD_ERROR => TTMazeOldError,

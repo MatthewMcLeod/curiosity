@@ -13,7 +13,7 @@ mutable struct GPI{F<:Number, LU<:LearningUpdate} <: Learner
 
     num_tasks::Int
 
-    feature_projector::AbstractFeatureProjector
+    feature_projector::FeatureCreator
 end
 
 function get_weights(learner::GPI)
