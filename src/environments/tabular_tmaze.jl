@@ -144,7 +144,6 @@ function MinimalRLCore.environment_step!(environment::TabularTMaze, action, rng:
         environment.current_state = potential_state
         terminal = true
     end
-    update!(environment, environment.cumulant_schedule, environment.current_state)
+    # update!(environment, environment.cumulant_schedule, environment.current_state)
+    update!(environment.cumulant_schedule, environment.current_state)
 end
-
-

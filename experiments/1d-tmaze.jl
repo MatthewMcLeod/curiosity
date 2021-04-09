@@ -14,6 +14,7 @@ using ProgressMeter
 
 # const TTMU = Curiosity.TabularTMazeUtils
 const ODTMU = Curiosity.OneDTMazeUtils
+const SRCU = Curiosity.SRCreationUtils
 
 default_args() =
     Dict(
@@ -32,7 +33,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
@@ -42,6 +43,8 @@ default_args() =
         #shared
         "num_tiles" => 4,
         "num_tilings" =>20,
+        "demon_num_tiles" => 4,
+        "demon_num_tilings" => 8,
 
         # Environment Config
         "constant_target"=> 1.0,
@@ -57,7 +60,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 4000,
         "use_external_reward" => true,
 
         "logger_keys"=>[LoggerKey.ONEDTMAZEERROR]
@@ -87,6 +90,9 @@ function construct_agent(parsed)
         1:2)
     feat_size = size(fc)
 
+    demon_projected_fc = Curiosity.FeatureSubset(
+        Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
+        1:2)
 
     # demons = get_horde(parsed, length(demon_feature_projector), action_space, demon_feature_projector)
     # Lets make a simple horde
@@ -96,6 +102,12 @@ function construct_agent(parsed)
              ODTMU.GoalTermination(0.9),
              ODTMU.GoalPolicy(i)) for i in 1:4])
 
+     SF_horde = SRCU.get_SF_horde_for_policy(ODTMU.GoalPolicy(1), ODTMU.GoalTermination(0.9),demon_projected_fc,1:action_space)
+     for i in 2:4
+         SF_horde = Curiosity.GVFSRHordes.merge(SF_horde,SRCU.get_SF_horde_for_policy(ODTMU.GoalPolicy(i), ODTMU.GoalTermination(0.9),demon_projected_fc,1:action_space))
+     end
+     num_SFs = 4
+     demons = Curiosity.GVFSRHordes.SRHorde(demons, SF_horde, num_SFs, demon_projected_fc)
 
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
         EpsilonGreedy(parsed["epsilon"])
@@ -103,16 +115,23 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
-    demon_learner = Curiosity.get_linear_learner(parsed,
-                                                 feat_size,
-                                                 action_space,
-                                                 demons,
-                                                 "demon",
-                                                 nothing)
-
+    # demon_learner = Curiosity.get_linear_learner(parsed,
+    #                                              feat_size,
+    #                                              action_space,
+    #                                              demons,
+    #                                              "demon",
+    #                                              nothing)
+     demon_learner = Curiosity.get_linear_learner(parsed,
+                                                  feat_size,
+                                                  action_space,
+                                                  demons,
+                                                  "demon",
+                                                  demon_projected_fc)
 
     # behaviour_learner = LinearQLearning()
     behaviour_learner = ODTMU.RoundRobinPolicy()
+
+
 
 
     # TODO: Behaviour horde needs access to the behaviour learner to condition the behaviour policy

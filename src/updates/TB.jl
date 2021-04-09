@@ -128,7 +128,7 @@ function update!(lu::TB,
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
 
     projected_state = learner.feature_projector(obs)
-    projected_state_action = get_active_action_state_vector(projected_state, action, length(learner.feature_projector), learner.num_actions)
+    projected_state_action = get_active_action_state_vector(projected_state, action, size(learner.feature_projector), learner.num_actions)
     # projected_next_state_next_action = learner.feature_projector(next_state,next_action)
 
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]

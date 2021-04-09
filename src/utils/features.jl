@@ -56,4 +56,4 @@ end
 # (FP::ActionValueFeatureProjector)(state, action) = project_features(FP, state, action)
 
 Base.length(AVFP::ActionValueFeatureProjector) = AVFP.pf_length
-
+Base.size(AVFP::ActionValueFeatureProjector) = AVFP.pf_length

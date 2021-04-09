@@ -28,8 +28,8 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.2,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
@@ -48,7 +48,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 52,
         "use_external_reward" => true,
     )
 
