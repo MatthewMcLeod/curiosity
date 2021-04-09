@@ -1,5 +1,5 @@
 [config]
-save_dir = "Experiment1"
+save_dir = "Experiment1_part_4"
 exp_file = "experiments/tabular_tmaze.jl"
 exp_module_name = "TabularTMazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-save_keys=["demon_opt", "seed", "demon_eta", "demon_learner", "exploration_param", "behaviour_eta"]
+save_keys=["demon_opt", "seed", "demon_eta", "demon_learner", "exploration_param", "behaviour_eta", "demon_beta_m", "demon_beta_v"]
 # save_keys=["demon_opt", "demon_eta", "runs"]
 
 # Behaviour Items
@@ -27,13 +27,11 @@ demon_alpha_init = 1.0
 # demon_eta = 0.5
 demon_discounts = 0.9
 # demon_learner = "SR"
-demon_update = "ESARSA"
+demon_update = "TB"
 demon_policy_type = "greedy_to_cumulant"
 # demon_opt = "Descent"
 demon_lambda = 0.9
 demon_trace = "AccumulatingTraces"
-demon_beta_m = 0.99
-demon_beta_v = 0.99
 
 # Environment Config
 constant_target= 1.0
@@ -54,10 +52,12 @@ use_external_reward = true
 [sweep_args]
 seed = "1:100"
 # runs = "1:2"
-demon_eta = "2.0 .^ (-6:0)"
-demon_opt = ["Descent", "Auto"]
+demon_eta = "2.0 .^ (-9:-5)"
+demon_opt = ["ADAM"]
 demon_learner = ["Q"]
 exploration_param = [0.0]
+demon_beta_m = [0.99, 0.999]
+demon_beta_v = [0.99, 0.999]
 behaviour_eta = "2.0 .^ (-2:-2)"
 
 # demon_opt = ["Auto"]
