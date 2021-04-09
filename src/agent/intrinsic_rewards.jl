@@ -14,13 +14,13 @@ end
 
 function WeightChange(learner::Learner)
     current_ws = flattenall(get_weights(learner))
-    WeightChange(learner, current_ws)
+    WeightChange(learner, deepcopy(current_ws))
 end
 
 function update_reward!(wc::WeightChange, agent)
     cw = flattenall(get_weights(agent.demon_learner))
     curiosity_reward = sum(abs.(cw .- wc.previous_weights))
-    wc.previous_weights .= cw
+    wc.previous_weights .= deepcopy(cw)
     return curiosity_reward
 end
 

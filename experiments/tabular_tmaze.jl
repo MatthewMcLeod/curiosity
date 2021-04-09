@@ -7,31 +7,31 @@ using GVFHordes
 using Curiosity
 using MinimalRLCore
 using SparseArrays
-
+using ProgressMeter
 
 const TTMU = Curiosity.TabularTMazeUtils
 
 default_args() =
     Dict(
         # Behaviour Items
-        "behaviour_eta" => 0.2,
+        "behaviour_eta" => 0.55,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
         "behaviour_update" => "TabularRoundRobin",
-        "behaviour_trace" => "AccumulatingTraces",
+        "behaviour_trace" => "ReplacingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
-        "exploration_param" => 0.2,
+        "exploration_param" => 0.3,
         "exploration_strategy" => "epsilon_greedy",
 
         # Demon Attributes
-        "demon_alpha_init" => 0.1,
+        "demon_alpha_init" => 1.0,
         "demon_eta" => 0.2,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Descent",
+        "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
 
@@ -39,13 +39,13 @@ default_args() =
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
         "distractor" => (1.0, 1.0),
-        "drifter" => (1.0, sqrt(0.01)),
+        "drifter" => (sqrt(0.01), 1.0),
         "exploring_starts"=>true,
 
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION,  LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 1000,
@@ -216,6 +216,10 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         max_num_steps = num_steps
         steps = Int[]
 
+        if progress
+            p = Progress(max_num_steps)
+        end
+
         while sum(steps) < max_num_steps
             cur_step = 0
             max_episode_steps = min(max_num_steps - sum(steps), 1000)
@@ -224,7 +228,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     #This is a callback for every timestep where logger can go
                     # agent is accesible in this scope
 
-                    if t == true && working==true
+                    if t == true && working==true && t
                         goals = s_next[2:end]
                         f = findfirst(!iszero, goals)
                         goal_visitations[f] += 1
@@ -236,6 +240,10 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                 logger_episode_end!(logger)
             push!(steps, stp)
             eps += 1
+
+            if progress
+                ProgressMeter.update!(p, sum(steps))
+            end
         end
         if working == true
             println(goal_visitations)

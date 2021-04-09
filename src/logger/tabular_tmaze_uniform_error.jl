@@ -1,20 +1,20 @@
 using JLD2
 using Statistics
 
-mutable struct TTMazeError <: LoggerKeyData
+mutable struct TTMazeUniformError <: LoggerKeyData
     error::Array{Float64,2}
     eval_set::Dict
     log_interval::Int
 
-    function TTMazeError(logger_init_info)
-        eval_set = @load string(pwd(),"/src/data/TTMazeEvalSet.jld2") TTMazeEvalSet
+    function TTMazeUniformError(logger_init_info)
+        eval_set = @load string(pwd(),"/src/data/TTMazeUniformEvalSet.jld2") TTMazeUniformEvalSet
         num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL])
 
-        new(zeros(4,num_logged_steps), TTMazeEvalSet, logger_init_info[LoggerInitKey.INTERVAL])
+        new(zeros(4,num_logged_steps), TTMazeUniformEvalSet, logger_init_info[LoggerInitKey.INTERVAL])
     end
 end
 
-function lg_step!(self::TTMazeError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
+function lg_step!(self::TTMazeUniformError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
     if rem(cur_step_total, self.log_interval) == 0
         ind = fld(cur_step_total, self.log_interval)
         # Q_est = hcat([predict(agent.demon_learner, agent, agent.demon_weights, state, action) for (state,action) in zip(self.eval_set["states"], self.eval_set["actions"])]...)
@@ -25,9 +25,9 @@ function lg_step!(self::TTMazeError, env, agent, s, a, s_next, r, is_terminal, c
     end
 end
 
-function lg_episode_end!(self::TTMazeError, cur_step_in_episode, cur_step_total)
+function lg_episode_end!(self::TTMazeUniformError, cur_step_in_episode, cur_step_total)
 end
 
-function save_log(self::TTMazeError, save_dict::Dict)
-    save_dict[:ttmaze_error] = self.error
+function save_log(self::TTMazeUniformError, save_dict::Dict)
+    save_dict[:ttmaze_uniform_error] = self.error
 end
