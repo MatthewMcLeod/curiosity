@@ -87,9 +87,10 @@ function proc_input(agent, obs)
 end
 
 function get_action(agent, state, obs)
-    action_probs = if agent.behaviour_learner.update isa TabularRoundRobin
-        p = get_action_probs(agent.behaviour_learner.update, state, obs)
-        p
+    action_probs = if agent.behaviour_learner isa OneDTMazeUtils.RoundRobinPolicy
+        get_action_probs(agent.behaviour_learner, state, obs)
+    elseif agent.behaviour_learner.update isa TabularRoundRobin 
+        get_action_probs(agent.behaviour_learner.update, state, obs)
     else
         qs = agent.behaviour_learner(state)
         agent.exploration(qs)
@@ -183,17 +184,17 @@ function update_behaviour!(agent, obs, next_obs, state, action, next_state, next
     next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
 
         #NOTE: Different call than demon updates as the reward and environment pseudotermination function
-        update!(agent.behaviour_learner,
-                agent.behaviour_demons,
-                obs,
-                next_obs,
-                state,
-                action,
-                next_state,
-                next_action,
-                is_terminal,
-                (state, obs) -> get_behaviour_pis(agent, state, obs),
-                reward)
+    update!(agent.behaviour_learner,
+            agent.behaviour_demons,
+            obs,
+            next_obs,
+            state,
+            action,
+            next_state,
+            next_action,
+            is_terminal,
+            (state, obs) -> get_behaviour_pis(agent, state, obs),
+            reward)
 end
 
 function get_demon_prediction(agent::Agent, obs, action)
