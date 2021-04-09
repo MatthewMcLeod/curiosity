@@ -1,5 +1,5 @@
 
-struct FeatureSubset{T, R}
+struct FeatureSubset{T, R} <: FeatureCreator
     fc::T
     subset::R
 end
@@ -31,7 +31,7 @@ function get_active_action_state_vector(state::SparseVector, action, feature_siz
     return active_state_action
 end
 
-mutable struct ValueFeatureProjector <: AbstractFeatureProjector
+mutable struct ValueFeatureProjector <: FeatureCreator
     func::Function
     pf_length::Int
 end
@@ -43,7 +43,7 @@ end
 
 Base.size(VFP::ValueFeatureProjector) = VFP.pf_length
 
-mutable struct ActionValueFeatureProjector <: AbstractFeatureProjector
+mutable struct ActionValueFeatureProjector <: FeatureCreator
     func::Function
     pf_length::Int
 end

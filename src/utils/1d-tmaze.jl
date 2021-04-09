@@ -10,9 +10,12 @@ import ..get_action_probs
 import ..GVFHordes
 import ..update
 import ..Curiosity
+import ..GVFSRHordes
+import ..SRCreationUtils
 
 const TMCS = TMazeCumulantSchedules
 const ODTMC = OneDTmazeConst
+const SRCU = Curiosity.SRCreationUtils
 
 
 #####
@@ -85,7 +88,34 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
     end
 end
 
+####
+# Demon Creation
+####
 
+function create_demons(parsed, demon_projected_fc = nothing)
+    action_space = 4
+    demons = if parsed["demon_learner"] != "SR"
+        GVFHordes.Horde(
+        [GVFHordes.GVF(GVFHordes.GVFParamFuncs.FeatureCumulant(i+2),
+             GoalTermination(0.9),
+             GoalPolicy(i)) for i in 1:4])
+    elseif parsed["demon_learner"] == "SR"
+        @assert demon_projected_fc != nothing
+        pred_horde =  GVFHordes.Horde(
+                [GVFHordes.GVF(GVFHordes.GVFParamFuncs.FeatureCumulant(i+2),
+                     GVFHordes.GVFParamFuncs.ConstantDiscount(0.0),
+                     GoalPolicy(i)) for i in 1:4])
+
+        SF_policies = [GoalPolicy(i) for i in 1:4]
+        SF_discounts = [GoalTermination(0.9) for i in 1:4]
+        num_SFs = length(SF_policies)
+        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
+    else
+        throw(ArgumentError("Cannot create demons"))
+    end
+    return demons
+end
 
 
 ####

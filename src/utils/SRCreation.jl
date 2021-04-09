@@ -49,5 +49,13 @@ function get_SF_horde_for_policy(policy, discount, projected_feature_constructor
 
 end
 
+function create_SF_horde(policies, discounts, projected_feature_constructor, action_set)
+    SF_horde = get_SF_horde_for_policy(policies[1], discounts[1], projected_feature_constructor, action_set)
+    for i in 2:length(policies)
+        SF_horde = GVFSRHordes.merge(SF_horde, get_SF_horde_for_policy(policies[i], discounts[i], projected_feature_constructor, action_set))
+    end
+    return SF_horde
+end
+
 
 end

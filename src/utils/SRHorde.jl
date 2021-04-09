@@ -3,7 +3,7 @@ import Lazy: @forward
 
 export SFHorde, SRHorde
 using GVFHordes
-using ..Curiosity: AbstractFeatureProjector
+using ..Curiosity: FeatureCreator
 
 struct SFHorde{T<:AbstractGVF} <: GVFHordes.AbstractHorde
     gvfs::Vector{T}
@@ -16,7 +16,7 @@ mutable struct SRHorde <: GVFHordes.AbstractHorde
     num_tasks::Int
     num_SFs::Int
     # state_constructor::Union{AbstractFeatureProjector, Curiosity.TileCoder}
-    state_constructor::Any
+    state_constructor::FeatureCreator
     # state_constructor::Function
     function SRHorde(prediction_horde::GVFHordes.AbstractHorde, successor_feature_horde::SFHorde, num_SFs, state_constructor)
         new(prediction_horde, successor_feature_horde, length(prediction_horde), num_SFs, state_constructor)
@@ -34,6 +34,8 @@ end
 # function Base.get(gvfh::SRHorde, state_t, action_t, state_tp1, action_tp1, preds_tp1)
 function Base.get(gvfh::SRHorde; kwargs...)
     C, discounts, pi = get(gvfh.PredHorde; kwargs...)
+    # The reward discounts should always be 0 as they used for supervised learning prediction.
+    @assert sum(discounts) == 0
 
     constructed_state = gvfh.state_constructor(kwargs[:state_t])
     # C_SF = map(gvf -> get(cumulant(gvf), constructed_state, action_t, preds_tp1), gvfh.SFHorde.gvfs)

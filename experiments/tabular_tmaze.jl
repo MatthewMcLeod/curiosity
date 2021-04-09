@@ -48,7 +48,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 52,
+        "steps" => 1000,
         "use_external_reward" => true,
     )
 
@@ -171,9 +171,11 @@ function get_horde(parsed, feature_size, action_space, projected_feature_constru
 
 
     #TODO: Sort out the if-else block so that demon_policy_type and horde_type is not blocking eachother.
-    horde = if parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["horde_type"] == "regular"
+    horde = if parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["demon_learner"] != "SR"
         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(i;kwargs...))) for i in 1:num_demons])
-    elseif parsed["demon_policy_type"] == "random" && parsed["horde_type"] == "regular"
+    elseif parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["demon_learner"] == "SR"
+        Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(i;kwargs...))) for i in 1:num_demons])
+    elseif parsed["demon_policy_type"] == "random"
         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 1:num_demons])
     else
         throw(ArgumentError("Not a valid policy type for demons"))

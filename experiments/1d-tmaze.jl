@@ -33,7 +33,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
@@ -60,7 +60,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 4000,
+        "steps" => 101,
         "use_external_reward" => true,
 
         "logger_keys"=>[LoggerKey.ONEDTMAZEERROR]
@@ -94,20 +94,7 @@ function construct_agent(parsed)
         Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
         1:2)
 
-    # demons = get_horde(parsed, length(demon_feature_projector), action_space, demon_feature_projector)
-    # Lets make a simple horde
-
-    demons = Horde(
-        [GVF(GVFParamFuncs.FeatureCumulant(i+2),
-             ODTMU.GoalTermination(0.9),
-             ODTMU.GoalPolicy(i)) for i in 1:4])
-
-     SF_horde = SRCU.get_SF_horde_for_policy(ODTMU.GoalPolicy(1), ODTMU.GoalTermination(0.9),demon_projected_fc,1:action_space)
-     for i in 2:4
-         SF_horde = Curiosity.GVFSRHordes.merge(SF_horde,SRCU.get_SF_horde_for_policy(ODTMU.GoalPolicy(i), ODTMU.GoalTermination(0.9),demon_projected_fc,1:action_space))
-     end
-     num_SFs = 4
-     demons = Curiosity.GVFSRHordes.SRHorde(demons, SF_horde, num_SFs, demon_projected_fc)
+    demons = ODTMU.create_demons(parsed, demon_projected_fc)
 
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
         EpsilonGreedy(parsed["epsilon"])
@@ -115,12 +102,6 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
-    # demon_learner = Curiosity.get_linear_learner(parsed,
-    #                                              feat_size,
-    #                                              action_space,
-    #                                              demons,
-    #                                              "demon",
-    #                                              nothing)
      demon_learner = Curiosity.get_linear_learner(parsed,
                                                   feat_size,
                                                   action_space,
@@ -128,56 +109,7 @@ function construct_agent(parsed)
                                                   "demon",
                                                   demon_projected_fc)
 
-    # behaviour_learner = LinearQLearning()
     behaviour_learner = ODTMU.RoundRobinPolicy()
-
-
-
-
-    # TODO: Behaviour horde needs access to the behaviour learner to condition the behaviour policy
-    # BUT behaviour learner needs access the horde to know things like how many demons there are.
-    # behaviour_num_tasks = 1
-    # num_SFs = 4
-    # num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
-    #     num_SFs * feat_size * action_space + 1
-    # elseif parsed["behaviour_learner"] ∈ ["Q"]
-    #     1
-    # end
-
-    # behaviour_learner = Curiosity.get_linear_learner(parsed,
-    #                                                  feat_size,
-    #                                                  action_space,
-    #                                                  num_demons,
-    #                                                  behaviour_num_tasks,
-    #                                                  "behaviour",
-    #                                                  nothing)
-
-    # behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
-    # behaviour_demons = if behaviour_learner isa GPI
-    #     SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space, behaviour_feature_projector)
-
-    #     pred_horde = Horde([behaviour_gvf])
-
-    #     Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_feature_projector)
-    # elseif behaviour_learner isa QLearner
-    #     Horde([behaviour_gvf])
-    # else
-    #     throw(ArgumentError("goes with which horde? " ))
-    # end
-
-
-    # Agent(demons,
-    #       feature_size,
-    #       behaviour_learner,
-    #       behaviour_demons,
-    #       behaviour_discount,
-    #       demon_learner,
-    #       observation_size,
-    #       action_space,
-    #       intrinsic_reward_type,
-    #       (obs) -> state_constructor(obs, feature_size),
-    #       use_external_reward,
-    #       exploration_strategy)
 
     Agent(demons,
           feat_size,
@@ -193,33 +125,6 @@ function construct_agent(parsed)
           use_external_reward,
           exploration_strategy)
 end
-
-# function get_horde(parsed, feature_size, action_space, projected_feature_constructor)
-
-#     discount = parsed["demon_discounts"]
-#     pseudoterm = TTMU.pseudoterm
-#     num_actions = TTMU.NUM_ACTIONS
-#     num_demons = TTMU.NUM_DEMONS
-
-
-#     #TODO: Sort out the if-else block so that demon_policy_type and horde_type is not blocking eachother.
-#     horde = if parsed["demon_policy_type"] == "greedy_to_cumulant" && parsed["horde_type"] == "regular"
-#         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(i;kwargs...))) for i in 1:num_demons])
-#     elseif parsed["demon_policy_type"] == "random" && parsed["horde_type"] == "regular"
-#         Horde([GVF(GVFParamFuncs.FeatureCumulant(i+1), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVFParamFuncs.RandomPolicy(fill(1/num_actions,num_actions))) for i in 1:num_demons])
-#     else
-#         throw(ArgumentError("Not a valid policy type for demons"))
-#     end
-
-#     if parsed["demon_learner"] == "SR"
-#         num_SFs = 4
-#         SF_horde = TTMU.make_SF_horde(discount, length(projected_feature_constructor), action_space, projected_feature_constructor)
-
-#         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, projected_feature_constructor)
-#     end
-
-#     return horde
-# end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
@@ -256,7 +161,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     # agent is accesible in this scope
 
                     if t == true && working==true
-                        goals = s_next[2:end]
+                        goals = s_next[3:end]
                         f = findfirst(!iszero, goals)
                         goal_visitations[f] += 1
                     end

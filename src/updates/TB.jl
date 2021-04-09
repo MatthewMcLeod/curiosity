@@ -141,7 +141,6 @@ function update!(lu::TB,
     # Update Traces: See update_utils.jl
     if λ !== 0.0
         update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
-        # @show size(e_w), size(reward_discounts), size(reward_target_pis[:, action])
         update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
         e_nz = e_nz ∪ active_state_action.nzind
         e_w_nz = e_w_nz ∪ projected_state_action.nzind
@@ -158,6 +157,9 @@ function update!(lu::TB,
     td_err = target - ψ * active_state_action
 
     pred_err = reward_C - w * projected_state_action
+
+    # This should always be true as this is immediate next step prediction which is equivalent to having discounts of 0 for all states
+    @assert sum(reward_discounts) == 0
     #td_err is (336x1)
     # TD err is applied across rows
 
@@ -196,6 +198,7 @@ function update!(lu::TB,
         update!(lu.opt, ψ, -td_err .* e_ψ)
         update!(lu.opt, w, -pred_err * e_w)
     end
+    discounts .= next_discounts
 end
 
 

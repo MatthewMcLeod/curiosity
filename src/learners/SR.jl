@@ -12,7 +12,7 @@ mutable struct SRLearner{F<:Number, LU<:LearningUpdate} <: Learner
     feature_size::Int
 
     num_tasks::Int
-    feature_projector::Any
+    feature_projector::FeatureCreator
 
 end
 

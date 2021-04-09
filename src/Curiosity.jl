@@ -14,7 +14,7 @@ using Flux
 import Flux.Optimise: update!
 
 # Abstract type of FeatureProjector used in the learner utils
-abstract type AbstractFeatureProjector end
+abstract type FeatureCreator end
 export ValueFeatureProjector,ActionValueFeatureProjector
 include("utils/learners.jl")
 # export GVFHordes
@@ -56,13 +56,13 @@ include("logger/logger.jl")
 
 #utils
 export get_active_action_state_vector, ValueFeatureProjector
+include("utils/SRCreation.jl")
 include("utils/tmaze.jl")
 include("utils/1d-tmaze.jl")
 include("utils/mountain_car.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")
 include("utils/features.jl")
-include("utils/SRCreation.jl")
 
 
 
