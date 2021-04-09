@@ -29,12 +29,15 @@ function gen_dataset()
              ODTMU.GoalPolicy(i)) for i in 1:4])
 
     cumulant_schedule = ODTMU.get_cumulant_schedule(parsed)
-    parsed["exploring_starts"] = "beg"
+
+
+
+    parsed["exploring_starts"] = "whole"
     env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"])
 
-
     start_states = []
-    num_start_states = 20
+    num_start_states = 100
+    @show env.starts
     for i in 1:num_start_states
         MinimalRLCore.reset!(env)
         # s = MinimalRLCore.get_state(env)
@@ -47,7 +50,7 @@ function gen_dataset()
     num_returns = 2000
     γ_thresh=1e-6
     horde_rets = zeros(length(horde.gvfs), length(start_states))
-    actions = ones(Int,num_start_states)
+    actions = rand(1:4, length(start_states))
     for (gvf_i,gvf) in enumerate(horde.gvfs)
         rets = monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_thresh)
         rets_avg = mean(hcat(rets...),dims=1) # stack horizontally and then average over runs

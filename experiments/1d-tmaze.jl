@@ -36,7 +36,7 @@ default_args() =
         "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Descent",
+        "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
 
@@ -52,7 +52,7 @@ default_args() =
         "cumulant_schedule" => "Constant",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
-        "exploring_starts"=>"beg",
+        "exploring_starts"=>"whole",
 
         # Agent and Logger
         "horde_type" => "regular",
@@ -60,7 +60,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 101,
+        "steps" => 10000,
         "use_external_reward" => true,
 
         "logger_keys"=>[LoggerKey.ONEDTMAZEERROR]
