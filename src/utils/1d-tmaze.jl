@@ -1,5 +1,7 @@
 module OneDTMazeUtils
 
+using SparseArrays
+
 import ..TMazeCumulantSchedules
 import ..OneDTmazeConst
 import ..OneDTMaze
@@ -12,6 +14,7 @@ import ..update
 import ..Curiosity
 import ..GVFSRHordes
 import ..SRCreationUtils
+import ..FeatureCreator
 
 const TMCS = TMazeCumulantSchedules
 const ODTMC = OneDTmazeConst
@@ -116,6 +119,23 @@ function create_demons(parsed, demon_projected_fc = nothing)
     end
     return demons
 end
+
+####
+# Ideal Feature Creator
+####
+struct IdealDemonFeatures <: FeatureCreator
+end
+
+function project_features(fc::IdealDemonFeatures, state)
+    new_state = sparsevec(convert(Array{Int,1},[check_goal(OneDTMaze, i, state) for i in 1:4]))
+    # if sum(new_state) != 0
+    #     @show state, new_state
+    # end
+    return new_state
+end
+
+(FP::IdealDemonFeatures)(state) = project_features(FP, state)
+Base.size(FP::IdealDemonFeatures) = 4
 
 
 ####

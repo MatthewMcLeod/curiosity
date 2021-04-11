@@ -35,7 +35,7 @@ module LoggerKey
     const TEMP_PRINT = "TEMP_PRINT"
     const TTMAZE_ERROR = "TTMAZE_ERROR"
     const VALUE_MAP = "VALUE_MAP"
-    const ONEDTMAZEERROR = "OneDTMazeError"
+    const ONEDTMAZEERROR = "ONEDTMAZEERROR"
     const AUTOSTEP_STEPSIZE = "AutostepStepSize"
     const TTMAZE_UNIFORM_ERROR = "TTMAZE_UNIFORM_ERROR"
     const TTMAZE_OLD_ERROR = "TTMAZE_OLD_ERROR"

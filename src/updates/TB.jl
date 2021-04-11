@@ -199,6 +199,12 @@ function update!(lu::TB,
         update!(lu.opt, w, -pred_err * e_w)
     end
     discounts .= next_discounts
+
+    # if is_terminal
+    #     println()
+    #     @show size(SF_C), size(state)
+    #     println()
+    # end
 end
 
 
