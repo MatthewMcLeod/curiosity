@@ -1,0 +1,56 @@
+[config]
+save_dir = "Experiment2_ESarsa"
+exp_file = "experiments/tabular_tmaze.jl"
+exp_module_name = "TabularTMazeExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+save_keys=["seed", "demon_opt", "demon_update", "demon_learner", "demon_eta", "behaviour_learner", "behaviour_update", "exploration_param", "behaviour_eta"]
+
+# Behaviour Items
+# behaviour_eta = 0.2
+behaviour_gamma = 0.9
+behaviour_learner = "Q"
+behaviour_update = "ESARSA"
+behaviour_trace = "AccumulatingTraces"
+behaviour_opt = "Auto"
+behaviour_lambda = 0.9
+behaviour_alpha_init = 1.0
+# exploration_param = 0.0
+exploration_strategy = "epsilon_greedy"
+
+# Demon Attributes
+demon_alpha_init = 1.0
+# demon_eta = 0.5
+demon_discounts = 0.9
+demon_learner = "SR"
+demon_update = "TB"
+demon_policy_type = "greedy_to_cumulant"
+demon_opt = "Auto"
+demon_lambda = 0.9
+demon_trace = "AccumulatingTraces"
+
+# Environment Config
+constant_target= 1.0
+cumulant_schedule = "DrifterDistractor"
+distractor = [1.0, 1.0]
+drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
+exploring_starts=true
+
+# Agent and Logger
+horde_type = "regular"
+intrinsic_reward = "weight_change"
+logger_keys = ["TTMAZE_ERROR", "TTMAZE_UNIFORM_ERROR", "TTMAZE_OLD_ERROR"]
+# save_dir = "TabularTMazeExperiment"
+# seed = 1
+steps = 2
+use_external_reward = true
+logger_interval = 100
+
+[sweep_args]
+seed = "1:30"
+demon_eta = "2.0 .^ (-6:0)"
+exploration_param = [0.1, 0.2, 0.3, 0.4]
+behaviour_eta = "2.0 .^ (-6:0)"

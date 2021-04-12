@@ -14,24 +14,25 @@ const TTMU = Curiosity.TabularTMazeUtils
 default_args() =
     Dict(
         # Behaviour Items
-        "behaviour_eta" => 0.55,
+        "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
         "behaviour_update" => "ESARSA",
-        "behaviour_trace" => "ReplacingTraces",
-        "behaviour_opt" => "Descent",
+        "behaviour_trace" => "AccumulatingTraces",
+        "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.9,
+        "behaviour_alpha_init" => 1.0,
         "exploration_param" => 0.3,
         "exploration_strategy" => "epsilon_greedy",
 
         # Demon Attributes
         "demon_alpha_init" => 1.0,
-        "demon_eta" => 0.2,
+        "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "ADAM",
+        "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.9,
@@ -47,11 +48,12 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION,  LoggerKey.TTMAZE_OLD_ERROR],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 30000,
         "use_external_reward" => true,
+        "logger_interval" => 100,
     )
 
 
@@ -199,7 +201,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     Random.seed!(parsed["seed"])
 
     cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
-
     exploring_starts = parsed["exploring_starts"]
     env = TabularTMaze(exploring_starts, cumulant_schedule)
 
@@ -209,7 +210,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
-        LoggerInitKey.INTERVAL => 50,
+        LoggerInitKey.INTERVAL => parsed["logger_interval"],
         LoggerInitKey.ENV => "tabular_tmaze"
     )
 
