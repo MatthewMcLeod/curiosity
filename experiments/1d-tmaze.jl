@@ -36,23 +36,25 @@ default_args() =
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Descent",
-        "demon_lambda" => 0.0,
+        "demon_opt" => "Auto",
+        "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
+        "demon_beta_m" => 0.99,
+        "demon_beta_v" => 0.99,
 
         #shared
         "num_tiles" => 4,
         "num_tilings" =>16,
         "demon_rep" => "tilecoding",
-        "demon_num_tiles" => 4,
-        "demon_num_tilings" => 4,
+        "demon_num_tiles" => 6,
+        "demon_num_tilings" => 1,
 
         # Environment Config
         "constant_target"=> 1.0,
         "cumulant"=>1.0,
         "cumulant_schedule" => "Constant",
         "distractor" => (1.0, 1.0),
-        "drifter" => (sqrt(0.01), 1.0),
+        "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"whole",
 
         # Agent and Logger
@@ -61,7 +63,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 1000,
         "use_external_reward" => true,
 
         "logger_keys"=>[LoggerKey.ONEDTMAZEERROR]
@@ -100,7 +102,6 @@ function construct_agent(parsed)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
-
 
     demons = ODTMU.create_demons(parsed, demon_projected_fc)
 
@@ -186,8 +187,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             eps += 1
         end
         if working == true
-            # @show sum(agent.demon_learner.ψ)
-            # @show sum(agent.demon_learner.r_w)
             println(goal_visitations)
         end
         agent

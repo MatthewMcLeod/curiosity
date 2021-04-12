@@ -129,6 +129,8 @@ function update!(lu::TB,
 
     projected_state = learner.feature_projector(obs)
     projected_state_action = get_active_action_state_vector(projected_state, action, size(learner.feature_projector), learner.num_actions)
+    projected_next_state = learner.feature_projector(next_obs)
+    projected_next_state_action = get_active_action_state_vector(projected_next_state, next_action, size(learner.feature_projector), learner.num_actions)
     # projected_next_state_next_action = learner.feature_projector(next_state,next_action)
 
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
@@ -139,12 +141,10 @@ function update!(lu::TB,
 
 
     # Update Traces: See update_utils.jl
-    if λ !== 0.0
-        update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
-        update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
-        e_nz = e_nz ∪ active_state_action.nzind
-        e_w_nz = e_w_nz ∪ projected_state_action.nzind
-    end
+    update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
+    update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
+    e_nz = e_nz ∪ active_state_action.nzind
+    e_w_nz = e_w_nz ∪ projected_state_action.nzind
 
     pred = ψ * next_active_state_action
     reward_feature_backup = zeros(length(SF_C))
@@ -175,16 +175,15 @@ function update!(lu::TB,
         z = abs_ϕ_ψ .* max.(abs_ϕ_ψ, state_discount)
         update!(lu.opt, ψ, e_ψ, td_err, z,  learner.num_demons - learner.num_tasks, 1)
 
-        state_discount_r = -reward_next_discounts * next_active_state_action'
-        state_discount_r .+= active_state_action'
+        state_discount_r = -reward_next_discounts * projected_next_state_action'
+        state_discount_r .+= projected_state_action'
         abs_ϕ_w = if λ == 0.0
-            abs.(repeat(active_state_action, outer=(1, length(pred_err)))')
+            abs.(repeat(projected_state_action, outer=(1, length(pred_err)))')
         else
             abs.(e_w)
         end
         z_r = abs_ϕ_w .* max.(abs_ϕ_w, state_discount_r)
         update!(lu.opt, w, e_w, pred_err, z_r, learner.num_tasks, 1)
-        # throw("SR + TB + Auto not implemented")
     elseif lu.opt isa Flux.Descent
         α = lu.opt.eta
         if λ == 0.0
@@ -195,19 +194,10 @@ function update!(lu::TB,
             w[:, e_w_nz] .+= (α  * pred_err) .* e_w[:, e_w_nz]
         end
     else
-        # @show size(e_ψ), size(e_w)
-        # @show size(td_err), size(pred_err)
-        
         update!(lu.opt, ψ, - e_ψ .* td_err)
         update!(lu.opt, w, - e_w .* pred_err)
     end
     discounts .= next_discounts
-
-    # if is_terminal
-    #     println()
-    #     @show size(SF_C), size(state)
-    #     println()
-    # end
 end
 
 

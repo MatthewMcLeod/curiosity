@@ -28,14 +28,14 @@ default_args() =
         "demon_alpha_init" => 1.0,
         "demon_eta" => 0.2,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "ADAM",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.9,
-        "demon_beta_v" => 0.9,
+        "demon_beta_v" => 0.99,
 
         # Environment Config
         "constant_target"=> 1.0,
@@ -50,7 +50,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION,  LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 30000,
+        "steps" => 2000,
         "use_external_reward" => true,
     )
 
