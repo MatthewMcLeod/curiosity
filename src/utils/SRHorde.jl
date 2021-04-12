@@ -37,9 +37,9 @@ function Base.get(gvfh::SRHorde; kwargs...)
     # The reward discounts should always be 0 as they used for supervised learning prediction.
     @assert sum(discounts) == 0
 
-    constructed_state = gvfh.state_constructor(kwargs[:state_t])
+    constructed_state = gvfh.state_constructor(kwargs[:state_t], kwargs[:action_t], kwargs[:state_tp1])
     # C_SF = map(gvf -> get(cumulant(gvf), constructed_state, action_t, preds_tp1), gvfh.SFHorde.gvfs)
-    C_SF = map(gvf -> get(cumulant(gvf);constructed_state_t = constructed_state, kwargs...), gvfh.SFHorde.gvfs)
+    C_SF = map(gvf -> get(cumulant(gvf); constructed_state_t = constructed_state, kwargs...), gvfh.SFHorde.gvfs)
     # For efficiency, the discount and pi for a given SF task should all have the same values. Therefore, to
     # improve speed, a single call to an GVF within each block should be sufficient.
     state_action_feature_length = Int( length(gvfh.SFHorde) / gvfh.num_SFs)

@@ -13,7 +13,7 @@ const LEFT = 4
 
 const ACTIONS = [UP, RIGHT, DOWN, LEFT]
 
-const EPSILON = 0.08
+const EPSILON = 0.0
 const ACTION_STEP = 0.1
 
 end

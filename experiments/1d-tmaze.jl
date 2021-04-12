@@ -19,10 +19,13 @@ const SRCU = Curiosity.SRCreationUtils
 default_args() =
     Dict(
         # Behaviour Items
-        "behaviour_eta" => 0.2,
-        "behaviour_gamma" => 0.9,
+        "behaviour_eta" => 0.1/8,
+        "behaviour_gamma" => 0.0,
         "behaviour_learner" => "RoundRobin",
-        "behaviour_update" => "none",
+        "behaviour_update" => "TB",
+        "behaviour_reward_projector" => "tilecoding",
+        "behaviour_rp_tilings" => 2,
+        "behaviour_rp_tiles" => 2,
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -43,7 +46,7 @@ default_args() =
         #shared
         "num_tiles" => 4,
         "num_tilings" =>16,
-        "demon_rep" => "tilecoding",
+        "demon_rep" => "ideal",
         "demon_num_tiles" => 4,
         "demon_num_tilings" => 4,
 
@@ -64,7 +67,7 @@ default_args() =
         "steps" => 10000,
         "use_external_reward" => true,
 
-        "logger_keys"=>[LoggerKey.ONEDTMAZEERROR]
+        "logger_keys"=>[LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION]
     )
 
 
@@ -92,11 +95,12 @@ function construct_agent(parsed)
     feat_size = size(fc)
 
     demon_projected_fc = if parsed["demon_rep"] == "tilecoding"
-        Curiosity.FeatureSubset(
-        Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
-        1:2)
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+                Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
+            1:2), false)
     elseif parsed["demon_rep"] == "ideal"
-        ODTMU.IdealDemonFeatures()
+        # ODTMU.IdealDemonFeatures()
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2), true)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
@@ -104,26 +108,81 @@ function construct_agent(parsed)
 
     demons = ODTMU.create_demons(parsed, demon_projected_fc)
 
+    demon_learner = Curiosity.get_linear_learner(parsed,
+                                                 feat_size,
+                                                 action_space,
+                                                 demons,
+                                                 "demon",
+                                                 demon_projected_fc)
+
+
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
         EpsilonGreedy(parsed["exploration_param"])
     else
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 
-     demon_learner = Curiosity.get_linear_learner(parsed,
-                                                  feat_size,
-                                                  action_space,
-                                                  demons,
-                                                  "demon",
-                                                  demon_projected_fc)
+    behaviour_reward_projector = if parsed["behaviour_reward_projector"] == "tilecoding"
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+            Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
+            1:2), false)
+    elseif parsed["behaviour_reward_projector"] == "base"
+        Curiosity.FeatureProjector(fc, false)
+    elseif parsed["behaviour_reward_projector"] == "identity"
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(identity, 1:2), false)
+    elseif parsed["behaviour_reward_projector"] == "ideal"
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+            ODTMU.IdealDemonFeatures(), 1:2), true)
+    else
+        throw(ArgumentError("Not a valid demon projection rep for SR"))
+    end
+    
+     behaviour_num_tasks = 1
+     num_SFs = 4
+     num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
+         num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
+     elseif parsed["behaviour_learner"] ∈ ["Q"]
+         behaviour_num_tasks
+     elseif parsed["behaviour_learner"] == "RoundRobin"
+         0
+    else
+        throw(ArgumentError("Hacky thing not working, yay!"))
+     end
+    
+    behaviour_learner = if parsed["behaviour_learner"] == "RoundRobin"
+        ODTMU.RoundRobinPolicy()
+    else
+        behaviour_learner = Curiosity.get_linear_learner(parsed,
+                                                         size(fc),
+                                                         action_space,
+                                                         num_demons,
+                                                         behaviour_num_tasks,
+                                                         "behaviour",
+                                                         behaviour_reward_projector)
+    end
 
-    behaviour_learner = ODTMU.RoundRobinPolicy()
+    bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner, parsed["behaviour_gamma"], fc, exploration_strategy)
+    
+    behaviour_demons = if behaviour_learner isa GPI
+        @assert !(behaviour_reward_projector isa Nothing)
+        pred_horde = GVFHordes.Horde([bh_gvf])
+        SF_policies = [ODTMU.GoalPolicy(i) for i in 1:4]
+        SF_discounts = [ODTMU.GoalTermination(0.9) for i in 1:4]
+        num_SFs = length(SF_policies)
+        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
+        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_projector)
+    elseif behaviour_learner isa QLearner
+        GVFHordes.Horde([bh_gvf])
+    elseif behaviour_learner isa ODTMU.RoundRobinPolicy
+        nothing
+    else
+        throw(ArgumentError("goes with which horde? " ))
+    end
 
     Agent(demons,
           feat_size,
           behaviour_learner,
-          # behaviour_demons,
-          nothing,
+          behaviour_demons,
           behaviour_discount,
           demon_learner,
           obs_size,
