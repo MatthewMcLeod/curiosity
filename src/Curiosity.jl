@@ -18,6 +18,8 @@ include("utils/learners.jl")
 # export GVFHordes
 # include("GVFHordes/GVFHordes.jl")
 include("utils/SRHorde.jl")
+include("utils/replay.jl")
+include("utils/update_timer.jl")
 
 export Auto
 include("optimizers/Auto.jl")
