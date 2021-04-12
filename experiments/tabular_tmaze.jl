@@ -17,7 +17,7 @@ default_args() =
         "behaviour_eta" => 0.55,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
-        "behaviour_update" => "TabularRoundRobin",
+        "behaviour_update" => "ESARSA",
         "behaviour_trace" => "ReplacingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -41,7 +41,7 @@ default_args() =
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
         "distractor" => (1.0, 1.0),
-        "drifter" => (sqrt(0.01), 1.0),
+        "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>true,
 
         # Agent and Logger
@@ -50,7 +50,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION,  LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 2000,
+        "steps" => 30000,
         "use_external_reward" => true,
     )
 

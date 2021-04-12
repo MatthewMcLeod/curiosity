@@ -7,8 +7,8 @@ import ..Curiosity: get_cumulant, update!, get_cumulant_eval_values
 
 mutable struct DrifterDistractor <: CumulantSchedule
     constants::Float64
-    drifter_std::Float64
     drifter_mean::Float64
+    drifter_std::Float64
     distractor_mean::Float64
     distractor_std::Float64
 end
