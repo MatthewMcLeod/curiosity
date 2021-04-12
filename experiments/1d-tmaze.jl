@@ -1,7 +1,7 @@
 module OneDTmazeExperiment
 
 
-import Flux: Descent
+import Flux: Descent, ADAM
 import Random
 
 using GVFHordes
@@ -26,32 +26,33 @@ default_args() =
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
-        "epsilon" => 0.2,
+        "exploration_param" => 0.2,
         "exploration_strategy" => "epsilon_greedy",
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Auto",
-        "demon_lambda" => 0.9,
+        "demon_opt" => "Descent",
+        "demon_lambda" => 0.0,
         "demon_trace"=> "AccumulatingTraces",
 
         #shared
         "num_tiles" => 4,
-        "num_tilings" =>20,
+        "num_tilings" =>16,
+        "demon_rep" => "tilecoding",
         "demon_num_tiles" => 4,
-        "demon_num_tilings" => 8,
+        "demon_num_tilings" => 4,
 
         # Environment Config
         "constant_target"=> 1.0,
         "cumulant"=>1.0,
         "cumulant_schedule" => "Constant",
         "distractor" => (1.0, 1.0),
-        "drifter" => (1.0, sqrt(0.01)),
+        "drifter" => (sqrt(0.01), 1.0),
         "exploring_starts"=>"whole",
 
         # Agent and Logger
@@ -90,14 +91,21 @@ function construct_agent(parsed)
         1:2)
     feat_size = size(fc)
 
-    demon_projected_fc = Curiosity.FeatureSubset(
+    demon_projected_fc = if parsed["demon_rep"] == "tilecoding"
+        Curiosity.FeatureSubset(
         Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
         1:2)
+    elseif parsed["demon_rep"] == "ideal"
+        ODTMU.IdealDemonFeatures()
+    else
+        throw(ArgumentError("Not a valid demon projection rep for SR"))
+    end
+
 
     demons = ODTMU.create_demons(parsed, demon_projected_fc)
 
     exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
-        EpsilonGreedy(parsed["epsilon"])
+        EpsilonGreedy(parsed["exploration_param"])
     else
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
@@ -178,6 +186,8 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             eps += 1
         end
         if working == true
+            # @show sum(agent.demon_learner.ψ)
+            # @show sum(agent.demon_learner.r_w)
             println(goal_visitations)
         end
         agent

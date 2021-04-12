@@ -1,0 +1,71 @@
+[config]
+save_dir = "OneDTMazeQ_ADAM"
+exp_file = "experiments/1d-tmaze.jl"
+exp_module_name = "OneDTmazeExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+save_keys=["demon_opt", "seed", "demon_eta", "demon_learner", "exploration_param", "behaviour_eta", "demon_update"]
+# save_keys=["demon_opt", "demon_eta", "runs"]
+
+# Behaviour Items
+# behaviour_eta = 0.2
+behaviour_gamma = 0.9
+behaviour_learner = "Q"
+behaviour_update = "RoundRobin"
+behaviour_trace = "AccumulatingTraces"
+behaviour_opt = "Descent"
+behaviour_lambda = 0.9
+behaviour_alpha_init = 0.1
+# exploration_param = 0.0
+exploration_strategy = "epsilon_greedy"
+
+# Demon Attributes
+demon_alpha_init = 0.0625 # 1/16tilings
+# demon_eta = 0.5
+demon_discounts = 0.9
+# demon_learner = "SR"
+# demon_update = "TB"
+demon_policy_type = "greedy_to_cumulant"
+# demon_opt = "Descent"
+demon_lambda = 0.9
+demon_trace = "AccumulatingTraces"
+demon_beta_m = 0.99
+demon_beta_v = 0.99
+
+# Environment Config
+constant_target= 1.0
+cumulant = 1.0
+cumulant_schedule = "DrifterDistractor"
+distractor = [1.0, 1.0]
+drifter = [0.1, 1.0] # drifter is the sqrt(0.01)
+exploring_starts="whole"
+
+# Agent and Logger
+horde_type = "regular"
+intrinsic_reward = "weight_change"
+logger_keys = ["ONEDTMAZEERROR"]
+# save_dir = "TabularTMazeExperiment"
+# seed = 1
+steps = 10000
+use_external_reward = true
+
+num_tiles = 4
+num_tilings = 16
+demon_num_tiles = 4
+demon_num_tilings = 8
+
+[sweep_args]
+seed = "1:30"
+# runs = "1:2"
+demon_eta = "2.0 .^ (-8:-6)"
+demon_opt = ["Auto", "Descent", "ADAM"]
+demon_update = ["TB", "ESARSA"]
+demon_learner = ["Q"]
+exploration_param = [0.0]
+behaviour_eta = "2.0 .^ (-1:-1)"
+
+
+# demon_opt = ["Auto"]
