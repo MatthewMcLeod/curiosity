@@ -33,11 +33,11 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Descent",
-        "demon_lambda" => 0.9,
+        "demon_lambda" => 0.0,
         "demon_trace"=> "AccumulatingTraces",
 
         #shared
@@ -45,14 +45,14 @@ default_args() =
         "num_tilings" =>16,
         "demon_rep" => "tilecoding",
         "demon_num_tiles" => 4,
-        "demon_num_tilings" => 2,
+        "demon_num_tilings" => 4,
 
         # Environment Config
         "constant_target"=> 1.0,
         "cumulant"=>1.0,
         "cumulant_schedule" => "Constant",
         "distractor" => (1.0, 1.0),
-        "drifter" => (1.0, sqrt(0.01)),
+        "drifter" => (sqrt(0.01), 1.0),
         "exploring_starts"=>"whole",
 
         # Agent and Logger
@@ -186,8 +186,8 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             eps += 1
         end
         if working == true
-            @show sum(agent.demon_learner.ψ)
-            @show sum(agent.demon_learner.r_w)
+            # @show sum(agent.demon_learner.ψ)
+            # @show sum(agent.demon_learner.r_w)
             println(goal_visitations)
         end
         agent

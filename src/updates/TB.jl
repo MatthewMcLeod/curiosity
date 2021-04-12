@@ -189,7 +189,7 @@ function update!(lu::TB,
         α = lu.opt.eta
         if λ == 0.0
             ψ[:, active_state_action.nzind] .+= (α  * td_err) * active_state_action.nzval'
-            w .= w .+ α * pred_err * active_state_action'
+            w .= w .+ α * pred_err * projected_state_action'
         else
             ψ[:, e_nz] .+= (α  * td_err) .* e_ψ[:, e_nz]
             w[:, e_w_nz] .+= (α  * pred_err) .* e_w[:, e_w_nz]
