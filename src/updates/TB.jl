@@ -195,8 +195,11 @@ function update!(lu::TB,
             w[:, e_w_nz] .+= (α  * pred_err) .* e_w[:, e_w_nz]
         end
     else
-        update!(lu.opt, ψ, -td_err .* e_ψ)
-        update!(lu.opt, w, -pred_err * e_w)
+        # @show size(e_ψ), size(e_w)
+        # @show size(td_err), size(pred_err)
+        
+        update!(lu.opt, ψ, - e_ψ .* td_err)
+        update!(lu.opt, w, - e_w .* pred_err)
     end
     discounts .= next_discounts
 end
