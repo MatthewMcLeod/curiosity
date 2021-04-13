@@ -49,13 +49,14 @@ logger_keys = ["TTMAZE_ERROR", "TTMAZE_UNIFORM_ERROR", "TTMAZE_OLD_ERROR"]
 # save_dir = "TabularTMazeExperiment"
 # seed = 1
 logger_interval = 50
-steps = 100
+steps = 2000
 use_external_reward = true
 
 [sweep_args]
-seed = "1:2"
+seed = "1:100"
 # runs = "1:2"
-demon_eta = "2.0 .^ (-6:0)"
+# demon_eta = "2.0 .^ (-6:0)"
+demon_eta = [0.03, 0.1, 0.3, 1.0]
 demon_opt = ["Descent", "Auto"]
 demon_learner = ["Q"]
 exploration_param = [0.0]

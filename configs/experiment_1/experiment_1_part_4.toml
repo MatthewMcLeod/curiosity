@@ -55,10 +55,10 @@ seed = "1:100"
 # runs = "1:2"
 demon_eta = "2.0 .^ (-4:-4)"
 demon_opt = ["ADAM"]
-demon_learner = ["SR"]
+demon_learner = ["Q", "SR"]
 exploration_param = [0.0]
-demon_beta_m = [0.9, 0.99]
-demon_beta_v = [0.99, 0.999]
+demon_beta_m = [0.9, 0.99, 0.99]
+demon_beta_v = [0.9, 0.99, 0.999]
 behaviour_eta = "2.0 .^ (-2:-2)"
 
 # demon_opt = ["Auto"]

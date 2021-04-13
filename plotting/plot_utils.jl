@@ -62,7 +62,10 @@ function get_stats(data;per_gvf=false)
     return a,b = if per_gvf == true
         mean_per_gvf, std_per_gvf
     else
-        mean(mean_per_gvf,dims=1)[1,:], mean(std_per_gvf,dims=1)[1,:]
+
+        error_tot = sum(data,dims=1)[1,:,:]
+        # sum(mean_per_gvf,dims=1)[1,:], sum(std_per_gvf,dims=1)[1,:]
+        sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=2)[1,:]
     end
 end
 
