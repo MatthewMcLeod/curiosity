@@ -16,8 +16,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -29,7 +29,7 @@ default_args() =
         "demon_alpha_init" => 1.0,
         "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -51,7 +51,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 2000,
+        "steps" => 5000,
         "use_external_reward" => true,
         "logger_interval" => 100,
     )
@@ -98,8 +98,7 @@ function construct_agent(parsed)
         return s
     end
 
-    behaviour_feature_projector = ActionValueFeatureProjector(state_constructor_func, feature_size)
-    # behaviour_feature_projector = ActionValueFeatureProjector(compressed_state_constructor, 4)
+    behaviour_feature_projector = Curiosity.FeatureProjector(ActionValueFeatureProjector(state_constructor_func, feature_size), false)
     demon_feature_projector = behaviour_feature_projector
 
 
@@ -138,7 +137,14 @@ function construct_agent(parsed)
                                                  "behaviour",
                                                  behaviour_feature_projector)
 
-    behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
+    behaviour_gvf = if behaviour_learner isa GPI
+        #behaviour discount for immediate reward predictor for GPI should always be 0.
+        TTMU.make_behaviour_gvf(0.0, state_constructor_func, behaviour_learner, exploration_strategy)
+    elseif behaviour_learner isa QLearner
+        TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
+    else
+        throw(ArgumentError("What other type of behaviour learner??"))
+    end
     behaviour_demons = if behaviour_learner isa GPI
         SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space, behaviour_feature_projector)
 
