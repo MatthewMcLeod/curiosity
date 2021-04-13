@@ -36,7 +36,7 @@ default_args() =
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.9,
-        "demon_beta_v" => 0.9,
+        "demon_beta_v" => 0.99,
 
         # Environment Config
         "constant_target"=> 1.0,
@@ -98,8 +98,7 @@ function construct_agent(parsed)
         return s
     end
 
-    behaviour_feature_projector = ActionValueFeatureProjector(state_constructor_func, feature_size)
-    # behaviour_feature_projector = ActionValueFeatureProjector(compressed_state_constructor, 4)
+    behaviour_feature_projector = Curiosity.FeatureProjector(ActionValueFeatureProjector(state_constructor_func, feature_size), false)
     demon_feature_projector = behaviour_feature_projector
 
 
@@ -128,6 +127,8 @@ function construct_agent(parsed)
         num_SFs * feature_size * action_space + 1
     elseif parsed["behaviour_learner"] ∈ ["Q"]
         1
+    else
+        println("Invalid behaviour learner. Num demons is not defined")
     end
 
     behaviour_learner = Curiosity.get_linear_learner(parsed,
@@ -138,7 +139,14 @@ function construct_agent(parsed)
                                                  "behaviour",
                                                  behaviour_feature_projector)
 
-    behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
+    behaviour_gvf = if behaviour_learner isa GPI
+        #behaviour discount for immediate reward predictor for GPI should always be 0.
+        TTMU.make_behaviour_gvf(0.0, state_constructor_func, behaviour_learner, exploration_strategy)
+    elseif behaviour_learner isa QLearner
+        TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
+    else
+        throw(ArgumentError("What other type of behaviour learner??"))
+    end
     behaviour_demons = if behaviour_learner isa GPI
         SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space, behaviour_feature_projector)
 
@@ -225,7 +233,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
         while sum(steps) < max_num_steps
             cur_step = 0
-            max_episode_steps = min(max_num_steps - sum(steps), 1000)
+            max_episode_steps = max_num_steps - sum(steps)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     #This is a callback for every timestep where logger can go

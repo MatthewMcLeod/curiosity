@@ -41,9 +41,11 @@ default_args() =
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Descent",
-        "demon_lambda" => 0.0,
+        "demon_opt" => "Auto",
+        "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
+        "demon_beta_m" => 0.99,
+        "demon_beta_v" => 0.99,
 
         #shared
         "num_tiles" => 4,
@@ -57,7 +59,7 @@ default_args() =
         "cumulant"=>1.0,
         "cumulant_schedule" => "Constant",
         "distractor" => (1.0, 1.0),
-        "drifter" => (sqrt(0.01), 1.0),
+        "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"whole",
 
         # Agent and Logger
@@ -66,7 +68,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 1000,
         "use_external_reward" => true,
 
         "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH]
@@ -110,7 +112,6 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
 
-
     demons = ODTMU.create_demons(parsed, demon_projected_fc)
 
     demon_learner = Curiosity.get_linear_learner(parsed,
@@ -144,10 +145,25 @@ function construct_agent(parsed)
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
     
-
-    
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         ODTMU.RoundRobinPolicy(), nothing, 0.0
+# =======
+
+#      behaviour_num_tasks = 1
+#      num_SFs = 4
+#      num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
+#          num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
+#      elseif parsed["behaviour_learner"] ∈ ["Q"]
+#          behaviour_num_tasks
+#      elseif parsed["behaviour_learner"] == "RoundRobin"
+#          0
+#     else
+#         throw(ArgumentError("Hacky thing not working, yay!"))
+#      end
+
+#     behaviour_learner = if parsed["behaviour_learner"] == "RoundRobin"
+#         ODTMU.RoundRobinPolicy()
+# >>>>>>> 1b7e6a40dd162181af44386a0be2c70962467ec9
     else
         behaviour_num_tasks = 1
         num_SFs = 4
@@ -188,6 +204,25 @@ function construct_agent(parsed)
 
         behaviour_learner, behaviour_demons, parsed["behaviour_gamma"]
     end #end behaviour_learner, behaviour_demons = if parsed["behaviour_learner"] == "RoundRobin"
+
+#     bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner, parsed["behaviour_gamma"], fc, exploration_strategy)
+
+#     behaviour_demons = if behaviour_learner isa GPI
+#         @assert !(behaviour_reward_projector isa Nothing)
+#         pred_horde = GVFHordes.Horde([bh_gvf])
+#         SF_policies = [ODTMU.GoalPolicy(i) for i in 1:4]
+#         SF_discounts = [ODTMU.GoalTermination(0.9) for i in 1:4]
+#         num_SFs = length(SF_policies)
+#         SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
+#         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_projector)
+#     elseif behaviour_learner isa QLearner
+#         GVFHordes.Horde([bh_gvf])
+#     elseif behaviour_learner isa ODTMU.RoundRobinPolicy
+#         nothing
+#     else
+#         throw(ArgumentError("goes with which horde? " ))
+#     end
+# >>>>>>> 1b7e6a40dd162181af44386a0be2c70962467ec9
 
     Agent(demons,
           feat_size,
@@ -255,8 +290,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             eps += 1
         end
         if working == true
-            # @show sum(agent.demon_learner.ψ)
-            # @show sum(agent.demon_learner.r_w)
             println(goal_visitations)
         end
         agent
