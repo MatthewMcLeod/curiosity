@@ -16,8 +16,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "ESARSA",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -51,7 +51,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 5000,
+        "steps" => 30000,
         "use_external_reward" => true,
         "logger_interval" => 100,
     )
@@ -127,6 +127,8 @@ function construct_agent(parsed)
         num_SFs * feature_size * action_space + 1
     elseif parsed["behaviour_learner"] ∈ ["Q"]
         1
+    else
+        println("Invalid behaviour learner. Num demons is not defined")
     end
 
     behaviour_learner = Curiosity.get_linear_learner(parsed,
@@ -231,7 +233,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
         while sum(steps) < max_num_steps
             cur_step = 0
-            max_episode_steps = min(max_num_steps - sum(steps), 1000)
+            max_episode_steps = max_num_steps - sum(steps)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     #This is a callback for every timestep where logger can go
