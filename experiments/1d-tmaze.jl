@@ -48,7 +48,7 @@ default_args() =
         #shared
         "num_tiles" => 4,
         "num_tilings" =>16,
-        "demon_rep" => "ideal",
+        "demon_rep" => "tilecoding",
         "demon_num_tiles" => 4,
         "demon_num_tilings" => 4,
 

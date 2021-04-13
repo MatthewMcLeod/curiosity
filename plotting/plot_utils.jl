@@ -35,8 +35,10 @@ function split_algo(algo_ic, swept_params)
     println(swept_params)
     dicts = [Dict()]
     for k in swept_params
-        list_of_params = diff(algo_ic)[k]
-        dicts = combine(dicts, k, list_of_params)
+        if k in keys(diff(algo_ic))
+            list_of_params = diff(algo_ic)[k]
+            dicts = combine(dicts, k, list_of_params)
+        end
     end
     return dicts
 end
@@ -68,10 +70,14 @@ end
 function print_params(ic, algo_params, sweep_params)
     println("For IC: ")
     for p in algo_params
-        println(p,"  ", ic[1].parsed_args[p])
+        if p in keys(ic[1].parsed_args)
+            println(p,"  ", ic[1].parsed_args[p])
+        end
     end
     for p in sweep_params
-        println(p,"  ", ic[1].parsed_args[p])
+        if p in keys(ic[1].parsed_args)
+            println(p,"  ", ic[1].parsed_args[p])
+        end
     end
     println()
 end

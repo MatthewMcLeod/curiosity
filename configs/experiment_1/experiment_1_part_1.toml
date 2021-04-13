@@ -1,5 +1,5 @@
 [config]
-save_dir = "Experiment1_part_4"
+save_dir = "Experiment1"
 exp_file = "experiments/tabular_tmaze.jl"
 exp_module_name = "TabularTMazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-save_keys=["demon_opt", "seed", "demon_eta", "demon_learner", "exploration_param", "behaviour_eta", "demon_beta_m", "demon_beta_v"]
+save_keys=["demon_opt", "seed", "demon_eta", "demon_learner", "exploration_param", "behaviour_eta"]
 # save_keys=["demon_opt", "demon_eta", "runs"]
 
 # Behaviour Items
@@ -32,32 +32,33 @@ demon_policy_type = "greedy_to_cumulant"
 # demon_opt = "Descent"
 demon_lambda = 0.9
 demon_trace = "AccumulatingTraces"
+demon_beta_m = 0.9
+demon_beta_v = 0.99
 
 # Environment Config
 constant_target= 1.0
 cumulant_schedule = "DrifterDistractor"
 distractor = [1.0, 1.0]
-drifter = [0.1, 1.0]
+drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
 exploring_starts=true
 
-# Agent and Logger
+# Agent and Logger100
 horde_type = "regular"
 intrinsic_reward = "weight_change"
+logger_interval = 50
 logger_keys = ["TTMAZE_ERROR", "TTMAZE_UNIFORM_ERROR", "TTMAZE_OLD_ERROR"]
 # save_dir = "TabularTMazeExperiment"
 # seed = 1
-steps = 2000
+steps = 100
 use_external_reward = true
 
 [sweep_args]
-seed = "1:100"
+seed = "1:2"
 # runs = "1:2"
-demon_eta = "2.0 .^ (-9:-5)"
-demon_opt = ["ADAM"]
-demon_learner = ["Q"]
+demon_eta = "2.0 .^ (-4:0)"
+demon_opt = ["Auto", "Descent"]
+demon_learner = ["SR", "Q"]
 exploration_param = [0.0]
-demon_beta_m = [0.99, 0.999]
-demon_beta_v = [0.99, 0.999]
-behaviour_eta = "2.0 .^ (-2:-2)"
+behaviour_eta = "2.0 .^ (-1:-1)"
 
 # demon_opt = ["Auto"]
