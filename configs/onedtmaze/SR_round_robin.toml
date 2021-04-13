@@ -51,10 +51,9 @@ exploration_param = 0.0
 [sweep_args]
 seed = "1:10"
 cumulant_schedule = ["Constant", "DrifterDistractor"]
-demon_eta = "0.1 * 1.5.^(-8:2)"
-demon_opt = ["Auto", "Descent", "ADAM", "RMSProp"]
-
-demon_update = ["TB", "ESARSA"]
+demon_eta = "0.1 * 1.5.^(-8:2:2)"
+demon_opt = ["Auto", "Descent"]
+demon_update = ["TB"]
 
 demon_num_tiles = [4, 8, 16]
 demon_num_tilings = [1, 4, 8]
