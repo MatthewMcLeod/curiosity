@@ -205,25 +205,6 @@ function construct_agent(parsed)
         behaviour_learner, behaviour_demons, parsed["behaviour_gamma"]
     end #end behaviour_learner, behaviour_demons = if parsed["behaviour_learner"] == "RoundRobin"
 
-#     bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner, parsed["behaviour_gamma"], fc, exploration_strategy)
-
-#     behaviour_demons = if behaviour_learner isa GPI
-#         @assert !(behaviour_reward_projector isa Nothing)
-#         pred_horde = GVFHordes.Horde([bh_gvf])
-#         SF_policies = [ODTMU.GoalPolicy(i) for i in 1:4]
-#         SF_discounts = [ODTMU.GoalTermination(0.9) for i in 1:4]
-#         num_SFs = length(SF_policies)
-#         SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
-#         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_projector)
-#     elseif behaviour_learner isa QLearner
-#         GVFHordes.Horde([bh_gvf])
-#     elseif behaviour_learner isa ODTMU.RoundRobinPolicy
-#         nothing
-#     else
-#         throw(ArgumentError("goes with which horde? " ))
-#     end
-# >>>>>>> 1b7e6a40dd162181af44386a0be2c70962467ec9
-
     Agent(demons,
           feat_size,
           behaviour_learner,

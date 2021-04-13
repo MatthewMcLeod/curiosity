@@ -52,7 +52,7 @@ function Base.get(gvfh::SRHorde; kwargs...)
     discounts_SF = repeat(unique_discounts_SF, inner = state_action_feature_length)
     pi_SF = repeat(unique_pi_SF, inner = state_action_feature_length)
 
-    return vcat(C,C_SF),vcat(discounts,discounts_SF), vcat(pi,pi_SF)
+    return vcat(C,C_SF), vcat(discounts,discounts_SF), vcat(pi,pi_SF)
 end
 
 # Base.get(gvfh::SRHorde, state_tp1, preds_tp1) =

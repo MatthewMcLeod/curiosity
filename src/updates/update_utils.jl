@@ -32,16 +32,19 @@ function get_demon_pis(horde::GVFSRHordes.SRHorde, num_actions, state, obs)
     target_pis = zeros(length(horde), num_actions)
     for i in 1:length(horde.PredHorde)
         for a in 1:num_actions
-        # _, _, pi = get(horde, obs, a, obs, a)
             target_pis[i, a] = get(GVFHordes.policy(horde.PredHorde.gvfs[i]); state_t = obs, action_t = a)
         end
     end
-    for i in 1:length(horde.SFHorde)
-        for a in 1:num_actions
-        # _, _, pi = get(horde, obs, a, obs, a)
-            target_pis[length(horde.PredHorde) + i, a] = get(GVFHordes.policy(horde.SFHorde.gvfs[i]); state_t = obs, action_t = a)
-        end
+
+    state_action_feature_length = Int( length(horde.SFHorde) / horde.num_SFs)
+    inds_per_task = collect(1:state_action_feature_length:length(horde.SFHorde))
+
+    for a in 1:num_actions
+        unique_pi_SF = map(gvf -> get(GVFHordes.policy(gvf); state_t=obs, action_t=a), horde.SFHorde.gvfs[inds_per_task])
+        upsf = repeat(unique_pi_SF, inner = state_action_feature_length)
+        target_pis[length(horde.PredHorde)+1:end, a] .=  upsf
     end
+
     return target_pis
 end
 

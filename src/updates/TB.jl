@@ -129,9 +129,6 @@ function update!(lu::TB,
 
     projected_state = learner.feature_projector(obs, action, next_obs)
     projected_state_action = get_active_action_state_vector(projected_state, action, size(learner.feature_projector), learner.num_actions)
-    # projected_next_state = learner.feature_projector(next_obs)
-    # projected_next_state_action = get_active_action_state_vector(projected_next_state, next_action, size(learner.feature_projector), learner.num_actions)
-    # projected_next_state_next_action = learner.feature_projector(next_state,next_action)
 
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
     (reward_discounts, SF_discounts) = discounts[1:learner.num_tasks], discounts[learner.num_tasks+1:end]
@@ -143,8 +140,16 @@ function update!(lu::TB,
     # Update Traces: See update_utils.jl
     update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
     update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
-    e_nz = e_nz ∪ active_state_action.nzind
-    e_w_nz = e_w_nz ∪ projected_state_action.nzind
+    # e_nz = e_nz ∪ active_state_action.nzind
+    # e_w_nz = e_w_nz ∪ projected_state_action.nzind
+    if λ == 0.0
+        e_nz = active_state_action.nzind
+        e_w_nz = projected_state_action.nzind
+    else
+        e_nz = e_nz ∪ active_state_action.nzind
+        e_w_nz = e_w_nz ∪ projected_state_action.nzind
+    end
+
 
     pred = ψ * next_active_state_action
     reward_feature_backup = zeros(length(SF_C))
