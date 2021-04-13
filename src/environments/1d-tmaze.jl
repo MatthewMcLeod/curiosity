@@ -44,18 +44,17 @@ MinimalRLCore.is_terminal(env::OneDTMaze, pos=env.pos) = any(check_goal.([env], 
 
 check_goal(env::OneDTMaze, goal, pos=env.pos) = check_goal(OneDTMaze, goal, pos)
 
-function check_goal(env::Type{OneDTMaze}, goal, pos)
-    ODTMC = OneDTmazeConst
+function check_goal(env::Type{OneDTMaze}, goal, pos, epsilon=OneDTmazeConst.EPSILON)
     cur_x = pos[1]
     cur_y = pos[2]
     if goal == (goal isa String ? "G1" : 1)
-        (cur_x == 0.0 && range_check(cur_y, 1.0-ODTMC.EPSILON, 2.0)) # G1
+        (cur_x == 0.0 && range_check(cur_y, 1.0-epsilon, 2.0)) # G1
     elseif goal == (goal isa String ? "G2" : 2)
-        (cur_x == 0.0 && range_check(cur_y, 0.0, 0.6+ODTMC.EPSILON)) # G2
+        (cur_x == 0.0 && range_check(cur_y, 0.0, 0.6+epsilon)) # G2
     elseif goal == (goal isa String ? "G3" : 3)
-        (cur_x == 1.0 && range_check(cur_y, 1.0-ODTMC.EPSILON, 2.0)) # G3
+        (cur_x == 1.0 && range_check(cur_y, 1.0-epsilon, 2.0)) # G3
     elseif goal == (goal isa String ? "G4" : 4)
-        (cur_x == 1.0 && range_check(cur_y, 0.0, 0.6+ODTMC.EPSILON)) # G4
+        (cur_x == 1.0 && range_check(cur_y, 0.0, 0.6+epsilon)) # G4
     end
 end
 

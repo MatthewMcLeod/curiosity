@@ -109,6 +109,9 @@ function construct_agent(parsed)
     elseif parsed["demon_rep"] == "ideal"
         # ODTMU.IdealDemonFeatures()
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2), true)
+    elseif parsed["demon_rep"] == "ideal_martha"
+        # ODTMU.IdealDemonFeatures()
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.MarthaIdealDemonFeatures(), 1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
