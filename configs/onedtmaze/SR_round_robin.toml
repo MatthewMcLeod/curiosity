@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMazeSR_tilecoding"
+save_dir = "OneDTMazeSR_ideal"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -19,7 +19,7 @@ exploration_strategy = "epsilon_greedy"
 
 # Demon Attributes
 demon_learner = "SR"
-demon_rep = "tilecoding"
+demon_rep = "ideal_martha"
 
 demon_alpha_init = 1 # Will be 1/tilings from sweep
 demon_beta_m = 0.9
@@ -49,14 +49,14 @@ use_external_reward = true
 exploration_param = 0.0
 
 [sweep_args]
-seed = "1:10"
+seed = "1:20"
 cumulant_schedule = ["Constant", "DrifterDistractor"]
-demon_eta = "0.1 * 1.5.^(-8:2:2)"
+demon_eta = "0.1 * 1.5.^(-8:2)"
 demon_opt = ["Auto", "Descent"]
 demon_update = ["TB"]
 
-demon_num_tiles = [4, 8, 16]
-demon_num_tilings = [1, 4, 8]
+# demon_num_tiles = [4, 8, 16]
+# demon_num_tilings = [1, 4, 8]
 
 num_tiles = [4, 8, 16]
 num_tilings = [1, 4, 8]
