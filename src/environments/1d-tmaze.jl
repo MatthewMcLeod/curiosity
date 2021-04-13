@@ -14,7 +14,7 @@ const LEFT = 4
 const ACTIONS = [UP, RIGHT, DOWN, LEFT]
 
 const EPSILON = 0.0
-const ACTION_STEP = 0.1
+const ACTION_STEP = 0.05
 
 end
 
@@ -49,11 +49,11 @@ function check_goal(env::Type{OneDTMaze}, goal, pos)
     cur_x = pos[1]
     cur_y = pos[2]
     if goal == (goal isa String ? "G1" : 1)
-        (cur_x == 0.0 && range_check(cur_y, 1.0-ODTMC.EPSILON, 1.0)) # G1
+        (cur_x == 0.0 && range_check(cur_y, 1.0-ODTMC.EPSILON, 2.0)) # G1
     elseif goal == (goal isa String ? "G2" : 2)
         (cur_x == 0.0 && range_check(cur_y, 0.0, 0.6+ODTMC.EPSILON)) # G2
     elseif goal == (goal isa String ? "G3" : 3)
-        (cur_x == 1.0 && range_check(cur_y, 1.0-ODTMC.EPSILON, 1.0)) # G3
+        (cur_x == 1.0 && range_check(cur_y, 1.0-ODTMC.EPSILON, 2.0)) # G3
     elseif goal == (goal isa String ? "G4" : 4)
         (cur_x == 1.0 && range_check(cur_y, 0.0, 0.6+ODTMC.EPSILON)) # G4
     end
@@ -92,9 +92,9 @@ function get_random_state(env::OneDTMaze)
             [rand(Uniform(0.0, 1.0)), 0.8]
         else
             if rand() > 0.5
-                [0.0, rand(Uniform(0.6, 1.0))]
+                [0.0, rand(Uniform(0.65, 0.95))]
             else
-                [1.0, rand(Uniform(0.6, 1.0))]
+                [1.0, rand(Uniform(0.65, 0.95))]
             end
         end
     end
@@ -113,17 +113,16 @@ end
 function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)
     ODTMC = OneDTmazeConst
     @boundscheck valid_action(env, action)
-    x_mov_scale, y_mov_scale = if action == ODTMC.UP
-        (0.0, ODTMC.ACTION_STEP)
+    rand_mov = rand(rng, Uniform(-0.01, 0.01))
+    x_mov, y_mov = if action == ODTMC.UP
+        (0.0, ODTMC.ACTION_STEP + rand_mov)
     elseif action == ODTMC.DOWN
-        (0.0, -ODTMC.ACTION_STEP)
+        (0.0, -ODTMC.ACTION_STEP + rand_mov)
     elseif action == ODTMC.RIGHT
-        (ODTMC.ACTION_STEP, 0.0)
+        (ODTMC.ACTION_STEP + rand_mov, 0.0)
     elseif action == ODTMC.LEFT
-        (-ODTMC.ACTION_STEP, 0.0)
+        (-ODTMC.ACTION_STEP + rand_mov, 0.0)
     end
-
-    x_mov, y_mov = rand(rng)*x_mov_scale, rand(rng)*y_mov_scale
 
     cur_x = env.pos[1]
     cur_y = env.pos[2]

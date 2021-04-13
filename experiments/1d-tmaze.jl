@@ -18,7 +18,7 @@ const SRCU = Curiosity.SRCreationUtils
 
 default_args() =
     Dict(
-        "logger_interval" => 1000,
+        "logger_interval" => 100,
         
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
@@ -101,6 +101,7 @@ function construct_agent(parsed)
     feat_size = size(fc)
 
     demon_projected_fc = if "demon_rep" ∉ keys(parsed)
+        nothing
     elseif parsed["demon_rep"] == "tilecoding"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
                 Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
@@ -147,23 +148,6 @@ function construct_agent(parsed)
     
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         ODTMU.RoundRobinPolicy(), nothing, 0.0
-# =======
-
-#      behaviour_num_tasks = 1
-#      num_SFs = 4
-#      num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
-#          num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
-#      elseif parsed["behaviour_learner"] ∈ ["Q"]
-#          behaviour_num_tasks
-#      elseif parsed["behaviour_learner"] == "RoundRobin"
-#          0
-#     else
-#         throw(ArgumentError("Hacky thing not working, yay!"))
-#      end
-
-#     behaviour_learner = if parsed["behaviour_learner"] == "RoundRobin"
-#         ODTMU.RoundRobinPolicy()
-# >>>>>>> 1b7e6a40dd162181af44386a0be2c70962467ec9
     else
         behaviour_num_tasks = 1
         num_SFs = 4
@@ -184,7 +168,10 @@ function construct_agent(parsed)
                                                          "behaviour",
                                                          behaviour_reward_projector)
 
-        bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner, parsed["behaviour_gamma"], fc, exploration_strategy)
+        bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
+                                          parsed["behaviour_gamma"],
+                                          fc,
+                                          exploration_strategy)
     
         behaviour_demons = if behaviour_learner isa GPI
             @assert !(behaviour_reward_projector isa Nothing)
@@ -203,7 +190,7 @@ function construct_agent(parsed)
         end
 
         behaviour_learner, behaviour_demons, parsed["behaviour_gamma"]
-    end #end behaviour_learner, behaviour_demons = if parsed["behaviour_learner"] == "RoundRobin"
+    end #end behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
 
     Agent(demons,
           feat_size,
