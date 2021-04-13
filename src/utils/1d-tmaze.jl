@@ -152,6 +152,17 @@ end
 (FP::IdealDemonFeatures)(state) = project_features(FP, state)
 Base.size(FP::IdealDemonFeatures) = 4
 
+struct MarthaIdealDemonFeatures <: FeatureCreator
+end
+
+function project_features(fc::MarthaIdealDemonFeatures, state)
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state, 0.05) for i in 1:4]))
+    return new_state
+end
+
+(FP::MarthaIdealDemonFeatures)(state) = project_features(FP, state)
+Base.size(FP::MarthaIdealDemonFeatures) = 4
+
 
 ####
 # Behaviour policies
