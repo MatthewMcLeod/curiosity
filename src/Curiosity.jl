@@ -51,7 +51,7 @@ include("environments.jl")
 
 
 # logger
-export Logger, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
+export Logger, logger_start!, logger_step!, logger_episode_end!, LoggerKey, LoggerInitKey
 include("logger/logger.jl")
 
 #utils

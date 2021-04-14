@@ -10,10 +10,13 @@ function lg_episode_end!(self::LoggerKeyData, cur_step_in_episode, cur_step_tota
     error("lg_episode_end! for this logger is unimplemented")
 end
 
+function lg_start!(self::LoggerKeyData, agent, env)
+    @warn ("lg_start! for $(self) not implemented")
+end
+
 function save_log(self::LoggerKeyData, save_dict::Dict)
     error("save_log for this logger is unimplemented")
 end
-
 
 include("one_d_tmaze_error.jl")
 include("goal_visitation.jl")
@@ -92,6 +95,14 @@ mutable struct Logger
             end
         end
         new(save_file, logger_keys, logger_key_data, cur_step_in_episode, cur_step_total)
+    end
+end
+
+function logger_start!(self::Logger, env, agent)
+    for data in self.logger_key_data
+        if applicable(lg_start!, data, env, agent)
+            lg_start!(data, env, agent)
+        end
     end
 end
 
