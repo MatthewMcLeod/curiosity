@@ -33,10 +33,10 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
-        "demon_update" => "TB",
+        "demon_learner" => "Q",
+        "demon_update" => "ESARSA",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Auto",
+        "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.99,
@@ -44,7 +44,7 @@ default_args() =
 
         #shared
         "num_tiles" => 4,
-        "num_tilings" =>16,
+        "num_tilings" =>8,
         "demon_rep" => "tilecoding",
         "demon_num_tiles" => 6,
         "demon_num_tilings" => 1,
@@ -63,7 +63,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 1000,
+        "steps" => 5000,
         "use_external_reward" => true,
 
         "logger_keys"=>[LoggerKey.ONEDTMAZEERROR]
@@ -159,6 +159,8 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
+
+        logger_start!(logger, env, agent)
 
         prg_bar = ProgressMeter.Progress(num_steps, "Step: ")
         while sum(steps) < max_num_steps
