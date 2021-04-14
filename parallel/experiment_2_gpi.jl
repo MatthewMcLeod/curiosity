@@ -3,9 +3,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH -o experiment_2_gpi.out # Standard output
 #SBATCH -e experiment_2_gpi.err # Standard error
-#SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=00:20:00 #
-#SBATCH --ntasks=128
+#SBATCH --mem-per-cpu=3000M # Memory request of 3GB
+#SBATCH --time=01:40:00 #
+#SBATCH --ntasks=64
 #SBATCH --account=def-whitem
 
 using Pkg
