@@ -17,7 +17,7 @@ default_args() =
         "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
-        "behaviour_update" => "ESARSA",
+        "behaviour_update" => "TabularRoundRobin",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
@@ -51,7 +51,7 @@ default_args() =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 30000,
+        "steps" => 2000,
         "use_external_reward" => true,
         "logger_interval" => 100,
     )
