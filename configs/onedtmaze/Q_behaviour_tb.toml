@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMazeQ"
+save_dir = "OneDTMazeQ_B_tb"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -12,23 +12,23 @@ steps = 50000
 logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH"]
 logger_interval = 100
 # Behaviour Items
+behaviour_alpha_init = 1.0 # Will be 1/tilings from sweep
 behaviour_gamma = 0.9
-behaviour_learner = "RoundRobin"
-behaviour_update = "RoundRobin"
 exploration_strategy = "epsilon_greedy"
-
+behaviour_trace = "AccumulatingTraces"
+behaviour_lambda = 0.9
 # Demon Attributes
-demon_alpha_init = 1 # Will be 1/tilings from sweep
-demon_beta_m = 0.9
-demon_beta_v = 0.99
-demon_rho = 0.9
 
+demon_alpha_init = 1.0 # Will be 1/tilings from sweep
 demon_discounts = 0.9
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
 
-
+demon_learner = "Q"
+demon_update = "TB"
+demon_eta = 0.0444444444
+demon_opt = "Auto"
 
 # Environment Config
 constant_target= 1.0
@@ -43,16 +43,16 @@ horde_type = "regular"
 intrinsic_reward = "weight_change"
 
 use_external_reward = true
-exploration_param = 0.0
+
+num_tilings = 8
+num_tiles = 2
+
 
 [sweep_args]
 seed = "1:30"
-cumulant_schedule = ["Constant", "DrifterDistractor"]
-demon_eta = "0.1 * 1.5.^(-10:2)"
-demon_opt = ["Auto", "Descent", "ADAM", "RMSProp"]
-
-demon_update = ["TB", "ESARSA"]
-demon_learner = ["Q"]
-
-num_tiles = [4, 8, 16]
-num_tilings = [1, 4, 8]
+cumulant_schedule = ["DrifterDistractor"]
+behaviour_eta = "0.1 * 1.5.^(-10:2)"
+behaviour_opt = ["Auto", "Descent"]
+behaviour_learner = ["Q"]
+behaviour_update = ["ESARSA"]
+exploration_param = [0.1, 0.2, 0.3, 0.4]
