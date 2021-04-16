@@ -231,6 +231,9 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             p = Progress(max_num_steps)
         end
 
+        logger_start!(logger, env, agent)
+
+
         while sum(steps) < max_num_steps
             cur_step = 0
             max_episode_steps = max_num_steps - sum(steps)

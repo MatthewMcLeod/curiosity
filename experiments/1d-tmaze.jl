@@ -19,7 +19,7 @@ const SRCU = Curiosity.SRCreationUtils
 default_args() =
     Dict(
         "logger_interval" => 100,
-        
+
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.0,
@@ -38,8 +38,8 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
-        "demon_update" => "TB",
+        "demon_learner" => "Q",
+        "demon_update" => "ESARSA",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
@@ -49,10 +49,10 @@ default_args() =
 
         #shared
         "num_tiles" => 4,
-        "num_tilings" =>16,
+        "num_tilings" =>8,
         "demon_rep" => "tilecoding",
-        "demon_num_tiles" => 4,
-        "demon_num_tilings" => 4,
+        "demon_num_tiles" => 6,
+        "demon_num_tilings" => 1,
 
         # Environment Config
         "constant_target"=> 1.0,
@@ -93,7 +93,7 @@ function construct_agent(parsed)
         parsed["behaviour_alpha_init"] =
             parsed["behaviour_alpha_init"] / parsed["num_tilings"]
     end
-    
+
 
     fc = Curiosity.FeatureSubset(
         Curiosity.SparseTileCoder(parsed["num_tilings"], parsed["num_tiles"], 2),
@@ -151,7 +151,7 @@ function construct_agent(parsed)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
-    
+
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         ODTMU.RoundRobinPolicy(), nothing, 0.0
     else
@@ -175,7 +175,7 @@ function construct_agent(parsed)
                                                          behaviour_reward_projector)
 
 
-    
+
         behaviour_demons = if behaviour_learner isa GPI
             @assert !(behaviour_reward_projector isa Nothing)
             bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
@@ -241,6 +241,8 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
+
+        logger_start!(logger, env, agent)
 
         prg_bar = ProgressMeter.Progress(num_steps, "Step: ")
         while sum(steps) < max_num_steps

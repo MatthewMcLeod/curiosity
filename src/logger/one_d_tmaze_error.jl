@@ -14,19 +14,21 @@ mutable struct OneDTMazeError <: LoggerKeyData
     end
 end
 
+function lg_start!(self::OneDTMazeError, env, agent)
+    Q_est = hcat([get_demon_prediction(agent, state, Int(action)) for (state, action) in zip(self.eval_set["states"], self.eval_set["actions"])]...)
+    true_values = OneDTMazeUtils.get_true_values(env, self.eval_set["ests"])
+    err = mean((Q_est - true_values) .^ 2, dims=2)
+    self.error[:,1] = sqrt.(err)
+end
+
 function lg_step!(self::OneDTMazeError, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
-    if (rem(cur_step_total, self.log_interval) == 0 || cur_step_total == 1)
+    if (rem(cur_step_total, self.log_interval) == 0)
         ind = fld(cur_step_total, self.log_interval) + 1
-        # Q_est = hcat([predict(agent.demon_learner, agent, agent.demon_weights, state, action) for (state,action) in zip(self.eval_set["states"], self.eval_set["actions"])]...)
         Q_est = hcat([get_demon_prediction(agent, state, Int(action)) for (state, action) in zip(self.eval_set["states"], self.eval_set["actions"])]...)
 
         true_values = OneDTMazeUtils.get_true_values(env, self.eval_set["ests"])
         err = mean((Q_est - true_values) .^ 2, dims=2)
-        # if cur_step_total == 1
-        #     @show Q_est
-        #     @show true_values
-        #     @show err
-        # end
+
         self.error[:,ind] = sqrt.(err)
     end
 end

@@ -53,6 +53,7 @@ function Flux.Optimise.update!(opt::Auto, θ::AbstractArray{F}, ϕ, δ, z, num_d
         end
     end
     θ .+= α.*δϕ
+    # @show "after", sum(θ)
     h .= h.*(1 .- α.*abs_ϕ) + α.*δϕ
 
 end
