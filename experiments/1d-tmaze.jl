@@ -145,6 +145,9 @@ function construct_agent(parsed)
     elseif parsed["behaviour_reward_projector"] == "ideal"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
             ODTMU.IdealDemonFeatures(), 1:2), true)
+    elseif parsed["behaviour_reward_projector"] == "ideal_martha"
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+            ODTMU.MarthaIdealDemonFeatures(), 1:2), true)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
@@ -171,20 +174,25 @@ function construct_agent(parsed)
                                                          "behaviour",
                                                          behaviour_reward_projector)
 
-        bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
-                                          parsed["behaviour_gamma"],
-                                          fc,
-                                          exploration_strategy)
+
     
         behaviour_demons = if behaviour_learner isa GPI
             @assert !(behaviour_reward_projector isa Nothing)
+            bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
+                                              0.0,
+                                              fc,
+                                              exploration_strategy)
             pred_horde = GVFHordes.Horde([bh_gvf])
             SF_policies = [ODTMU.GoalPolicy(i) for i in 1:4]
-            SF_discounts = [ODTMU.GoalTermination(0.9) for i in 1:4]
+            SF_discounts = [ODTMU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
             num_SFs = length(SF_policies)
             SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
             Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_projector)
         elseif behaviour_learner isa QLearner
+            bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
+                                              parsed["behaviour_gamma"],
+                                              fc,
+                                              exploration_strategy)
             GVFHordes.Horde([bh_gvf])
         elseif behaviour_learner isa ODTMU.RoundRobinPolicy
             nothing
