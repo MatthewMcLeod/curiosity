@@ -56,3 +56,4 @@ behaviour_opt = ["Auto", "Descent"]
 behaviour_learner = ["Q"]
 behaviour_update = ["ESARSA"]
 exploration_param = [0.1, 0.2, 0.3, 0.4]
+
