@@ -14,22 +14,23 @@ const TTMU = Curiosity.TabularTMazeUtils
 default_args() =
     Dict(
         # Behaviour Items
-        "behaviour_eta" => 0.55,
+        "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
         "behaviour_update" => "TabularRoundRobin",
-        "behaviour_trace" => "ReplacingTraces",
+        "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
+        "behaviour_alpha_init" => 1.0,
         "exploration_param" => 0.3,
         "exploration_strategy" => "epsilon_greedy",
 
         # Demon Attributes
         "demon_alpha_init" => 1.0,
-        "demon_eta" => 0.1,
+        "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
@@ -47,11 +48,12 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.GOAL_VISITATION,  LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.TTMAZE_ERROR_MAP],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 2000,
         "use_external_reward" => true,
+        "logger_interval" => 100,
     )
 
 
@@ -96,8 +98,7 @@ function construct_agent(parsed)
         return s
     end
 
-    behaviour_feature_projector = ActionValueFeatureProjector(state_constructor_func, feature_size)
-    # behaviour_feature_projector = ActionValueFeatureProjector(compressed_state_constructor, 4)
+    behaviour_feature_projector = Curiosity.FeatureProjector(ActionValueFeatureProjector(state_constructor_func, feature_size), false)
     demon_feature_projector = behaviour_feature_projector
 
 
@@ -126,6 +127,8 @@ function construct_agent(parsed)
         num_SFs * feature_size * action_space + 1
     elseif parsed["behaviour_learner"] ∈ ["Q"]
         1
+    else
+        println("Invalid behaviour learner. Num demons is not defined")
     end
 
     behaviour_learner = Curiosity.get_linear_learner(parsed,
@@ -136,7 +139,14 @@ function construct_agent(parsed)
                                                  "behaviour",
                                                  behaviour_feature_projector)
 
-    behaviour_gvf = TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
+    behaviour_gvf = if behaviour_learner isa GPI
+        #behaviour discount for immediate reward predictor for GPI should always be 0.
+        TTMU.make_behaviour_gvf(0.0, state_constructor_func, behaviour_learner, exploration_strategy)
+    elseif behaviour_learner isa QLearner
+        TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
+    else
+        throw(ArgumentError("What other type of behaviour learner??"))
+    end
     behaviour_demons = if behaviour_learner isa GPI
         SF_horde = TTMU.make_SF_horde(behaviour_discount, feature_size, action_space, behaviour_feature_projector)
 
@@ -199,7 +209,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     Random.seed!(parsed["seed"])
 
     cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
-
     exploring_starts = parsed["exploring_starts"]
     env = TabularTMaze(exploring_starts, cumulant_schedule)
 
@@ -209,7 +218,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
-        LoggerInitKey.INTERVAL => 50,
+        LoggerInitKey.INTERVAL => parsed["logger_interval"],
         LoggerInitKey.ENV => "tabular_tmaze"
     )
 
@@ -222,9 +231,12 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             p = Progress(max_num_steps)
         end
 
+        logger_start!(logger, env, agent)
+
+
         while sum(steps) < max_num_steps
             cur_step = 0
-            max_episode_steps = min(max_num_steps - sum(steps), 1000)
+            max_episode_steps = max_num_steps - sum(steps)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     #This is a callback for every timestep where logger can go

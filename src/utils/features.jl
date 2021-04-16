@@ -5,6 +5,7 @@ struct FeatureSubset{T, R} <: FeatureCreator
 end
 
 Base.size(fc::FeatureSubset) = Base.size(fc.fc)
+Base.length(fc::FeatureSubset) = Base.size(fc.fc)
 
 (fc::FeatureSubset)(s; kwargs...) =
     fc.fc(s[fc.subset]; kwargs...)
@@ -57,3 +58,18 @@ end
 
 Base.length(AVFP::ActionValueFeatureProjector) = AVFP.pf_length
 Base.size(AVFP::ActionValueFeatureProjector) = AVFP.pf_length
+
+
+struct FeatureProjector{FC} <: FeatureCreator
+    fc::FC
+    next_obs::Bool
+end
+
+Base.size(fc::FeatureProjector) = Base.size(fc.fc)
+Base.length(fc::FeatureProjector) = Base.size(fc.fc)
+
+(fc::FeatureProjector)(s, a, s_prime; kwargs...) = if fc.next_obs
+    fc.fc(s_prime; kwargs...)
+else
+    fc.fc(s; kwargs...)
+end

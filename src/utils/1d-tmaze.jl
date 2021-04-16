@@ -91,6 +91,7 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
     end
 end
 
+
 ####
 # Demon Creation
 ####
@@ -99,9 +100,9 @@ function create_demons(parsed, demon_projected_fc = nothing)
     action_space = 4
     demons = if parsed["demon_learner"] != "SR"
         GVFHordes.Horde(
-        [GVFHordes.GVF(GVFHordes.GVFParamFuncs.FeatureCumulant(i+2),
-             GoalTermination(0.9),
-             GoalPolicy(i)) for i in 1:4])
+            [GVFHordes.GVF(GVFHordes.GVFParamFuncs.FeatureCumulant(i+2),
+                           GoalTermination(0.9),
+                           GoalPolicy(i)) for i in 1:4])
     elseif parsed["demon_learner"] == "SR"
         @assert demon_projected_fc != nothing
         pred_horde =  GVFHordes.Horde(
@@ -120,6 +121,20 @@ function create_demons(parsed, demon_projected_fc = nothing)
     return demons
 end
 
+function make_behaviour_gvf(learner, γ, state_constructor, expl_strat) #discount, state_constructor_func, learner, exploration_strategy)
+    function b_π(state_constructor, learner, exploration_strategy; kwargs...)
+        s = state_constructor(kwargs[:state_t])
+        preds = learner(s)
+        return exploration_strategy(preds)[kwargs[:action_t]]
+    end
+    GVF_policy = GVFHordes.GVFParamFuncs.FunctionalPolicy((;kwargs...) -> b_π(state_constructor, learner, expl_strat; kwargs...))
+    BehaviourGVF = GVFHordes.GVF(GVFHordes.GVFParamFuncs.RewardCumulant(),
+                       GoalTermination(γ),
+                       GVF_policy)
+end
+
+
+
 ####
 # Ideal Feature Creator
 ####
@@ -127,7 +142,7 @@ struct IdealDemonFeatures <: FeatureCreator
 end
 
 function project_features(fc::IdealDemonFeatures, state)
-    new_state = sparsevec(convert(Array{Int,1},[check_goal(OneDTMaze, i, state) for i in 1:4]))
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state) for i in 1:4]))
     # if sum(new_state) != 0
     #     @show state, new_state
     # end
@@ -136,6 +151,17 @@ end
 
 (FP::IdealDemonFeatures)(state) = project_features(FP, state)
 Base.size(FP::IdealDemonFeatures) = 4
+
+struct MarthaIdealDemonFeatures <: FeatureCreator
+end
+
+function project_features(fc::MarthaIdealDemonFeatures, state)
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state, 0.05) for i in 1:4]))
+    return new_state
+end
+
+(FP::MarthaIdealDemonFeatures)(state) = project_features(FP, state)
+Base.size(FP::MarthaIdealDemonFeatures) = 4
 
 
 ####
@@ -239,5 +265,9 @@ function get_true_values(env::Curiosity.OneDTMaze, eval_set)
     end
     return copy_eval_est
 end
+
+
+
+
 
 end

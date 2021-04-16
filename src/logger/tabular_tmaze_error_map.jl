@@ -8,10 +8,11 @@ mutable struct TTMazeErrorMap <: LoggerKeyData
     est::Array{Any}
 
     function TTMazeErrorMap(logger_init_info)
-        eval_set = @load string(pwd(),"/src/data/TTMazeEvalSet.jld2") TTMazeEvalSet
+        # eval_set = @load string(pwd(),"/src/data/TTMazeEvalSet.jld2") TTMazeEvalSet
+        eval_set = @load string(pwd(),"/src/data/TTMazeUniformEvalSet.jld2") TTMazeUniformEvalSet
         num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL])
 
-        new([], TTMazeEvalSet, logger_init_info[LoggerInitKey.INTERVAL], [])
+        new([], TTMazeUniformEvalSet, logger_init_info[LoggerInitKey.INTERVAL], [])
     end
 end
 

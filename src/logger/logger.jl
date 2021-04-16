@@ -35,7 +35,8 @@ include("tabular_tmaze_error_map.jl")
 
 # Module for scoping key names
 module LoggerKey
-    const GOAL_VISITATION = "GOAL_VISITATION"
+const GOAL_VISITATION = "GOAL_VISITATION"
+    const ONED_GOAL_VISITATION = "ONED_GOAL_VISITATION"
     const EPISODE_LENGTH = "EPISODE_LENGTH"
     const MC_ERROR = "MC_ERROR"
     const TEMP_PRINT = "TEMP_PRINT"
@@ -62,6 +63,7 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TEMP_PRINT => TempPrint,
     LoggerKey.VALUE_MAP => ValueMap,
     LoggerKey.ONEDTMAZEERROR => OneDTMazeError,
+    LoggerKey.ONED_GOAL_VISITATION => OneDGoalVisitation,
     LoggerKey.AUTOSTEP_STEPSIZE => AutostepStepSize,
     LoggerKey.TTMAZE_UNIFORM_ERROR => TTMazeUniformError,
     LoggerKey.TTMAZE_OLD_ERROR => TTMazeOldError,
@@ -105,8 +107,8 @@ function logger_start!(self::Logger, env, agent)
     for data in self.logger_key_data
         if applicable(lg_start!, data, env, agent)
             lg_start!(data, env, agent)
-        else
-            @warn "No lg_start! defined for $(typeof(data))"
+        # else
+        #     @warn "No lg_start! defined for $(typeof(data))"
         end
     end
 end

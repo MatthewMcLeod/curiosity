@@ -10,14 +10,15 @@ using GVFHordes
 using Statistics
 using JLD2
 
+using ProgressMeter
+
 StatsBase.sample(p::GVFHordes.GVFParamFuncs.FunctionalPolicy, s, actions) =
     sample(Weights([p.func(;state_t = s, action_t = a) for a in actions]))
-
 
 StatsBase.sample(rng, p::GVFHordes.GVFParamFuncs.AbstractPolicy, s, actions) =
     sample(Weights([get(p;state_t = s, action_t = a) for a in actions]))
 
-function gen_dataset()
+function gen_dataset(num_start_states=500)
     parsed = OneDTmazeExperiment.default_args()
     parsed["cumulant_schedule"] = "Constant"
     parsed["cumulant"] = 1.0
@@ -36,7 +37,6 @@ function gen_dataset()
     env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"])
 
     start_states = []
-    num_start_states = 100
     @show env.starts
     for i in 1:num_start_states
         MinimalRLCore.reset!(env)

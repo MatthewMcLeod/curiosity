@@ -36,14 +36,36 @@ function Base.get(gvfh::SRHorde; kwargs...)
     C, discounts, pi = get(gvfh.PredHorde; kwargs...)
     # The reward discounts should always be 0 as they used for supervised learning prediction.
     @assert sum(discounts) == 0
-
-    constructed_state = gvfh.state_constructor(kwargs[:state_t])
-    # C_SF = map(gvf -> get(cumulant(gvf), constructed_state, action_t, preds_tp1), gvfh.SFHorde.gvfs)
-    C_SF = map(gvf -> get(cumulant(gvf);constructed_state_t = constructed_state, kwargs...), gvfh.SFHorde.gvfs)
     # For efficiency, the discount and pi for a given SF task should all have the same values. Therefore, to
     # improve speed, a single call to an GVF within each block should be sufficient.
     state_action_feature_length = Int( length(gvfh.SFHorde) / gvfh.num_SFs)
     inds_per_task = collect(1:state_action_feature_length:length(gvfh.SFHorde))
+
+    constructed_state = gvfh.state_constructor(kwargs[:state_t], kwargs[:action_t], kwargs[:state_tp1])
+
+    # @show constructed_state, kwargs[:action_t]
+    #NOTE: Commenting out potential optimization as it is hacky and not too big of saving.
+    # nz_inds = findall(!iszero, constructed_state)
+    # num_actions = 4
+    # C_SF_nz_ind = (nz_inds .- 1) * num_actions .+ kwargs[:action_t]
+    # C_SF_per_SF = zeros(state_action_feature_length)
+    # C_SF_per_SF[C_SF_nz_ind] .= 1
+    # C_SF_fast = repeat(C_SF_per_SF, gvfh.num_SFs)
+    #
+    # cumulant_inds_per_task = state_action_feature_length
+    # # C_SF = C_SF_fast
+    C_SF = map(gvf -> get(cumulant(gvf); constructed_state_t = constructed_state, kwargs...), gvfh.SFHorde.gvfs)
+    # #
+    # if C_SF != C_SF_fast
+    #     throw(ArgumentError("Fast version is not the same"))
+    #     @show size(C_SF), size(C_SF_fast)
+    # end
+    # C_SF = zeros(length(gvfh.SFHorde))
+    #
+    # @show findall(!iszero, C_SF)
+    # println()
+    # println()
+
     # unique_discounts_SF = map(gvf -> get(discount(gvf), state_t, action_t, state_tp1, action_tp1, preds_tp1), gvfh.SFHorde.gvfs[inds_per_task])
     unique_discounts_SF = map(gvf -> get(discount(gvf); kwargs...), gvfh.SFHorde.gvfs[inds_per_task])
     # unique_pi_SF = map(gvf -> get(policy(gvf), state_t, action_t), gvfh.SFHorde.gvfs[inds_per_task])
@@ -52,7 +74,7 @@ function Base.get(gvfh::SRHorde; kwargs...)
     discounts_SF = repeat(unique_discounts_SF, inner = state_action_feature_length)
     pi_SF = repeat(unique_pi_SF, inner = state_action_feature_length)
 
-    return vcat(C,C_SF),vcat(discounts,discounts_SF), vcat(pi,pi_SF)
+    return vcat(C,C_SF), vcat(discounts,discounts_SF), vcat(pi,pi_SF)
 end
 
 # Base.get(gvfh::SRHorde, state_tp1, preds_tp1) =

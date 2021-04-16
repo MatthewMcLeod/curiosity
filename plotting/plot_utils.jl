@@ -35,8 +35,10 @@ function split_algo(algo_ic, swept_params)
     println(swept_params)
     dicts = [Dict()]
     for k in swept_params
-        list_of_params = diff(algo_ic)[k]
-        dicts = combine(dicts, k, list_of_params)
+        if k in keys(diff(algo_ic))
+            list_of_params = diff(algo_ic)[k]
+            dicts = combine(dicts, k, list_of_params)
+        end
     end
     return dicts
 end
@@ -60,18 +62,36 @@ function get_stats(data;per_gvf=false)
     return a,b = if per_gvf == true
         mean_per_gvf, std_per_gvf
     else
-        mean(mean_per_gvf,dims=1)[1,:], mean(std_per_gvf,dims=1)[1,:]
+
+        error_tot = sum(data,dims=1)[1,:,:]
+        # sum(mean_per_gvf,dims=1)[1,:], sum(std_per_gvf,dims=1)[1,:]
+        # @show size(std(error_tot,dims=2))
+        # @show size(std(error_tot,dims=1))
+        sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=2)[:,1]
     end
 end
 
+function get_label(ic, params)
+    label = ""
+    for p in params
+        if p in keys(ic[1].parsed_args)
+            label = string(label, " ", ic[1].parsed_args[p])
+        end
+    end
+    return label
+end
 
 function print_params(ic, algo_params, sweep_params)
     println("For IC: ")
     for p in algo_params
-        println(p,"  ", ic[1].parsed_args[p])
+        if p in keys(ic[1].parsed_args)
+            println(p,"  ", ic[1].parsed_args[p])
+        end
     end
     for p in sweep_params
-        println(p,"  ", ic[1].parsed_args[p])
+        if p in keys(ic[1].parsed_args)
+            println(p,"  ", ic[1].parsed_args[p])
+        end
     end
     println()
 end
