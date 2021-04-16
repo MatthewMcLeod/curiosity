@@ -65,10 +65,21 @@ function get_stats(data;per_gvf=false)
 
         error_tot = sum(data,dims=1)[1,:,:]
         # sum(mean_per_gvf,dims=1)[1,:], sum(std_per_gvf,dims=1)[1,:]
-        sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=2)[1,:]
+        # @show size(std(error_tot,dims=2))
+        # @show size(std(error_tot,dims=1))
+        sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=2)[:,1]
     end
 end
 
+function get_label(ic, params)
+    label = ""
+    for p in params
+        if p in keys(ic[1].parsed_args)
+            label = string(label, " ", ic[1].parsed_args[p])
+        end
+    end
+    return label
+end
 
 function print_params(ic, algo_params, sweep_params)
     println("For IC: ")
