@@ -1,4 +1,5 @@
 using GVFHordes
+import ProgressMeter
 
 
 StatsBase.sample(rng::Random.AbstractRNG, p::GVFHordes.GVFParamFuncs.FunctionalPolicy, s, actions) =
@@ -58,5 +59,15 @@ function monte_carlo_return(env,
     return returns
 end
 
-monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_thresh, max_steps=Int(1e6), rng=Random.GLOBAL_RNG) =
-    [monte_carlo_return(env, gvf, st, a, num_returns, γ_thresh, max_steps) for (st, a) in zip(start_states,actions)]
+function monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_thresh, max_steps=Int(1e6), rng=Random.GLOBAL_RNG)
+
+    states_actions = zip(start_states, actions)
+    ret = Vector{Vector{Float64}}(undef, length(states_actions))
+    prg_meter = ProgressMeter.Progress(length(states_actions))
+    Threads.@threads for i ∈ 1:length(states_actions)
+        ret[i] = monte_carlo_return(env, gvf, start_states[i], a[i], num_returns, γ_thres, max_steps)
+        next!(prg_meter)
+    end
+    ret
+    
+end

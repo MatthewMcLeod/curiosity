@@ -20,3 +20,22 @@
    - Constructing learners and learning updates.
    - Separate required vs not-required
    - Logger could use some work, a bit complicated and scary right now, but likely usable.
+
+* [2021-04-17 Sat]
+
+** Horde uses Kwargs. This is bad and confusing. Rethink.
+   - I think we can still make based on kwargs. But we should reconsider what kwargs to use for different parameter functions. For example. Policy shouldn't take `state_t`, but should take `state`. Horde then does the conversion.
+   - Maybe use type traits to determine what parameters to pass.
+** Play with compilation times to see If we can speed things up.
+   - Most of my projects use lots of parametric types. Is this necessary? Can we have some things be non-parametric but still maintain most of the speed? How slow is runtime dispatch if heavy computing is done after?
+   - If runtime dispatch is mostly manageable, then we should be able to get some nice speedups by removing a bunch of parametric types that are not needed.
+** Logger Params
+   - Logger is a bit wild. And will continue to get more complex as the number of environments grows. Maybe there is a better way?
+** Optimizer headaches and parameter headaches. Maybe there is a different way?
+   My core philosophy is that defaults are evil. How can we reduce cognitive load while also maintaining defaults are evil?
+** Utils isolated in separate file.
+   Clean up Curiosity.jl. Purely asthetic. Maybe stupid to do.
+** Speeding things up w/ Parallelism (Monte-Carlo Returns...)
+   I should be able to speed up these expensive operations using threads, and we should be able to make the code a bit more friendly.
+** Move to 1.6.x.
+   Faster pre-compilation times. Shouldn't be any problems w/ compatibility (arnns on 1.6 and works well already).
