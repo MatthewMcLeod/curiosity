@@ -117,12 +117,12 @@ end
 mp4(main_experiment(default_args(0.1)))
 
 # ╔═╡ 1bacedb7-8373-4d52-99b8-54e1e5460346
-let
-	for ϵ ∈ [0.1, 0.2, 0.3, 0.4]
-		anim = main_experiment(default_args(ϵ))
-		mp4(anim, "GPI_SR_epsilon_$(ϵ).mp4")
-	end
-end
+# let
+# 	for ϵ ∈ [0.1, 0.2, 0.3, 0.4]
+# 		anim = main_experiment(default_args(ϵ))
+# 		mp4(anim, "GPI_SR_epsilon_$(ϵ).mp4")
+# 	end
+# end
 
 # ╔═╡ Cell order:
 # ╠═a7871567-172a-42ec-b889-56c5440c99fa
