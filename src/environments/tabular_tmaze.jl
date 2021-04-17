@@ -164,18 +164,12 @@ using RecipesBase, Colors
     WALL = Colors.RGB(0.3, 0.3, 0.3)
     AC = Colors.RGB(0.69921875, 0.10546875, 0.10546875)
     GOAL = Colors.RGB(0.796875, 0.984375, 0.76953125)
-    AGENT = [AC AC AC AC;
-             AC AC AC AC;
-             AC AC AC AC;
-             AC AC AC AC;]
+    
     cell = fill(BG, SIZE, SIZE)
     cell[1, :] .= BORDER
     cell[end, :] .= BORDER
     cell[:, 1] .= BORDER
     cell[:, end] .= BORDER
-
-    # agent_cell = copy(cell)
-    # agent_cell[Int(SIZE/2)-2:Int(SIZE/2)+2, Int(SIZE/2)-2:Int(SIZE/2)+2] .= AC
 
 
     s_y = length(env.world)
@@ -207,9 +201,7 @@ using RecipesBase, Colors
                 v[:, 1] .= BORDER
                 v[end, :] .= BORDER
                 v[:, end] .= BORDER
-
             end
-
         end
     end
     
