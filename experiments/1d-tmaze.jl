@@ -128,12 +128,6 @@ function construct_agent(parsed)
                                                  "demon",
                                                  demon_projected_fc)
 
-
-    # exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
-    #     EpsilonGreedy(parsed["exploration_param"])
-    # else
-    #     throw(ArgumentError("Not a Valid Exploration Strategy"))
-    # end
     exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
     behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)

@@ -46,7 +46,7 @@ default_args() =
         "cumulant_schedule" => "DrifterDistractor",
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
-        "exploring_starts"=>true,
+        "exploring_starts"=>false,
 
         # Agent and Logger
         "horde_type" => "regular",
@@ -106,19 +106,6 @@ function construct_agent(parsed)
 
 
     demons = get_horde(parsed, length(demon_feature_projector), action_space, demon_feature_projector)
-
-    # exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
-    #     EpsilonGreedy(parsed["exploration_param"])
-    # elseif parsed["exploration_strategy"] == "epsilon_greedy_decay"
-    #     ϵGreedyDecay(
-    #         parsed["ϵ_range"],
-    #         parsed["decay_period"],
-    #         parsed["warmup_steps"],
-    #         1:action_space
-    #     )
-    # else
-    #     throw(ArgumentError("Not a Valid Exploration Strategy"))
-    # end
 
     exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
