@@ -17,13 +17,16 @@ default_args() =
         "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "Q",
-        "behaviour_update" => "TabularRoundRobin",
+        "behaviour_update" => "ESARSA",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
         "behaviour_alpha_init" => 1.0,
         "exploration_param" => 0.3,
         "exploration_strategy" => "epsilon_greedy",
+        "ϵ_range" => (0.4,0.1),
+        "decay_period" => 1000,
+        "warmup_steps" => 100,
 
         # Demon Attributes
         "demon_alpha_init" => 1.0,
@@ -48,7 +51,7 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.EPISODE_LENGTH],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 2000,
@@ -104,11 +107,20 @@ function construct_agent(parsed)
 
     demons = get_horde(parsed, length(demon_feature_projector), action_space, demon_feature_projector)
 
-    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
-        EpsilonGreedy(parsed["exploration_param"])
-    else
-        throw(ArgumentError("Not a Valid Exploration Strategy"))
-    end
+    # exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
+    #     EpsilonGreedy(parsed["exploration_param"])
+    # elseif parsed["exploration_strategy"] == "epsilon_greedy_decay"
+    #     ϵGreedyDecay(
+    #         parsed["ϵ_range"],
+    #         parsed["decay_period"],
+    #         parsed["warmup_steps"],
+    #         1:action_space
+    #     )
+    # else
+    #     throw(ArgumentError("Not a Valid Exploration Strategy"))
+    # end
+
+    exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
     demon_learner = Curiosity.get_linear_learner(parsed,
                                                  feature_size,

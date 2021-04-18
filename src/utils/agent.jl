@@ -218,3 +218,18 @@ function _init_learning_update(lu_type::Union{Type{ESARSA}, Type{SARSA}},
         throw("$(lu_type) needs: $(λ_str) (float).")
     end
 end
+
+function get_exploration_strategy(parsed, action_set)
+    if parsed["exploration_strategy"] == "epsilon_greedy"
+        EpsilonGreedy(parsed["exploration_param"])
+    elseif parsed["exploration_strategy"] == "epsilon_greedy_decay"
+        ϵGreedyDecay(
+            parsed["ϵ_range"],
+            parsed["decay_period"],
+            parsed["warmup_steps"],
+            action_set
+        )
+    else
+        throw(ArgumentError("Not a Valid Exploration Strategy"))
+    end
+end

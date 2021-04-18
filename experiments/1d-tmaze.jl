@@ -23,8 +23,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.0,
-        "behaviour_learner" => "RoundRobin",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "ESARSA",
         "behaviour_reward_projector" => "tilecoding",
         "behaviour_rp_tilings" => 2,
         "behaviour_rp_tiles" => 2,
@@ -33,6 +33,9 @@ default_args() =
         "behaviour_lambda" => 0.9,
         "exploration_param" => 0.2,
         "exploration_strategy" => "epsilon_greedy",
+        "ϵ_range" => (0.4,0.1),
+        "decay_period" => 5000,
+        "warmup_steps" => 1000,
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
@@ -126,11 +129,12 @@ function construct_agent(parsed)
                                                  demon_projected_fc)
 
 
-    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
-        EpsilonGreedy(parsed["exploration_param"])
-    else
-        throw(ArgumentError("Not a Valid Exploration Strategy"))
-    end
+    # exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
+    #     EpsilonGreedy(parsed["exploration_param"])
+    # else
+    #     throw(ArgumentError("Not a Valid Exploration Strategy"))
+    # end
+    exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
     behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)
         nothing

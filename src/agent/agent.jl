@@ -89,7 +89,7 @@ end
 function get_action(agent, state, obs)
     action_probs = if agent.behaviour_learner isa OneDTMazeUtils.RoundRobinPolicy
         get_action_probs(agent.behaviour_learner, state, obs)
-    elseif agent.behaviour_learner.update isa TabularRoundRobin 
+    elseif agent.behaviour_learner.update isa TabularRoundRobin
         get_action_probs(agent.behaviour_learner.update, state, obs)
     else
         qs = agent.behaviour_learner(state)
@@ -110,6 +110,7 @@ MinimalRLCore.end!(agent, obs, reward, is_terminal) =
 function MinimalRLCore.start!(agent::Agent, obs, args...)
     next_state = proc_input(agent, obs)
     #Always exploring starts
+    step!(agent.exploration)
     next_action = sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
 
     # NOTE: IS THIS RIGHT, seems wierd!?
@@ -126,6 +127,7 @@ end
 
 function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     next_state = proc_input(agent, obs)
+    step!(agent.exploration)
     next_action, next_action_probs = get_action(agent, next_state, obs)
 
     update_demons!(agent,

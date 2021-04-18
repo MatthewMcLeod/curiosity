@@ -36,7 +36,7 @@ export TabularRoundRobin, update!
 include("updates/TabularRoundRobin.jl")
 
 abstract type ExplorationStrategy end
-export EpsilonGreedy
+export EpsilonGreedy, ϵGreedyDecay
 include("agent/exploration.jl")
 
 export Agent, agent_end!, step!, get_demon_prediction
