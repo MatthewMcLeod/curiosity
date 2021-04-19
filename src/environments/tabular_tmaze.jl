@@ -158,7 +158,7 @@ using RecipesBase, Colors
     xaxis := false
     yaxis := false
 
-    SIZE=10
+    SIZE=20
     BG = Colors.RGB(1.0, 1.0, 1.0)
     BORDER = Colors.RGB(0.0, 0.0, 0.0)
     WALL = Colors.RGB(0.3, 0.3, 0.3)
@@ -189,7 +189,7 @@ using RecipesBase, Colors
             if env.current_state[1] == i && env.current_state[2] == j
                 v = @view screen[sqr_i, sqr_j]
                 v .= cell
-                v[Int(SIZE/2)-2:Int(SIZE/2)+3, Int(SIZE/2)-2:Int(SIZE/2)+3] .= AC
+                v[Int(SIZE/2)-4:Int(SIZE/2)+5, Int(SIZE/2)-4:Int(SIZE/2)+5] .= AC
             elseif env.world[i][j] == "0"
                 screen[sqr_i, sqr_j] .= WALL
             elseif env.world[i][j] == "1"
