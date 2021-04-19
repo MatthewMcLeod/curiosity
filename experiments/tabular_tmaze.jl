@@ -32,7 +32,7 @@ default_args() =
         "demon_alpha_init" => 1.0,
         "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -53,8 +53,8 @@ default_args() =
         "intrinsic_reward" => "weight_change",
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.EPISODE_LENGTH],
         "save_dir" => "TabularTMazeExperiment",
-        "seed" => 1,
-        "steps" => 2000,
+        "seed" => 3,
+        "steps" => 10000,
         "use_external_reward" => true,
         "logger_interval" => 100,
     )
@@ -231,8 +231,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         end
 
         logger_start!(logger, env, agent)
-
-
         while sum(steps) < max_num_steps
             cur_step = 0
             max_episode_steps = max_num_steps - sum(steps)

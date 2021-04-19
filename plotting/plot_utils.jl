@@ -71,6 +71,27 @@ function get_stats(data;per_gvf=false)
     end
 end
 
+function get_min_length(arrs)
+    return minimum([length(arr) for arr in arrs])
+end
+
+function goal_visits_per_episode(arr_of_episodes, max_length; num_gvfs = 4)
+    goal_visits = zeros(num_gvfs, max_length)
+    for run in 1:length(arr_of_episodes)
+        goal_visits += onehot(arr_of_episodes[run],num_gvfs)[:,1:max_length]
+    end
+    goal_visit_percentage = goal_visits / length(arr_of_episodes)
+    return goal_visit_percentage
+end
+
+function onehot(data, num_gvfs = 4)
+    onehot_enc = zeros(num_gvfs, length(data))
+    for gvf_i in 1:num_gvfs
+        onehot_enc[gvf_i,:] += (data .== gvf_i)
+    end
+    return onehot_enc
+end
+
 function get_label(ic, params)
     label = ""
     for p in params

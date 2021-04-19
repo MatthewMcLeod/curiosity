@@ -30,8 +30,8 @@ mutable struct TabularTMaze <: MinimalRLCore.AbstractEnvironment
                  ["0", "0", "0", "1", "0", "0", "0"],
                  ["0", "0", "0", "1", "0", "0", "0"]]
         goal_states = ["G1", "G2", "G3", "G4"]
-        start_state = [1,1]
-        new(world, start_state, [1,1], goal_states, feature_size,step, exploring_starts, cumulant_schedule)
+        start_state = [9,4]
+        new(world, start_state, [9,4], goal_states, feature_size,step, exploring_starts, cumulant_schedule)
     end
 end
 
