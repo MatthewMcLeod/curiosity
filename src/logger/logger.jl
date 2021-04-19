@@ -35,7 +35,7 @@ include("tabular_tmaze_error_map.jl")
 
 # Module for scoping key names
 module LoggerKey
-const GOAL_VISITATION = "GOAL_VISITATION"
+    const GOAL_VISITATION = "GOAL_VISITATION"
     const ONED_GOAL_VISITATION = "ONED_GOAL_VISITATION"
     const EPISODE_LENGTH = "EPISODE_LENGTH"
     const MC_ERROR = "MC_ERROR"

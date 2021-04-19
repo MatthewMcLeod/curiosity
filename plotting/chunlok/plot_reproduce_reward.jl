@@ -10,7 +10,7 @@ function get_lines(data)
     means = []
     step = 10
     for start in 1:step:size(data)[2]
-        chunk = data[:, start:min(start + step - 1, length(data)),: ]
+        chunk = data[:, start:min(start + step - 1, size(data)[2]),: ]
         # println(size(chunk))
         chunk_mean = mean(chunk, dims=2)
         push!(means, chunk_mean)
@@ -37,7 +37,9 @@ sweep_params = ["demon_eta", "exploration_param", "behaviour_eta"]
 p = plot()
 
 
-ic = ItemCollection("M:/globus/Experiment2/Experiment2_GPI/")
+# ic = ItemCollection("M:/globus/Experiment2/Experiment2_GPI/")
+ic = ItemCollection("./Test_Large_Distractor_GPI/")
+best_ic = ic
 
 print(diff(ic))
 
@@ -48,7 +50,7 @@ print(diff(ic))
 # print_params(best_ic, sweep_params, [])
 
 # best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.4, "behaviour_eta" => 0.5))
-best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.1, "behaviour_eta" => 0.0625))
+# best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.1, "behaviour_eta" => 0.0625))
 
 print_params(best_ic, sweep_params, [])
 
@@ -57,41 +59,37 @@ print_params(best_ic, sweep_params, [])
 data = load_results(best_ic, :ttmaze_uniform_error)
 
 xs, mean_line, std_err_line = get_lines(data)
-plot!(p, xs, mean_line, ribbons=std_err_line, label="GPI")
+plot!(p, mean_line, ribbons=std_err_line, label="GPI")
 
 
 
+# ic = ItemCollection("M:/globus/Experiment2/Experiment2_GPI/")
+ic = ItemCollection("./Test_Large_Distractor/")
+best_ic = ic
 
-ic = ItemCollection("M:/globus/Experiment2/Experiment2_ESarsa_NoLimit")
-
-println(diff(ic))
+print(diff(ic))
 
 # best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error)
 # print_params(best_ic, sweep_params, [])
+
 # best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error, (0.9, 1))
 # print_params(best_ic, sweep_params, [])
 
-
-#AUC
-# best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.4, "behaviour_eta" => 0.25))
-#AUC last 10%
-best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.3, "behaviour_eta" => 0.03125))
-
-
-# Old Params
+# best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.4, "behaviour_eta" => 0.5))
 # best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.1, "behaviour_eta" => 0.0625))
+
+print_params(best_ic, sweep_params, [])
+
 
 
 data = load_results(best_ic, :ttmaze_uniform_error)
 
-println(size(data))
-
 xs, mean_line, std_err_line = get_lines(data)
-plot!(p, xs, mean_line, ribbons=std_err_line, label="ESarsa")
+plot!(p, mean_line, ribbons=std_err_line, label="Naive")
 
 
 
 
 
 
-savefig("plotting/chunlok/generated_plots/test_plot_reproduce.svg")
+savefig("plotting/chunlok/generated_plots/test_plot_reproduce_naive.svg")
