@@ -16,8 +16,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "ESARSA",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.9,

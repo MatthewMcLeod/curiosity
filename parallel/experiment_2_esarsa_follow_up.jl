@@ -1,11 +1,11 @@
 #!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/julia/1.5.2/bin/julia
 #SBATCH --mail-user=mmcleod2@ualberta.ca
 #SBATCH --mail-type=ALL
-#SBATCH -o experiment_2_gpi.out # Standard output
-#SBATCH -e experiment_2_gpi.err # Standard error
+#SBATCH -o experiment_2_esarsa.out # Standard output
+#SBATCH -e experiment_2_esarsa.err # Standard error
 #SBATCH --mem-per-cpu=3000M # Memory request of 3GB
 #SBATCH --time=04:00:00 #
-#SBATCH --ntasks=32
+#SBATCH --ntasks=16
 #SBATCH --account=def-amw8
 
 using Pkg
