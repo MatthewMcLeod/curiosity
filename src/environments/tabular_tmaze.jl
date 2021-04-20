@@ -157,6 +157,7 @@ using RecipesBase, Colors
     aspect_ratio := 1
     xaxis := false
     yaxis := false
+    yflip := false
 
     SIZE=20
     BG = Colors.RGB(1.0, 1.0, 1.0)
@@ -164,7 +165,7 @@ using RecipesBase, Colors
     WALL = Colors.RGB(0.3, 0.3, 0.3)
     AC = Colors.RGB(0.69921875, 0.10546875, 0.10546875)
     GOAL = Colors.RGB(0.796875, 0.984375, 0.76953125)
-    
+
     cell = fill(BG, SIZE, SIZE)
     cell[1, :] .= BORDER
     cell[end, :] .= BORDER
@@ -204,7 +205,5 @@ using RecipesBase, Colors
             end
         end
     end
-    
-    screen
+    screen[end:-1:1,:]
 end
-

@@ -89,7 +89,7 @@ end
 function get_action(agent, state, obs)
     action_probs = if agent.behaviour_learner isa OneDTMazeUtils.RoundRobinPolicy
         get_action_probs(agent.behaviour_learner, state, obs)
-    elseif agent.behaviour_learner.update isa TabularRoundRobin 
+    elseif agent.behaviour_learner.update isa TabularRoundRobin
         get_action_probs(agent.behaviour_learner.update, state, obs)
     else
         qs = agent.behaviour_learner(state)
@@ -161,7 +161,10 @@ end
 get_behaviour_pis(agent::Agent, state, obs) =
     get_action(agent, state, obs)[2]
 
-
+function μ_π(agent::Agent, obs)
+    state = proc_input(agent, obs)
+    get_behaviour_pis(agent,state,obs)
+end
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal, env_reward)
 
     update!(agent.demon_learner,

@@ -5,7 +5,10 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ a7871567-172a-42ec-b889-56c5440c99fa
-using Revise
+begin
+	using Revise
+	using ProgressMeter
+end
 
 # ╔═╡ 7fa178d6-9f1c-11eb-3604-9777d8da228e
 using Curiosity, Plots, PlutoUI, Statistics, Random
@@ -57,7 +60,7 @@ default_args(ϵ) =
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 15000,
+        "steps" => 10000,
         "use_external_reward" => true,
         "logger_interval" => 100,
     )
@@ -65,14 +68,79 @@ default_args(ϵ) =
 # ╔═╡ b1573f0a-6622-4a40-b171-24f8afae3505
 env = TabularTMaze(true, Curiosity.TMazeCumulantSchedules.Constant(1))
 
-# ╔═╡ e976aa18-cc1c-4ad9-86f6-71df2c878e53
+# ╔═╡ c655ab97-c20c-4e62-8435-533d50f47ade
 begin
 	start!(env)
 	plot(env)
 end
 
+# ╔═╡ 037b8feb-c1de-4c5e-a8f4-fbd6b762673e
+function get_policy_arrows(env,agent)
+	#HARDCODED CAUSE IDK WHAT ELSE TO DO :(
+	s_x = 7
+	s_y = 9
+	SIZE = 20
+	OFFSET = 1*SIZE
+	arrow_x = []
+	arrow_y = []
+	arrow_u = []
+	arrow_v = []
+	function generate_obs(state::Array{Int64})
+		obs = zeros(Int64, 9, 7)
+		obs[state[1],state[2]] = 1
+		toReturn = findfirst(!iszero, obs[Curiosity.valid_state_mask()])
+		return toReturn
+	end
+	for j ∈ 1:s_x
+		for i ∈ 1:s_y
+			sqr_i = ((i)*SIZE + 1):((i+1)*SIZE)
+			sqr_j = ((j)*SIZE + 1):((j+1)*SIZE)
+
+			k = generate_obs([i,j])
+			if k != nothing # If it is not part of the 21 valid cells
+				# @show k,i,j
+				obs = zeros(5)
+				obs[1] = k
+				b_π = Curiosity.μ_π(agent, obs)
+				# val, ACTION = findmax(b_π)
+
+				# drawarray is bugged. Need to have it off. This is the correct transformation
+				# when yflip=true
+				# https://github.com/JuliaPlots/Plots.jl/issues/1498
+				x_coord = OFFSET + (j-1) * SIZE + OFFSET/2
+				y_coord = s_y * SIZE + 2*OFFSET - i * SIZE - OFFSET/2
+				# yflip = false
+				# x_coord = s_x * SIZE + 2 * OFFSET - (j) * SIZE - OFFSET/2
+				# y_coord = OFFSET + (i-1) * SIZE + OFFSET/2
+
+				max_prob,_ = findmax(b_π)
+				for (ACTION,π) in enumerate(b_π)
+					if π != max_prob
+						continue
+					end
+
+					if ACTION == 1
+						u,v = 0,1
+					elseif ACTION == 2
+						u,v, = 1,0
+					elseif ACTION == 3
+						u,v = 0,-1
+					elseif ACTION == 4
+						u,v = -1,0
+					end
+					push!(arrow_x,x_coord)
+					push!(arrow_y,y_coord)
+					push!(arrow_u, u*SIZE/2)
+					push!(arrow_v,v*SIZE/2)
+				end
+			end
+		end
+	end
+	return arrow_x,arrow_y,arrow_u,arrow_v
+end
+
 # ╔═╡ 77dae42d-3be5-43b0-93b0-611fa8c9f123
-function main_experiment(parsed=default_args(); progress=false, working=false)
+function main_experiment(parsed=default_args(0.1); progress=false, working=false, show_policy = false)
 
     num_steps = parsed["steps"]
     Random.seed!(parsed["seed"])
@@ -98,7 +166,15 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
             run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                 #This is a callback for every timestep where logger can go
                 # agent is accesible in this scope
-				plot(env, title=cur_step)
+				plot(env, title=string("Eps: ", parsed["exploration_param"],
+					" Step: ",cur_step,
+					" Ep: ", eps,
+					" DL: ", parsed["demon_learner"],
+					" BL: ", parsed["behaviour_learner"]))
+				if show_policy
+					arrow_x, arrow_y, arrow_u, arrow_v = get_policy_arrows(env,agent)
+					quiver!(arrow_x,arrow_y,quiver=(arrow_u,arrow_v))
+				end
 				frame(anim)
                 cur_step+=1
             end
@@ -131,7 +207,8 @@ mp4(main_experiment(default_args(0.1)))
 # ╠═60fa4e34-de7a-43c3-91d6-e4f60f1ca272
 # ╠═6f96b22d-1bbe-4711-b4bd-b9b89130fead
 # ╟─b1573f0a-6622-4a40-b171-24f8afae3505
-# ╟─e976aa18-cc1c-4ad9-86f6-71df2c878e53
+# ╠═c655ab97-c20c-4e62-8435-533d50f47ade
+# ╠═037b8feb-c1de-4c5e-a8f4-fbd6b762673e
 # ╟─77dae42d-3be5-43b0-93b0-611fa8c9f123
 # ╠═465bd0cd-3204-41a2-a68c-f3e38cdd0b5f
 # ╠═1bacedb7-8373-4d52-99b8-54e1e5460346
