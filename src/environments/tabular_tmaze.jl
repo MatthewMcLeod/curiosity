@@ -147,3 +147,63 @@ function MinimalRLCore.environment_step!(environment::TabularTMaze, action, rng:
     # update!(environment, environment.cumulant_schedule, environment.current_state)
     update!(environment.cumulant_schedule, environment.current_state)
 end
+
+using RecipesBase, Colors
+@recipe function f(env::TabularTMaze)
+    ticks := nothing
+    foreground_color_border := nothing
+    grid := false
+    legend := false
+    aspect_ratio := 1
+    xaxis := false
+    yaxis := false
+    yflip := false
+
+    SIZE=20
+    BG = Colors.RGB(1.0, 1.0, 1.0)
+    BORDER = Colors.RGB(0.0, 0.0, 0.0)
+    WALL = Colors.RGB(0.3, 0.3, 0.3)
+    AC = Colors.RGB(0.69921875, 0.10546875, 0.10546875)
+    GOAL = Colors.RGB(0.796875, 0.984375, 0.76953125)
+
+    cell = fill(BG, SIZE, SIZE)
+    cell[1, :] .= BORDER
+    cell[end, :] .= BORDER
+    cell[:, 1] .= BORDER
+    cell[:, end] .= BORDER
+
+
+    s_y = length(env.world)
+    s_x = length(env.world[1])
+
+    screen = fill(BG, (s_y + 2)*SIZE, (s_x + 2)*SIZE)
+
+    screen[:, 1:SIZE] .= WALL
+    screen[1:SIZE, :] .= WALL
+    screen[end-(SIZE-1):end, :] .= WALL
+    screen[:, end-(SIZE-1):end] .= WALL
+
+    for j ∈ 1:s_x
+        for i ∈ 1:s_y
+            sqr_i = ((i)*SIZE + 1):((i+1)*SIZE)
+            sqr_j = ((j)*SIZE + 1):((j+1)*SIZE)
+            if env.current_state[1] == i && env.current_state[2] == j
+                v = @view screen[sqr_i, sqr_j]
+                v .= cell
+                v[Int(SIZE/2)-4:Int(SIZE/2)+5, Int(SIZE/2)-4:Int(SIZE/2)+5] .= AC
+            elseif env.world[i][j] == "0"
+                screen[sqr_i, sqr_j] .= WALL
+            elseif env.world[i][j] == "1"
+                screen[sqr_i, sqr_j] .= cell
+            elseif env.world[i][j][1] == 'G'
+                v = @view screen[sqr_i, sqr_j]
+                v .= GOAL
+                v[1, :] .= BORDER
+                v[:, 1] .= BORDER
+                v[end, :] .= BORDER
+                v[:, end] .= BORDER
+            end
+        end
+    end
+    screen[end:-1:1,:]
+end

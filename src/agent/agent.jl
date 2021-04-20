@@ -163,7 +163,10 @@ end
 get_behaviour_pis(agent::Agent, state, obs) =
     get_action(agent, state, obs)[2]
 
-
+function μ_π(agent::Agent, obs)
+    state = proc_input(agent, obs)
+    get_behaviour_pis(agent,state,obs)
+end
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal, env_reward)
 
     update!(agent.demon_learner,
