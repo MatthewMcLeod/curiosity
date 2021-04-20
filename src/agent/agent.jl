@@ -2,25 +2,25 @@ using SparseArrays
 using Distributions
 using StatsBase
 using GVFHordes
+import GVFHordes: AbstractHorde
 using MinimalRLCore
 
-mutable struct Agent{IR<:IntrinsicReward,
-                     H,
-                     BH,
-                     DL<:Learner,
-                     BL<:Learner,
+mutable struct Agent{#IR<:IntrinsicReward,
+                     # H,
+                     # BH,
+                     # DL<:Learner,
+                     # BL<:Learner,
                      O,
                      Φ,
-                     SC,
-                     ES<:ExplorationStrategy} <: AbstractAgent
+                     SC} <: AbstractAgent
 
 
-    behaviour_learner::BL
-    behaviour_demons::BH
+    behaviour_learner::Learner
+    behaviour_demons::AbstractHorde
     behaviour_gamma::Float64
 
-    demons::H
-    demon_learner::DL
+    demons::AbstractHorde
+    demon_learner::Learner
 
     last_obs::O
     last_state::Φ
@@ -28,10 +28,10 @@ mutable struct Agent{IR<:IntrinsicReward,
     last_action::Int
     num_actions::Int
 
-    intrinsic_reward::IR
+    intrinsic_reward::IntrinsicReward
     state_constructor::SC
     use_external_reward::Bool
-    exploration::ES
+    exploration::ExplorationStrategy
 
 end
 
@@ -163,7 +163,10 @@ end
 get_behaviour_pis(agent::Agent, state, obs) =
     get_action(agent, state, obs)[2]
 
-
+function μ_π(agent::Agent, obs)
+    state = proc_input(agent, obs)
+    get_behaviour_pis(agent,state,obs)
+end
 function update_demons!(agent,obs, next_obs, state, action, next_state, next_action, is_terminal, env_reward)
 
     update!(agent.demon_learner,

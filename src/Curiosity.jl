@@ -15,15 +15,13 @@ import Flux.Optimise: update!
 
 # Abstract type of FeatureProjector used in the learner utils
 abstract type FeatureCreator end
-export ValueFeatureProjector,ActionValueFeatureProjector
+export ValueFeatureProjector, ActionValueFeatureProjector
 include("utils/learners.jl")
-# export GVFHordes
-# include("GVFHordes/GVFHordes.jl")
 include("utils/SRHorde.jl")
+
 
 export Auto
 include("optimizers/Auto.jl")
-
 
 
 export QLearner, LinearQLearner, VLearner, SRLearner, GPI, predict, predict_SF
@@ -39,7 +37,7 @@ abstract type ExplorationStrategy end
 export EpsilonGreedy, ϵGreedyDecay
 include("agent/exploration.jl")
 
-export Agent, agent_end!, step!, get_demon_prediction
+export Agent, agent_end!, step!, get_demon_prediction, μ_π
 include("agent/agent.jl")
 
 export TileCoder, create_features
@@ -63,8 +61,6 @@ include("utils/mountain_car.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")
 include("utils/features.jl")
-
-
 
 
 using GVFHordes
