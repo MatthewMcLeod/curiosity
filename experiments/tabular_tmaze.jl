@@ -19,9 +19,9 @@ default_args() =
         "behaviour_learner" => "Q",
         "behaviour_update" => "ESARSA",
         "behaviour_trace" => "AccumulatingTraces",
-        "behaviour_opt" => "Descent",
+        "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.9,
-        "behaviour_alpha_init" => 1.0,
+        "behaviour_alpha_init" => 0.1,
         "exploration_param" => 0.3,
         "exploration_strategy" => "epsilon_greedy",
         "ϵ_range" => (0.4,0.1),
@@ -42,9 +42,9 @@ default_args() =
         "demon_beta_v" => 0.99,
 
         # Environment Config
-        "constant_target"=> 1.0,
+        "constant_target"=> (-10,10),
         "cumulant_schedule" => "DrifterDistractor",
-        "distractor" => (1.0, 1.0),
+        "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>false,
 
@@ -53,7 +53,7 @@ default_args() =
         "intrinsic_reward" => "weight_change",
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.EPISODE_LENGTH],
         "save_dir" => "TabularTMazeExperiment",
-        "seed" => 3,
+        "seed" => 1,
         "steps" => 10000,
         "use_external_reward" => true,
         "logger_interval" => 100,
