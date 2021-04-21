@@ -23,19 +23,19 @@ TTMU = Curiosity.TabularTMazeUtils
 default_args(ϵ) =
     Dict(
         # Behaviour Items
-        "behaviour_eta" => 0.5,
+        "behaviour_eta" => 0.04,
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "GPI",
         "behaviour_update" => "TB",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.9,
-        "behaviour_alpha_init" => 1.0,
+        "behaviour_alpha_init" => 0.1,
         "exploration_param" => ϵ,
         "exploration_strategy" => "epsilon_greedy",
 
         # Demon Attributes
-        "demon_alpha_init" => 1.0,
+        "demon_alpha_init" => 0.1,
         "demon_eta" => 0.5,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
@@ -50,9 +50,9 @@ default_args(ϵ) =
         # Environment Config
         "constant_target"=> 1.0,
         "cumulant_schedule" => "DrifterDistractor",
-        "distractor" => (1.0, 1.0),
+        "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
-        "exploring_starts"=>true,
+        "exploring_starts"=>false,
 
         # Agent and Logger
         "horde_type" => "regular",
@@ -190,7 +190,7 @@ end
 
 
 # ╔═╡ 465bd0cd-3204-41a2-a68c-f3e38cdd0b5f
-mp4(main_experiment(default_args(0.1)))
+anim = main_experiment(default_args(0.2), show_policy=true, progress=true)
 
 # ╔═╡ 1bacedb7-8373-4d52-99b8-54e1e5460346
 # let
