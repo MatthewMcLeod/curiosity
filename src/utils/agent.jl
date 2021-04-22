@@ -19,8 +19,23 @@ end
 _init_optimizer(opt, ::Dict) =
     throw("$(string(opt)) optimizer initialization not found.")
 
+function _get_eta_str(parsed::Dict, prefix = "")
+    eta_str = if "eta" in keys(parsed)
+        if (join([prefix, "eta"], "_")) in keys(parsed)
+            @warn "config has both $(prefix)_eta and eta. Defaulting to eta"
+        end
+        "eta"
+    elseif prefix == ""
+        "eta"
+    else
+        join([prefix, "eta"], "_")
+    end
+    return eta_str
+end
+
 function _init_optimizer(opt_type::Union{Type{Descent}, Type{ADAGrad}, Type{ADADelta}}, parsed::Dict, prefix = "")
-    eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    # eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    eta_str = _get_eta_str(parsed, prefix)
     try
         η = parsed[eta_str]
         opt_type(η)
@@ -34,7 +49,9 @@ function _init_optimizer(opt_type::Union{Type{RMSProp},
                                          Type{Nesterov}},
                          parsed::Dict, prefix="")
 
-    eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    # eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    eta_str = _get_eta_str(parsed, prefix)
+
     rho_str = prefix == "" ? "rho" : join([prefix, "rho"], "_")
     try
         η = parsed[eta_str]
@@ -52,7 +69,9 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
                                          Type{AMSGrad}},
                          parsed::Dict, prefix="")
 
-    eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    # eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    eta_str = _get_eta_str(parsed, prefix)
+
     beta_str = prefix == "" ? "beta" : join([prefix, "beta"], "_")
     try
         η = parsed[eta_str]
@@ -69,7 +88,8 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
 end
 
 function _init_optimizer(opt_type::Union{Type{Auto}}, parsed::Dict, prefix="")
-    α_str = prefix == "" ? "alpha" : join([prefix, "eta"], "_")
+    # α_str = prefix == "" ? "alpha" : join([prefix, "eta"], "_")
+    α_str = _get_eta_str(parsed, prefix)
     α_init_str = prefix == "" ?  "alpha_init" : join([prefix, "alpha_init"], "_")
     try
         α = parsed[α_str]
@@ -91,27 +111,32 @@ function get_linear_learner(parsed::Dict,
     learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
     opt = get_optimizer(parsed, prefix)
     lu = get_learning_update(parsed, opt, prefix)
+    w_init_key = prefix == "" ? "w_init" : join([prefix, "w_init"], "_")
+    w_init = w_init_key in keys(parsed) ? parsed[w_init_key] : 0
 
     learner_str = parsed[learner_key]
     demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
         LinearQLearner(lu,
                        feature_size,
                        num_actions,
-                       num_demons)
+                       num_demons,
+                       w_init)
     elseif learner_str ∈ ["SR", "SRLearner", "sr"]
         SRLearner(lu,
                   feature_size,
                   num_demons,
                   num_actions,
                   num_tasks,
-                  feature_projector)
+                  feature_projector,
+                  w_init)
     elseif learner_str ∈ ["GPI", "gpi"]
         GPI(lu,
             feature_size,
             num_demons,
             num_actions,
             num_tasks,
-            feature_projector)
+            feature_projector,
+            w_init)
     elseif learner_str ∈ ["LSTD", "LSTDLearner"]
         LSTDLearner(lu,
                     parsed[eta_str],
@@ -131,46 +156,61 @@ function get_linear_learner(parsed::Dict,
                             prefix="",
                             feature_projector=nothing)
 
-    num_demons = if demons isa Nothing
-        1
+    # Don't want to change call now. num_tasks only exists for SRHorde demons.
+    num_tasks = if !hasproperty(demons, :num_tasks)
+        0
     else
-        length(demons)
+        demons.num_tasks
     end
+    return get_linear_learner(parsed::Dict,
+        feature_size,
+        num_actions,
+        length(demons),
+        num_tasks,
+        prefix,
+        feature_projector)
 
-    learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
-    opt = get_optimizer(parsed, prefix)
-    lu = get_learning_update(parsed, opt, prefix)
 
-    learner_str = parsed[learner_key]
-    demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
-        LinearQLearner(lu,
-                       feature_size,
-                       num_actions,
-                       num_demons)
-    elseif learner_str ∈ ["SR", "SRLearner", "sr"]
-        SRLearner(lu,
-                  feature_size,
-                  num_demons,
-                  num_actions,
-                  demons.num_tasks,
-                  feature_projector)
-    elseif learner_str ∈ ["GPI", "gpi"]
-        GPI(lu,
-            feature_size,
-            num_demons,
-            num_actions,
-            demons.num_tasks,
-            feature_projector)
-    elseif learner_str ∈ ["LSTD", "LSTDLearner"]
-        eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
-        LSTDLearner(lu,
-                    parsed[eta_str],
-                    feature_size,
-                    num_actions,
-                    num_demons)
-    else
-        throw(ArgumentError("Not a valid demon learner"))
-    end
+    # num_demons = if demons isa Nothing
+    #     1
+    # else
+    #     length(demons)
+    # end
+    #
+    # learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
+    # opt = get_optimizer(parsed, prefix)
+    # lu = get_learning_update(parsed, opt, prefix)
+    #
+    # learner_str = parsed[learner_key]
+    # demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
+    #     LinearQLearner(lu,
+    #                    feature_size,
+    #                    num_actions,
+    #                    num_demons)
+    # elseif learner_str ∈ ["SR", "SRLearner", "sr"]
+    #     SRLearner(lu,
+    #               feature_size,
+    #               num_demons,
+    #               num_actions,
+    #               demons.num_tasks,
+    #               feature_projector)
+    # elseif learner_str ∈ ["GPI", "gpi"]
+    #     GPI(lu,
+    #         feature_size,
+    #         num_demons,
+    #         num_actions,
+    #         demons.num_tasks,
+    #         feature_projector)
+    # elseif learner_str ∈ ["LSTD", "LSTDLearner"]
+    #     eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
+    #     LSTDLearner(lu,
+    #                 parsed[eta_str],
+    #                 feature_size,
+    #                 num_actions,
+    #                 num_demons)
+    # else
+    #     throw(ArgumentError("Not a valid demon learner"))
+    # end
 end
 
 function get_learning_update(parsed::Dict, opt, prefix="")

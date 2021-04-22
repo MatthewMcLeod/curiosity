@@ -26,14 +26,16 @@ end
 Base.@kwdef struct OneDTMaze <: MinimalRLCore.AbstractEnvironment
 
     pos::Vector{Float64} = [0.0, 0.0]
-    
+
     cumulant_schedule::CumulantSchedule = TMazeCumulantSchedules.Constant(1.0)
     starts::String = "beg"
+    env_reward::Float64 = -0.01
 
 end
 
 OneDTMaze(starts::String) = OneDTMaze(starts=starts)
 OneDTMaze(cs::CumulantSchedule, starts::String) = OneDTMaze(cumulant_schedule=cs, starts=starts)
+OneDTMaze(cs::CumulantSchedule, starts::String, r::Float64) = OneDTMaze(cumulant_schedule=cs, starts=starts, env_reward = r)
 
 volume(::OneDTMaze) = 0.8 + 1.0 + 2*0.4
 
@@ -105,7 +107,7 @@ function MinimalRLCore.reset!(env::OneDTMaze)
 end
 
 function MinimalRLCore.reset!(env::OneDTMaze,
-                              start_state::Vector{Float64}) 
+                              start_state::Vector{Float64})
    env.pos .= start_state
 end
 
@@ -150,9 +152,7 @@ function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRN
         env.pos[2] = clamp(y_mov + cur_y, 0.0, 0.8)
     end
 
-    
+
     update!(env.cumulant_schedule, env.pos)
 
 end
-
-

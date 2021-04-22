@@ -14,8 +14,13 @@ mutable struct QLearner{F, LU<:LearningUpdate} <: ValueFunctionLearner
     num_demons::Int
 end
 
-LinearQLearner(update, num_features, num_actions, num_demons; init=(s...)->zeros(s...)) =
-    QLearner(init(num_actions*num_demons, num_features), update, num_actions, num_demons)
+function LinearQLearner(update, num_features, num_actions, num_demons, w_init)
+    model =  ones(num_actions*num_demons, num_features) * w_init
+    QLearner(model, update, num_actions, num_demons)
+end
+
+# LinearQLearner(update, num_features, num_actions, num_demons, w_init; init=(s...)->zeros(s...)) =
+#     QLearner(init(num_actions*num_demons, num_features), update, num_actions, num_demons)
 
 predict(l::QLearner{F}, ϕ) where {F <: Matrix} = l.model*ϕ
 predict(l::QLearner, ϕ) = l.model(ϕ)

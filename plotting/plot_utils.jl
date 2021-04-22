@@ -56,6 +56,21 @@ function get_best(ic, sweep_params, metric)
 
     return search(ic, splits[low_err_ind])
 end
+function get_best_final_perf(ic, sweep_params, metric, cut_per)
+    splits = split_algo(ic,sweep_params)
+    errors = ones(length(splits)) * Inf
+    for (ind, split) in enumerate(splits)
+        res = load_results(search(ic, split), metric)
+        num_steps = size(res)[2]
+        cut_ind = Int(floor(num_steps * (1-cut_per)))
+        error = mean(res[:,cut_ind:end,:])
+        errors[ind] = error
+    end
+    low_err, low_err_ind = findmin(errors)
+    println(errors)
+
+    return search(ic, splits[low_err_ind])
+end
 
 function get_stats(data;per_gvf=false)
     mean_per_gvf, std_per_gvf = mean(data,dims=3)[:,:,1], std(data,dims=3)[:,:,1]

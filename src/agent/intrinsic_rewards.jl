@@ -10,18 +10,24 @@ end
 mutable struct WeightChange{L<:Learner, A} <: IntrinsicReward
     learner::L
     previous_weights::A
+    previous_reward::Float64
 end
 
 function WeightChange(learner::Learner)
     current_ws = flattenall(get_weights(learner))
-    WeightChange(learner, deepcopy(current_ws))
+    WeightChange(learner, deepcopy(current_ws), 0.0)
 end
 
 function update_reward!(wc::WeightChange, agent)
     cw = flattenall(get_weights(agent.demon_learner))
     curiosity_reward = sum(abs.(cw .- wc.previous_weights))
     wc.previous_weights .= deepcopy(cw)
+    wc.previous_reward = curiosity_reward
     return curiosity_reward
+end
+
+function get_reward(wc::WeightChange, agent)
+    return wc.previous_reward
 end
 
 mutable struct NoReward <: IntrinsicReward end

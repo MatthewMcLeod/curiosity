@@ -14,8 +14,9 @@ mutable struct TabularTMaze <: MinimalRLCore.AbstractEnvironment
     step::Int
     exploring_starts::Bool
     cumulant_schedule::CumulantSchedule
+    extrinsic_reward::Float64
 
-    function TabularTMaze(exploring_starts, cumulant_schedule)
+    function TabularTMaze(exploring_starts, cumulant_schedule; extrinsic_reward = -0.01)
         feature_size = 21
         num_actions = 4
         step = 1
@@ -31,7 +32,7 @@ mutable struct TabularTMaze <: MinimalRLCore.AbstractEnvironment
                  ["0", "0", "0", "1", "0", "0", "0"]]
         goal_states = ["G1", "G2", "G3", "G4"]
         start_state = [9,4]
-        new(world, start_state, [9,4], goal_states, feature_size,step, exploring_starts, cumulant_schedule)
+        new(world, start_state, [9,4], goal_states, feature_size,step, exploring_starts, cumulant_schedule, extrinsic_reward)
     end
 end
 
@@ -85,7 +86,7 @@ returns a mask for the state-action mask (63,4)
 end
 
 
-MinimalRLCore.get_reward(env::TabularTMaze) = 0.0
+MinimalRLCore.get_reward(env::TabularTMaze) = env.extrinsic_reward
 is_terminal(env::TabularTMaze, pos) = env.world[pos[1]][pos[2]] in env.goal_states
 MinimalRLCore.is_terminal(env::TabularTMaze) = is_terminal(env, env.current_state)
 MinimalRLCore.get_actions(env::TabularTMaze) = 1:4

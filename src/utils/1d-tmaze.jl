@@ -1,6 +1,7 @@
 module OneDTMazeUtils
 
 using SparseArrays
+using Distributions
 
 import ..TMazeCumulantSchedules
 import ..OneDTmazeConst
@@ -223,16 +224,20 @@ end
 # Cumulant Schedules
 ####
 DrifterDistractor(parsed) = begin
+    c_dist = Uniform(parsed["constant_target"][1],parsed["constant_target"][2])
+    c1,c2 = rand(c_dist,2)
     if "drifter" ∈ keys(parsed)
         TMCS.DrifterDistractor(
-            parsed["constant_target"],
+            c1,
+            c2,
             parsed["drifter"][1],
             parsed["drifter"][2],
             parsed["distractor"][1],
             parsed["distractor"][2])
     else
         TMCS.DrifterDistractor(
-            parsed["constant_target"],
+            c1,
+            c2,
             parsed["drifter_init"],
             parsed["drifter_std"],
             parsed["distractor_mean"],

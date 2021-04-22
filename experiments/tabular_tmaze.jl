@@ -14,25 +14,26 @@ const TTMU = Curiosity.TabularTMazeUtils
 default_args() =
     Dict(
         # Behaviour Items
-        "behaviour_eta" => 0.50,
+        # "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.9,
         "behaviour_alpha_init" => 0.1,
-        "exploration_param" => 0.3,
+        "exploration_param" => 0.1,
         "exploration_strategy" => "epsilon_greedy",
         "ϵ_range" => (0.4,0.1),
         "decay_period" => 1000,
         "warmup_steps" => 100,
+        "behaviour_w_init" => 10.0,
 
         # Demon Attributes
         "demon_alpha_init" => 1.0,
-        "demon_eta" => 0.25,
+        # "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -41,17 +42,21 @@ default_args() =
         "demon_beta_m" => 0.9,
         "demon_beta_v" => 0.99,
 
+        #Shared Demon and Behaviour Attributes
+        "eta" =>0.5,
+
         # Environment Config
         "constant_target"=> (-10,10),
         "cumulant_schedule" => "DrifterDistractor",
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
-        "exploring_starts"=>false,
+        "exploring_starts" => false,
+        "env_step_penalty" => -0.01,
 
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.EPISODE_LENGTH],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
         "steps" => 10000,
