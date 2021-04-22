@@ -4,31 +4,15 @@ using MinimalRLCore
 
 
 """
-    ContGridWorld
-A Continuous grid world domain with generic dynamics to allow for different types of mazes.         
-    - state: [y, x]
-# Args
+    Simple reward structure for goals. Can be duck typed.
 """
-mutable struct ContGridWorld{F} <: AbstractEnvironment
-    # State is stored as (y,x)
-    state::Array{Float64, 1}
-    walls::Array{Bool, 2}
-
-    # goals stored as (y,x)
-    goals::Array{Int, 2}
-    reward_funcs::Dict{Int, F}
-    
-    max_action_noise::Float64
-    drift_noise::Float64
-    normalized::Bool
-    collision::Bool
-
-    edge_locs::Array{Array{Int64, 1}, 1}
-    collision_check::Array{Bool, 1}
-    new_state::Array{Float64, 1}
-    ContGridWorld(walls, goals, rew_funcs::Dict{Int, F}, max_action_noise, drift_noise, normalized) where {F} =
-        new{F}([0.0, 0.0], walls, goals, rew_funcs, max_action_noise, drift_noise, normalized, false, [[0,0] for i in 1:4], fill(false, 4), zeros(2))
+struct BasicRewFunc
+    value::Float64
 end
+
+is_terminal(rew::BasicRewFunc) = true
+get_reward(rew::BasicRewFunc) = rew.value
+
 
 module ContGridWorldParams
 UP = 1
@@ -49,24 +33,106 @@ const AGENT_BOUNDRIES = [
 ]
 end
 
+"""
+    ContGridWorld
+A Continuous grid world domain with generic dynamics to allow for different types of mazes.         
+    - state: [y, x]
+# Args
+"""
+mutable struct ContGridWorld{RF, SF} <: AbstractEnvironment
+    # State is stored as (y,x)
+    state::Array{Float64, 1}
+    walls::Array{Bool, 2}
+
+    # goals stored as (y,x)
+    goals::Array{Int, 2}
+    # reward_funcs::Dict{Int, F}
+    cumulant_schedule::RF
+    start_func::SF
+    
+    max_action_noise::Float64
+    drift_noise::Float64
+    normalized::Bool
+    collision::Bool
+
+    edge_locs::Array{Array{Int64, 1}, 1}
+    collision_check::Array{Bool, 1}
+    new_state::Array{Float64, 1}
+    ContGridWorld(walls, goals,
+                  cumulant_schedule::RF,# rew_funcs::Dict{Int, F},
+                  start_func::SF, max_action_noise,
+                  drift_noise, normalized) where {RF, SF} =
+        new{RF, SF}([0.0, 0.0], walls, goals,
+                   cumulant_schedule,
+                   start_func,
+                   max_action_noise, drift_noise,
+                   normalized, false,
+                   [[0,0] for i in 1:4],
+                   fill(false, 4),
+                   zeros(2))
+end
+
+ContGridWorld(walls, goals,
+              # rew_funcs,
+              max_action_noise,
+              drift_noise, normalized) =
+                  ContGridWorld(walls, goals,
+                                nothing,
+                                max_action_noise,
+                                drift_noise, normalized)
+
 MinimalRLCore.is_terminal(env::ContGridWorld) = begin
     goal_id = which_goal(env)
-    if goal_id ∈ keys(env.reward_funcs)
-        is_terminal(env.reward_funcs[goal_id])
-    else
+    if env.cumulant_schedule isa Dict
+        if goal_id ∈ keys(env.cumulant_schedule)
+            is_terminal(env.cumulant_schedule[goal_id])
+        else
+            false
+        end
+    elseif env.cumulant_schedule isa CumulantSchedule
+        which_goal(env) > 0
+    elseif env.cumulant_schedule isa nothing
         false
     end
 end
 
 MinimalRLCore.get_reward(env::ContGridWorld) = begin
     goal_id = which_goal(env)
-    if goal_id ∈ keys(env.reward_funcs)
-        get_reward(env.reward_funcs[goal_id])
-    else
+    if env.cumulant_schedule isa Dict
+        if goal_id ∈ keys(env.cumulant_schedule)
+            get_reward(env.cumulant_schedule[goal_id])
+        else
+            0.0
+        end
+    elseif env.cumulant_schedule isa CumulantSchedule
+        0.0
+    elseif env.cumulant_schedule isa nothing
         0.0
     end
 end
-MinimalRLCore.get_state(env::ContGridWorld) = (env.normalized ? env.state./size(env) : env.state, env.collision)
+
+function get_cumulants(env::ContGridWorld, cs::CumulantSchedule)
+    goal_id = which_goal(env)
+    cumulants = zeros(4)
+    if goal_id == 1 #check_goal(env, 1)
+        cumulants[1] = get_cumulant(cs, "G1")
+    elseif goal_id == 2 #check_goal(env, 2)
+        cumulants[2] = get_cumulant(cs, "G2")
+    elseif goal_id == 3 #check_goal(env, 3)
+        cumulants[3] = get_cumulant(cs, "G3")
+    elseif goal_id == 4 #check_goal(env, 4)
+        cumulants[4] = get_cumulant(cs, "G4")
+    end
+    cumulants
+end
+
+MinimalRLCore.get_state(env::ContGridWorld) = begin
+    s = env.normalized ? env.state./size(env) : env.state
+    if env.cumulant_schedule isa CumulantSchedule
+        s = vcat(s, get_cumulants(env, env.cumulant_schedule))
+    end
+    s
+end
 
 
 random_state(env::ContGridWorld, rng) = [rand(rng)*size(env.walls)[1], rand(rng)*size(env.walls)[2]]
@@ -171,13 +237,18 @@ function handle_collision!(env::ContGridWorld, action)
 end
 
 function MinimalRLCore.reset!(env::ContGridWorld, rng::Random.AbstractRNG=Random.GLOBAL_RNG)
-    state = random_state(env, rng)
-
-    while is_wall(env, state)
+    if env.start_func isa Nothing
         state = random_state(env, rng)
+
+        while is_wall(env, state)
+            state = random_state(env, rng)
+        end
+        env.state = state
+        env.state
+    else
+        env.state = env.start_func(env, rng)
+        env.state
     end
-    env.state = state
-    return state
 end
 
 function MinimalRLCore.reset!(env::ContGridWorld, state::AbstractArray)
@@ -227,4 +298,62 @@ function MinimalRLCore.environment_step!(env::ContGridWorld, action, rng=Random.
         end
     end
     env.collision = collision
+
+    update!(env.cumulant_schedule, env.state)
+end
+
+module ContGridWorldPlotParams
+
+using Colors
+import ColorSchemes
+
+const SIZE = 10
+const BG = Colors.RGB(1.0, 1.0, 1.0)
+const WALL = Colors.RGB(0.3, 0.3, 0.3)
+const AC = Colors.RGB(0.69921875, 0.10546875, 0.10546875)
+const GOAL = Colors.RGB(0.796875, 0.984375, 0.76953125)
+const GOAL_PALETTE = ColorSchemes.tol_muted
+const AGENT = [AC AC AC AC;
+               AC AC AC AC;
+               AC AC AC AC;
+               AC AC AC AC;]
+
+end
+
+@recipe function f(env::ContGridWorld)
+    ticks := nothing
+    foreground_color_border := nothing
+    grid := false
+    legend := false
+    aspect_ratio := 1
+    xaxis := false
+    yaxis := false
+
+    PP = ContGridWorldPlotParams
+
+    s = size(env)
+    screen = fill(PP.BG, (s[2] + 2)*PP.SIZE, (s[1] + 2)*PP.SIZE)
+    screen[:, 1:PP.SIZE] .= PP.WALL
+    screen[1:PP.SIZE, :] .= PP.WALL
+    screen[end-(PP.SIZE-1):end, :] .= PP.WALL
+    screen[:, end-(PP.SIZE-1):end] .= PP.WALL
+    
+    for i ∈ 1:s[1]
+        for j ∈ 1:s[2]
+            sqr_i = ((i)*PP.SIZE + 1):((i+1)*PP.SIZE)
+            sqr_j = ((j)*PP.SIZE + 1):((j+1)*PP.SIZE)
+            if env.walls[s[1] - i + 1, j]
+                screen[sqr_i, sqr_j] .= PP.WALL
+            end
+            if env.goals[s[1] - i + 1, j] > 0
+                screen[sqr_i, sqr_j] .=
+                    PP.GOAL_PALETTE[env.goals[s[1] - i + 1, j]]
+            end
+        end
+    end
+    state = ((env.state[1] - 1, env.state[2] + 1).*PP.SIZE)
+    
+    screen[collect(-1:2) .+ Int(floor(PP.SIZE*s[1] - state[1])), collect(-1:2) .+ Int(floor(state[2]))] .= PP.AGENT
+    
+    screen
 end
