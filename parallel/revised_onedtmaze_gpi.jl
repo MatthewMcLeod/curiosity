@@ -4,12 +4,12 @@
 #SBATCH -o onedtmaze_gpi.out # Standard output
 #SBATCH -e onedtmaze_gpi.err # Standard error
 #SBATCH --mem-per-cpu=3000M # Memory request of 3GB
-#SBATCH --time=02:30:00 #8 hours total
-#SBATCH --ntasks=4
+#SBATCH --time=03:30:00 #105 hours total
+#SBATCH --ntasks=32
 #SBATCH --account=def-amw8
 
 using Pkg
 Pkg.activate(".")
 
 include(joinpath(ENV["SLURM_SUBMIT_DIR"], "parallel/parallel_config.jl"))
-reproduce_config_experiment("configs/revised_onedtmaze/ESARSA_behaviour.toml", save_path="~/scratch/curiosity")
+reproduce_config_experiment("configs/revised_onedtmaze/GPI_behaviour.toml", save_path="~/scratch/curiosity")
