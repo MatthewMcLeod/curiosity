@@ -91,6 +91,8 @@ function get_action(agent, state, obs)
         get_action_probs(agent.behaviour_learner, state, obs)
     elseif agent.behaviour_learner.update isa TabularRoundRobin
         get_action_probs(agent.behaviour_learner.update, state, obs)
+    elseif agent.behaviour_learner isa BaselineUtils.FollowDemon || agent.behaviour_learner isa BaselineUtils.RandomDemons
+        agent.behaviour_learner(obs)
     else
         qs = agent.behaviour_learner(state)
         agent.exploration(qs)

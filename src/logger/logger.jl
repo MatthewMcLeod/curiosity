@@ -49,6 +49,7 @@ module LoggerKey
     const TTMAZE_OLD_ERROR = "TTMAZE_OLD_ERROR"
     const TTMAZE_ERROR_MAP = "TTMAZE_ERROR_MAP"
     const INTRINSIC_REWARD = "INTRINSIC_REWARD"
+    const TTMAZE_DIRECT_ERROR = "TTMAZE_DIRECT_ERROR"
 end
 
 module LoggerInitKey
@@ -70,7 +71,8 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TTMAZE_UNIFORM_ERROR => TTMazeUniformError,
     LoggerKey.TTMAZE_OLD_ERROR => TTMazeOldError,
     LoggerKey.TTMAZE_ERROR_MAP => TTMazeErrorMap,
-    LoggerKey.INTRINSIC_REWARD => IntrinsicRewardLogger
+    LoggerKey.INTRINSIC_REWARD => IntrinsicRewardLogger,
+    LoggerKey.TTMAZE_DIRECT_ERROR => TTMazeDirectError,
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started

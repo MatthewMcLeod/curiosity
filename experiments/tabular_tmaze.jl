@@ -10,6 +10,7 @@ using SparseArrays
 using ProgressMeter
 
 const TTMU = Curiosity.TabularTMazeUtils
+const BU = Curiosity.BaselineUtils
 
 default_args() =
     Dict(
@@ -30,7 +31,7 @@ default_args() =
         "behaviour_w_init" => 10.0,
 
         # Demon Attributes
-        "demon_alpha_init" => 1.0,
+        "demon_alpha_init" => 0.1,
         # "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
@@ -43,7 +44,7 @@ default_args() =
         "demon_beta_v" => 0.99,
 
         #Shared Demon and Behaviour Attributes
-        "eta" =>0.5,
+        "eta" =>0.2,
 
         # Environment Config
         "constant_target"=> (-10,10),
@@ -56,10 +57,12 @@ default_args() =
         # Agent and Logger
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
-        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR, LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD],
+        "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR,
+                            LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION,
+                            LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.TTMAZE_DIRECT_ERROR],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 30000,
         "use_external_reward" => true,
         "logger_interval" => 100,
     )
@@ -129,24 +132,38 @@ function construct_agent(parsed)
     num_SFs = 4
     num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
         num_SFs * feature_size * action_space + 1
-    elseif parsed["behaviour_learner"] ∈ ["Q"]
+    elseif parsed["behaviour_learner"] ∈ ["Q", "FollowDemon", "RandomDemons"]
         1
     else
         println("Invalid behaviour learner. Num demons is not defined")
     end
 
-    behaviour_learner = Curiosity.get_linear_learner(parsed,
-                                                 feature_size,
-                                                 action_space,
-                                                 num_demons,
-                                                 behaviour_num_tasks,
-                                                 "behaviour",
-                                                 behaviour_feature_projector)
+    behaviour_learner = if parsed["behaviour_learner"] == "FollowDemon"
+        demon_i = 3
+        action_set = 1:action_space
+        drifter_demon = GVF(GVFParamFuncs.FeatureCumulant(demon_i+1),
+                            GVFParamFuncs.StateTerminationDiscount(parsed["demon_discounts"], TTMU.pseudoterm),
+                            GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(demon_i;kwargs...)))
+        BU.FollowDemon(drifter_demon,action_set)
+    elseif parsed["behaviour_learner"] == "RandomDemons"
+        action_set = 1:action_space
+        BU.RandomDemons(demons, action_set)
+    else
+            Curiosity.get_linear_learner(parsed,
+                        feature_size,
+                        action_space,
+                        num_demons,
+                        behaviour_num_tasks,
+                        "behaviour",
+                        behaviour_feature_projector)
+    end
 
     behaviour_gvf = if behaviour_learner isa GPI
         #behaviour discount for immediate reward predictor for GPI should always be 0.
         TTMU.make_behaviour_gvf(0.0, state_constructor_func, behaviour_learner, exploration_strategy)
     elseif behaviour_learner isa QLearner
+        TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
+    elseif behaviour_learner isa BU.FollowDemon || behaviour_learner isa BU.RandomDemons
         TTMU.make_behaviour_gvf(behaviour_discount, state_constructor_func, behaviour_learner, exploration_strategy)
     else
         throw(ArgumentError("What other type of behaviour learner??"))
@@ -158,6 +175,8 @@ function construct_agent(parsed)
 
         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_feature_projector)
     elseif behaviour_learner isa QLearner
+        Horde([behaviour_gvf])
+    elseif behaviour_learner isa BU.FollowDemon || behaviour_learner isa BU.RandomDemons
         Horde([behaviour_gvf])
     else
         throw(ArgumentError("goes with which horde? " ))

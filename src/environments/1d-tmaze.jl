@@ -30,6 +30,7 @@ Base.@kwdef struct OneDTMaze <: MinimalRLCore.AbstractEnvironment
     cumulant_schedule::CumulantSchedule = TMazeCumulantSchedules.Constant(1.0)
     starts::String = "beg"
     env_reward::Float64 = -0.01
+    move_noise::Float64 = 0.0
 
 end
 
@@ -114,7 +115,12 @@ end
 function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)
     ODTMC = OneDTmazeConst
     @boundscheck valid_action(env, action)
-    rand_mov = rand(rng, Uniform(-0.01, 0.01))
+    if env.move_noise == 0.0
+        rand_mov = 0
+    else
+        rand_mov = rand(rng, Uniform(-env.move_noise, env.move_noise))
+    end
+
     x_mov, y_mov = if action == ODTMC.UP
         (0.0, ODTMC.ACTION_STEP + rand_mov)
     elseif action == ODTMC.DOWN

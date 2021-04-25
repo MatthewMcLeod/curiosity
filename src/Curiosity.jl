@@ -61,6 +61,7 @@ include("utils/mountain_car.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")
 include("utils/features.jl")
+include("utils/baseline_learners.jl")
 
 
 using GVFHordes
