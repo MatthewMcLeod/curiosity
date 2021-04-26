@@ -48,6 +48,14 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
             else
                 ODTMC.UP == action_t
             end
+        elseif cur_x == 1.0
+            if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
+                ODTMC.LEFT == action_t
+            elseif cur_y <= 0.8 - ODTMC.EPSILON
+                ODTMC.UP == action_t
+            elseif cur_y >= 0.8 + ODTMC.EPSILON
+                ODTMC.DOWN == action_t
+            end
         elseif range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON)
             ODTMC.UP == action_t
         else
@@ -59,6 +67,14 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
                 ODTMC.LEFT == action_t
             else
                 ODTMC.UP == action_t
+            end
+        elseif cur_x == 1.0
+            if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
+                ODTMC.LEFT == action_t
+            elseif cur_y <= 0.8 - ODTMC.EPSILON
+                ODTMC.UP == action_t
+            elseif cur_y >= 0.8 + ODTMC.EPSILON
+                ODTMC.DOWN == action_t
             end
         elseif range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON)
             ODTMC.DOWN == action_t
@@ -72,6 +88,14 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
             else
                 ODTMC.UP == action_t
             end
+        elseif cur_x == 0.0
+            if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
+                ODTMC.RIGHT == action_t
+            elseif cur_y <= 0.8 - ODTMC.EPSILON
+                ODTMC.UP == action_t
+            elseif cur_y >= 0.8 + ODTMC.EPSILON
+                ODTMC.DOWN == action_t
+            end
         elseif range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
             ODTMC.UP == action_t
         else
@@ -83,6 +107,14 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
                 ODTMC.RIGHT == action_t
             else
                 ODTMC.UP == action_t
+            end
+        elseif cur_x == 0.0
+            if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON)
+                ODTMC.RIGHT == action_t
+            elseif cur_y <= 0.8 - ODTMC.EPSILON
+                ODTMC.UP == action_t
+            elseif cur_y >= 0.8 + ODTMC.EPSILON
+                ODTMC.DOWN == action_t
             end
         elseif range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
             ODTMC.DOWN == action_t
@@ -157,7 +189,8 @@ struct MarthaIdealDemonFeatures <: FeatureCreator
 end
 
 function project_features(fc::MarthaIdealDemonFeatures, state)
-    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state, 0.05) for i in 1:4]))
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state, ODTMC.ACTION_STEP + ODTMC.EPSILON + 0.001) for i in 1:4]))
+    # alt_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state_tp1) for i in 1:4]))
     return new_state
 end
 

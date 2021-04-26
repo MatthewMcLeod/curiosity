@@ -10,10 +10,6 @@ function lg_episode_end!(self::LoggerKeyData, cur_step_in_episode, cur_step_tota
     error("lg_episode_end! for this logger is unimplemented")
 end
 
-# function lg_start!(self::LoggerKeyData, env, agent)
-#     @warn ("lg_start! for not implemented")
-# end
-
 function save_log(self::LoggerKeyData, save_dict::Dict)
     error("save_log for this logger is unimplemented")
 end
@@ -33,6 +29,7 @@ include("autostep_stepsize.jl")
 include("tabular_tmaze_old_error.jl")
 include("tabular_tmaze_error_map.jl")
 include("intrinsic_reward.jl")
+include("behaviour_action_values.jl")
 
 # Module for scoping key names
 module LoggerKey
@@ -50,6 +47,7 @@ module LoggerKey
     const TTMAZE_ERROR_MAP = "TTMAZE_ERROR_MAP"
     const INTRINSIC_REWARD = "INTRINSIC_REWARD"
     const TTMAZE_DIRECT_ERROR = "TTMAZE_DIRECT_ERROR"
+    const BEHAVIOUR_ACTION_VALUES = "BEHAVIOUR_ACTION_VALUES"
 end
 
 module LoggerInitKey
@@ -73,6 +71,7 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TTMAZE_ERROR_MAP => TTMazeErrorMap,
     LoggerKey.INTRINSIC_REWARD => IntrinsicRewardLogger,
     LoggerKey.TTMAZE_DIRECT_ERROR => TTMazeDirectError,
+    LoggerKey.BEHAVIOUR_ACTION_VALUES => BehaviourActionValues
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started

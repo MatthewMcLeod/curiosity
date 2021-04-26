@@ -18,7 +18,7 @@ StatsBase.sample(p::GVFHordes.GVFParamFuncs.FunctionalPolicy, s, actions) =
 StatsBase.sample(rng, p::GVFHordes.GVFParamFuncs.AbstractPolicy, s, actions) =
     sample(Weights([get(p;state_t = s, action_t = a) for a in actions]))
 
-function gen_dataset(num_start_states=500)
+function gen_dataset(num_start_states=500; action_noise = 0.0)
     parsed = OneDTmazeExperiment.default_args()
     parsed["cumulant_schedule"] = "Constant"
     parsed["cumulant"] = 1.0
@@ -31,10 +31,9 @@ function gen_dataset(num_start_states=500)
 
     cumulant_schedule = ODTMU.get_cumulant_schedule(parsed)
 
-
-
     parsed["exploring_starts"] = "whole"
-    env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"])
+    parsed["env_step_penalty"] = -0.005
+    env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"], parsed["env_step_penalty"], action_noise)
 
     start_states = []
     @show env.starts
@@ -47,7 +46,7 @@ function gen_dataset(num_start_states=500)
         push!(start_states,s)
     end
 
-    num_returns = 2000
+    num_returns = 1000
     γ_thresh=1e-6
     horde_rets = zeros(length(horde.gvfs), length(start_states))
     actions = rand(1:4, length(start_states))
@@ -69,6 +68,15 @@ function save_data(rets,obs,actions)
     OneDTMazeEvalSet["states"] = obs
 
     @save "./src/data/OneDTMazeEvalSet.jld2" OneDTMazeEvalSet
+end
+
+function save_data_deterministic(rets,obs,actions)
+    OneDTMazeDeterministicEvalSet = Dict()
+    OneDTMazeDeterministicEvalSet["ests"] = rets
+    OneDTMazeDeterministicEvalSet["actions"] = actions
+    OneDTMazeDeterministicEvalSet["states"] = obs
+
+    @save "./src/data/OneDTMazeDeterministicEvalSet.jld2" OneDTMazeDeterministicEvalSet
 end
 
 end

@@ -7,18 +7,18 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 60000
+steps = 120000
 
-logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
+logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
-behaviour_gamma = 0.9
+behaviour_gamma = 0.90
 behaviour_reward_projector = "ideal_martha"
 exploration_strategy = "epsilon_greedy"
 behaviour_trace = "AccumulatingTraces"
-behaviour_lambda = 0.9
-behaviour_w_init = 1
+behaviour_lambda = 0.95
+behaviour_w_init = 1.0
 
 # Demon Attributes
 
@@ -54,15 +54,15 @@ use_external_reward = true
 
 
 [sweep_args]
-seed = "1:10"
+seed = "1:20"
 cumulant_schedule = ["DrifterDistractor"]
 eta = "5.0.^(-3:-1)"
 behaviour_opt = ["Auto"]
 behaviour_learner = ["Q"]
 behaviour_update = ["ESARSA"]
-exploration_param = [0.2, 0.4]
+exploration_param = [0.1, 0.3]
 demon_learner = ["Q", "SR"]
 demon_update = ["TB"]
-num_tilings = [8]
-num_tiles = [2,4]
-exploring_starts= ["beg","whole"]
+num_tilings = [4, 8]
+num_tiles = [4, 2]
+exploring_starts= ["beg"]

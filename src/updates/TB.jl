@@ -117,6 +117,7 @@ function update!(lu::TB,
                              next_action,
                              env_reward)
 
+
     discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(next_discounts)
     e_nz = get!(()->Int[], lu.e, learner)::Array{Int, 1}
     e_w_nz = get!(()->Int[], lu.e, learner)::Array{Int, 1}
@@ -135,7 +136,6 @@ function update!(lu::TB,
     (reward_next_discounts, SF_next_discounts) = next_discounts[1:learner.num_tasks], next_discounts[learner.num_tasks+1:end]
     (reward_target_pis, SF_target_pis) = target_pis[1:learner.num_tasks,:], target_pis[learner.num_tasks+1:end,:]
     (reward_next_target_pis, SF_next_target_pis) = next_target_pis[1:learner.num_tasks,:], next_target_pis[learner.num_tasks+1:end, :]
-
 
     # Update Traces: See update_utils.jl
     update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])

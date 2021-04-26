@@ -16,7 +16,7 @@ mutable struct Agent{#IR<:IntrinsicReward,
 
 
     behaviour_learner::Learner
-    behaviour_demons::AbstractHorde
+    behaviour_demons::Union{AbstractHorde,Nothing} # Round Robin learners have behaviour demons set to nothing
     behaviour_gamma::Float64
 
     demons::AbstractHorde

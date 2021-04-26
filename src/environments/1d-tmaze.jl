@@ -13,8 +13,8 @@ const LEFT = 4
 
 const ACTIONS = [UP, RIGHT, DOWN, LEFT]
 
-const EPSILON = 0.0
-const ACTION_STEP = 0.05
+const EPSILON = 0.05
+const ACTION_STEP = 0.08
 
 end
 
@@ -37,6 +37,7 @@ end
 OneDTMaze(starts::String) = OneDTMaze(starts=starts)
 OneDTMaze(cs::CumulantSchedule, starts::String) = OneDTMaze(cumulant_schedule=cs, starts=starts)
 OneDTMaze(cs::CumulantSchedule, starts::String, r::Float64) = OneDTMaze(cumulant_schedule=cs, starts=starts, env_reward = r)
+OneDTMaze(cs::CumulantSchedule, starts::String, r::Float64, move_noise::Float64) = OneDTMaze(cumulant_schedule=cs, starts=starts, env_reward = r, move_noise = move_noise)
 
 volume(::OneDTMaze) = 0.8 + 1.0 + 2*0.4
 
@@ -162,3 +163,14 @@ function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRN
     update!(env.cumulant_schedule, env.pos)
 
 end
+
+
+# @userplot OneDTMaze
+# @recipe function f(env::OneDTMaze)
+#     p = scatter(env.pos[1:1],env.pos[2:2])
+#     plot!([0.5,0.5],[0.0,0.8], label="", color=:black)
+#     plot!([0.0,0.0],[0.6,1.0], label="", color=:black)
+#     plot!([1.0,1.0],[0.6,1.0], label="", color=:black)
+#     plot!([0.0,1.0],[0.8,0.8], label="", color=:black)
+#     return p
+# end

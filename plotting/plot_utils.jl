@@ -13,6 +13,7 @@ function load_results(ic, logger_key; return_type = "tensor")
     end
 
     if return_type == "tensor"
+        @show length(results)
         return cat(results..., dims = 3)
     elseif return_type == "array"
         return results
@@ -60,7 +61,12 @@ function get_best_final_perf(ic, sweep_params, metric, cut_per)
     splits = split_algo(ic,sweep_params)
     errors = ones(length(splits)) * Inf
     for (ind, split) in enumerate(splits)
-        res = load_results(search(ic, split), metric)
+        candidate_best = search(ic, split)
+        if length(candidate_best.items) == 0
+            @warn "$(split) results in not a valid combination"
+            continue
+        end
+        res = load_results(candidate_best, metric)
         num_steps = size(res)[2]
         cut_ind = Int(floor(num_steps * (1-cut_per)))
         error = mean(res[:,cut_ind:end,:])
