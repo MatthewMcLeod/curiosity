@@ -6,8 +6,10 @@ mutable struct IntrinsicRewardLogger <: LoggerKeyData
     log_interval::Int
 
     function IntrinsicRewardLogger(logger_init_info)
-        num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL])
-        new(zeros(num_logged_steps), logger_init_info[LoggerInitKey.INTERVAL])
+        # num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL])
+        # new(zeros(num_logged_steps), logger_init_info[LoggerInitKey.INTERVAL])
+        num_logged_steps = logger_init_info[LoggerInitKey.TOTAL_STEPS]
+        new(zeros(num_logged_steps), 1)
     end
 end
 
