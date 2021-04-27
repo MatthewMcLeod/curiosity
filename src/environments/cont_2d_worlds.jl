@@ -62,14 +62,14 @@ mutable struct ContGridWorld{RF, SF} <: AbstractEnvironment
                   cumulant_schedule::RF,# rew_funcs::Dict{Int, F},
                   start_func::SF, max_action_noise,
                   drift_noise, normalized) where {RF, SF} =
-        new{RF, SF}([0.0, 0.0], walls, goals,
-                   cumulant_schedule,
-                   start_func,
-                   max_action_noise, drift_noise,
-                   normalized, false,
-                   [[0,0] for i in 1:4],
-                   fill(false, 4),
-                   zeros(2))
+                      new{RF, SF}([0.0, 0.0], walls, goals,
+                                  cumulant_schedule,
+                                  start_func,
+                                  max_action_noise, drift_noise,
+                                  normalized, false,
+                                  [[0,0] for i in 1:4],
+                                  fill(false, 4),
+                                  zeros(2))
 end
 
 ContGridWorld(walls, goals,
