@@ -155,4 +155,62 @@ function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRN
 
 end
 
+module OneDTMazePlotParams
 
+using Colors
+import ColorSchemes
+
+const SIZE = 10
+const BG = Colors.RGB(1.0, 1.0, 1.0)
+const WALL = Colors.RGB(0.3, 0.3, 0.3)
+const AC = Colors.RGB(0.69921875, 0.10546875, 0.10546875)
+const GOAL = Colors.RGB(0.796875, 0.984375, 0.76953125)
+const GOAL_PALETTE = ColorSchemes.tol_muted
+const AGENT = fill(AC, SIZE, SIZE)
+
+end
+
+@recipe function f(env::OneDTMaze)
+    ticks := nothing
+    foreground_color_border := nothing
+    grid := false
+    legend := false
+    aspect_ratio := 1
+    xaxis := false
+    yaxis := false
+
+    PP = OneDTMazePlotParams
+
+    screen = fill(PP.WALL, PP.SIZE*12, PP.SIZE*12)
+
+    # Paths
+    screen[Int(PP.SIZE-PP.SIZE//2+1):Int(9*PP.SIZE + PP.SIZE//2), (Int(11//2*PP.SIZE) + 1):(Int((13//2)*PP.SIZE))] .= PP.BG
+    screen[(Int(17//2*PP.SIZE) + 1):Int(19//2*PP.SIZE), Int(PP.SIZE-PP.SIZE//2+1):Int(11*PP.SIZE + PP.SIZE//2)] .= PP.BG
+
+    screen[Int(14//2*PP.SIZE + 1):Int(22//2*PP.SIZE), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.BG
+    screen[Int(14//2*PP.SIZE + 1):Int(22//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.BG
+
+    # GOALS
+    ϵ = OneDTmazeConst.EPSILON
+    if OneDTmazeConst.EPSILON == 0.0
+        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[2]
+        screen[Int(22//2*PP.SIZE+1):Int(23//2*PP.SIZE), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[1]
+        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[4]
+        screen[Int(22//2*PP.SIZE+1):Int(23//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[3]
+    else
+        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE+PP.SIZE*ϵ), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[2]
+        screen[Int(22//2*PP.SIZE-PP.SIZE*ϵ+1):Int(23//2*PP.SIZE), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[1]
+        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE+PP.SIZE*ϵ), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[4]
+        screen[Int(22//2*PP.SIZE-PP.SIZE*ϵ+1):Int(23//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[3]
+    end
+    
+    state = env.pos
+    x, y = Int(floor((env.pos[1]*10 + 1)*PP.SIZE)), Int(floor((env.pos[2]*10 + 1)*PP.SIZE))
+
+    screen[Int(y-PP.SIZE//5 + 1):Int(y+PP.SIZE//5), Int(x-PP.SIZE//2 + 1):Int(x+PP.SIZE//2)] .= PP.AC
+    screen[Int(y-PP.SIZE//2 + 1):Int(y+PP.SIZE//2), Int(x-PP.SIZE//5 + 1):Int(x+PP.SIZE//5)] .= PP.AC
+
+
+    
+    screen[end:-1:1, :]
+end
