@@ -97,12 +97,12 @@ end
 
 # ╔═╡ db493356-572c-4475-93ac-f9c785d8cefd
 let
-	@show MinimalRLCore.step!(env, 2)
+	@show MinimalRLCore.step!(env, 1)
 	plot(env)
 end
 
 # ╔═╡ 99ad1698-d4f7-449d-8865-18a5917bb47c
-
+savefig("1dtmaze_example.pdf")
 
 # ╔═╡ Cell order:
 # ╠═caa2cdba-a76b-11eb-3461-bb8695eb2e3b
