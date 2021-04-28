@@ -20,9 +20,10 @@ function get_weights(learner::SRLearner)
     return [learner.ψ, learner.r_w]
 end
 
-function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp) where {F<:Number}
-    SRLearner(zeros(F, num_demons-num_tasks, feature_size * num_actions),
-              zeros(F, num_tasks, size(fp) * num_actions),
+function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp, w_init) where {F<:Number}
+    ψ_init = if w_init == 0 0 else 1 end
+    SRLearner(ones(F, num_demons-num_tasks, feature_size * num_actions)*ψ_init,
+              ones(F, num_tasks, size(fp) * num_actions)*w_init,
               lu,
               num_demons,
               num_actions,
@@ -30,8 +31,8 @@ function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp) 
               num_tasks, fp)
 end
 
-SRLearner(lu, feature_size, num_demons, num_actions, num_tasks, fp) =
-    SRLearner{Float64}(lu, feature_size, num_demons, num_actions, num_tasks, fp)
+SRLearner(lu, feature_size, num_demons, num_actions, num_tasks, fp, w_init) =
+    SRLearner{Float64}(lu, feature_size, num_demons, num_actions, num_tasks, fp, w_init)
 
 update(l::SRLearner) = l.update
 

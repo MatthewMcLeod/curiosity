@@ -13,8 +13,8 @@ const LEFT = 4
 
 const ACTIONS = [UP, RIGHT, DOWN, LEFT]
 
-const EPSILON = 0.0
-const ACTION_STEP = 0.05
+const EPSILON = 0.05
+const ACTION_STEP = 0.08
 
 end
 
@@ -26,20 +26,24 @@ end
 Base.@kwdef struct OneDTMaze <: MinimalRLCore.AbstractEnvironment
 
     pos::Vector{Float64} = [0.0, 0.0]
-    
+
     cumulant_schedule::CumulantSchedule = TMazeCumulantSchedules.Constant(1.0)
     starts::String = "beg"
+    env_reward::Float64 = -0.01
+    move_noise::Float64 = 0.0
 
 end
 
 OneDTMaze(starts::String) = OneDTMaze(starts=starts)
 OneDTMaze(cs::CumulantSchedule, starts::String) = OneDTMaze(cumulant_schedule=cs, starts=starts)
+OneDTMaze(cs::CumulantSchedule, starts::String, r::Float64) = OneDTMaze(cumulant_schedule=cs, starts=starts, env_reward = r)
+OneDTMaze(cs::CumulantSchedule, starts::String, r::Float64, move_noise::Float64) = OneDTMaze(cumulant_schedule=cs, starts=starts, env_reward = r, move_noise = move_noise)
 
 volume(::OneDTMaze) = 0.8 + 1.0 + 2*0.4
 
 MinimalRLCore.get_actions(env::OneDTMaze) = OneDTmazeConst.ACTIONS
 valid_action(env::OneDTMaze, action) = action in MinimalRLCore.get_actions(env)
-MinimalRLCore.get_reward(env::OneDTMaze) = 0.0 # -> determines if the agent_state is terminal
+MinimalRLCore.get_reward(env::OneDTMaze) = env.env_reward # -> determines if the agent_state is terminal
 MinimalRLCore.is_terminal(env::OneDTMaze, pos=env.pos) = any(check_goal.([env], 1:4, [pos]))
 
 check_goal(env::OneDTMaze, goal, pos=env.pos) = check_goal(OneDTMaze, goal, pos)
@@ -105,14 +109,19 @@ function MinimalRLCore.reset!(env::OneDTMaze)
 end
 
 function MinimalRLCore.reset!(env::OneDTMaze,
-                              start_state::Vector{Float64}) 
+                              start_state::Vector{Float64})
    env.pos .= start_state
 end
 
 function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRNG=Random.GLOBAL_RNG)
     ODTMC = OneDTmazeConst
     @boundscheck valid_action(env, action)
-    rand_mov = rand(rng, Uniform(-0.01, 0.01))
+    if env.move_noise == 0.0
+        rand_mov = 0
+    else
+        rand_mov = rand(rng, Uniform(-env.move_noise, env.move_noise))
+    end
+
     x_mov, y_mov = if action == ODTMC.UP
         (0.0, ODTMC.ACTION_STEP + rand_mov)
     elseif action == ODTMC.DOWN
@@ -150,7 +159,7 @@ function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRN
         env.pos[2] = clamp(y_mov + cur_y, 0.0, 0.8)
     end
 
-    
+
     update!(env.cumulant_schedule, env.pos)
 
 end

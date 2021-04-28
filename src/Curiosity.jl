@@ -37,7 +37,7 @@ abstract type ExplorationStrategy end
 export EpsilonGreedy, ϵGreedyDecay
 include("agent/exploration.jl")
 
-export Agent, agent_end!, step!, get_demon_prediction, μ_π
+export Agent, agent_end!, step!, get_demon_prediction, μ_π, proc_input
 include("agent/agent.jl")
 
 export TileCoder, create_features
@@ -62,6 +62,7 @@ include("utils/mountain_car.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")
 include("utils/features.jl")
+include("utils/baseline_learners.jl")
 
 
 using GVFHordes

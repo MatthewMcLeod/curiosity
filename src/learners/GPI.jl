@@ -20,9 +20,10 @@ function get_weights(learner::GPI)
     return vcat(learner.ψ, learner.r_w)
 end
 
-function GPI{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp) where {F<:Number}
-    GPI(zeros(F, num_demons-num_tasks, feature_size * num_actions),
-              zeros(F, num_tasks, length(fp) * num_actions),
+function GPI{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp, w_init) where {F<:Number}
+    ψ_init = if w_init == 0 0 else 1 end
+    GPI(ones(F, num_demons-num_tasks, feature_size * num_actions) * ψ_init,
+              ones(F, num_tasks, length(fp) * num_actions) * w_init,
               lu,
               num_demons,
               num_actions,
@@ -31,8 +32,8 @@ function GPI{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp) where 
               fp)
 end
 
-GPI(lu, feature_size, num_demons, num_actions, num_tasks, fp) =
-    GPI{Float64}(lu, feature_size, num_demons, num_actions, num_tasks, fp)
+GPI(lu, feature_size, num_demons, num_actions, num_tasks, fp, w_init) =
+    GPI{Float64}(lu, feature_size, num_demons, num_actions, num_tasks, fp, w_init)
 
 update(l::GPI) = l.update
 

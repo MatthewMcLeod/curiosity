@@ -6,22 +6,28 @@ import ..CumulantSchedule
 import ..Curiosity: get_cumulant, update!, get_cumulant_eval_values
 
 mutable struct DrifterDistractor <: CumulantSchedule
-    constants::Float64
+    constant1::Float64
+    constant2::Float64
     drifter_mean::Float64
     drifter_std::Float64
     distractor_mean::Float64
     distractor_std::Float64
+
+    # function DrifterDistractor(constants, drifter_mean, drifter_std, distractor_mean, distractor_std)
+    #     new(constants, constants, drifter_mean, drifter_std, distractor_mean, distractor_std)
+    # end
+
 end
 
 function get_cumulant(cs::DrifterDistractor, goal::String)
     if goal == "G1"
         rand(Normal(cs.distractor_mean, cs.distractor_std))
     elseif goal == "G2"
-        cs.constants
+        cs.constant1
     elseif goal == "G3"
         cs.drifter_mean
     elseif goal == "G4"
-        cs.constants
+        cs.constant2
     end
 end
 
@@ -30,9 +36,9 @@ function get_cumulant_eval_values(self::DrifterDistractor)
     num_cumulants = 4
     cumulants = zeros(num_cumulants)
     cumulants[1] = self.distractor_mean
-    cumulants[2] = self.constants
+    cumulants[2] = self.constant1
     cumulants[3] = self.drifter_mean
-    cumulants[4] = self.constants
+    cumulants[4] = self.constant2
     return cumulants
 end
 
