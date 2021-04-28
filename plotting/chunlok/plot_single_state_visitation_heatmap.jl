@@ -9,7 +9,7 @@ ENV["GKSwstype"] = "100"
 
 
 p = plot()
-folder = "OneDTMazeExperimentDebug/RP_0_0xad831c619d38f06a/"
+folder = "OneDTMazeExperimentDebug/RP_0_0x53f833f502c3599b/"
 save_file = "plotting/chunlok/generated_plots/state_vistation_heatmap.gif"
 
 

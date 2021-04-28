@@ -18,7 +18,7 @@ log_interval = 100
 
 p = plot()
 
-ic = ItemCollection("./OneDTMaze_SR_PLOT/")
+ic = ItemCollection("./OneDTMaze_NEW_DYNAMICS_PLOT/")
 best_ic = ic
 
 data = load_results(best_ic, :oned_tmaze_state_visitation; return_type="array")
@@ -29,13 +29,13 @@ num_log = size(state_visitation_data)[3]
 num_frames = 50
 frames_between = floor(Int32, num_log / num_frames)
 
-start_frame = 30
+start_frame = 1
 prog = Progress(num_frames, 1)
 anim = @animate for i ∈ start_frame:num_frames
     next!(prog)
     init_frame = i * frames_between
     last_frame = min((i+1) * frames_between, num_log)
-    frame_info = state_visitation_data[:, :, init_frame:last_frame, 1:1]
+    frame_info = state_visitation_data[:, :, init_frame:last_frame, 10:10]
     # println(size(frame_info))
 
     # println(size(sum(frame_info, dims=(3, 4))))

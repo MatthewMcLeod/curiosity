@@ -18,21 +18,33 @@ function lg_start!(self::OneDStateVisitation, env, agent)
 end
 
 function lg_step!(self::OneDStateVisitation, env, agent, s, a, s_next, r, is_terminal, cur_step_in_episode, cur_step_total)
-    x = ceil(Int32, s[1] * num_bins) 
-    y = ceil(Int32, s[2] * num_bins)
+    x = ceil(Int32, s_next[1] * num_bins) 
+    y = ceil(Int32, s_next[2] * num_bins)
     if (x == 0)
         x = 1
     end
     if (y == 0)
         y = 1
     end
-    # if (y == 7)
-    #     println()
-    #     println(s[1:2])
-    # end
+    if (s_next[1] == 0.49999999999999994)
+        println()
+        println("found state")
+        println("state: $(s[1:2])")
+        println("next state: $(s_next[1:2])")
+        print("================")
+    end
+    if (y == 3 && x != 6)
+        println()
+        println("BAD STATE")
+        println("state: $(s[1:2])")
+        println("next state: $(s_next[1:2])")
+    end
 
     # println("state: $(s[1]), $(s[2])")
     # println("$(x), $(y)")
+
+    # println(s)
+    # print(x, y)
 
     self.temp_state_visitations[x, y] += 1
     if (rem(cur_step_total, self.log_interval) == 0)
