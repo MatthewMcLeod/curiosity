@@ -15,6 +15,9 @@ include("environments/tmaze_cumulants.jl")
 include("environments/tabular_tmaze.jl")
 include("environments/1d-tmaze.jl")
 
+# Cont 2d Worlds environment.
+include("environments/cont_2d_worlds_spec.jl")
+
 
 # Mountain Car
 include("environments/mountain_car.jl")
