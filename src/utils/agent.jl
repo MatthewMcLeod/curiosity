@@ -91,34 +91,40 @@ function get_linear_learner(parsed::Dict,
     learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
     opt = get_optimizer(parsed, prefix)
     lu = get_learning_update(parsed, opt, prefix)
+    w_init_key = prefix == "" ? "w_init" : join([prefix, "w_init"], "_")
+    w_init = w_init_key in keys(parsed) ? parsed[w_init_key] : 0
 
     learner_str = parsed[learner_key]
     demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
         LinearQLearner(lu,
                        feature_size,
                        num_actions,
-                       num_demons)
+                       num_demons,
+                       w_init)
     elseif learner_str ∈ ["SR", "SRLearner", "sr"]
         SRLearner(lu,
                   feature_size,
                   num_demons,
                   num_actions,
                   num_tasks,
-                  feature_projector)
+                  feature_projector,
+                  w_init)
     elseif learner_str ∈ ["GPI", "gpi"]
         GPI(lu,
             feature_size,
             num_demons,
             num_actions,
             num_tasks,
-            feature_projector)
+            feature_projector,
+            w_init)
     elseif learner_str ∈ ["LSTD", "LSTDLearner"]
         LSTDLearner(lu,
                     parsed[eta_str],
                     feature_size,
                     num_actions,
                     num_demons)
-
+    elseif learner_str ∈ ["NoLearner", "nolearner"]
+        NoLearner(collect(1:num_actions), num_demons)
     else
         throw(ArgumentError("Not a valid demon learner"))
     end
@@ -131,46 +137,19 @@ function get_linear_learner(parsed::Dict,
                             prefix="",
                             feature_projector=nothing)
 
-    num_demons = if demons isa Nothing
-        1
+    # Don't want to change call now. num_tasks only exists for SRHorde demons.
+    num_tasks = if !hasproperty(demons, :num_tasks)
+        0
     else
-        length(demons)
+        demons.num_tasks
     end
-
-    learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
-    opt = get_optimizer(parsed, prefix)
-    lu = get_learning_update(parsed, opt, prefix)
-
-    learner_str = parsed[learner_key]
-    demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
-        LinearQLearner(lu,
-                       feature_size,
-                       num_actions,
-                       num_demons)
-    elseif learner_str ∈ ["SR", "SRLearner", "sr"]
-        SRLearner(lu,
-                  feature_size,
-                  num_demons,
-                  num_actions,
-                  demons.num_tasks,
-                  feature_projector)
-    elseif learner_str ∈ ["GPI", "gpi"]
-        GPI(lu,
-            feature_size,
-            num_demons,
-            num_actions,
-            demons.num_tasks,
-            feature_projector)
-    elseif learner_str ∈ ["LSTD", "LSTDLearner"]
-        eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
-        LSTDLearner(lu,
-                    parsed[eta_str],
-                    feature_size,
-                    num_actions,
-                    num_demons)
-    else
-        throw(ArgumentError("Not a valid demon learner"))
-    end
+    return get_linear_learner(parsed::Dict,
+        feature_size,
+        num_actions,
+        length(demons),
+        num_tasks,
+        prefix,
+        feature_projector)
 end
 
 function get_learning_update(parsed::Dict, opt, prefix="")
@@ -233,3 +212,20 @@ function get_exploration_strategy(parsed, action_set)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 end
+
+Base.@kwdef struct NoLearner <: Learner
+    action_set::Array{Int,1}
+    num_demons::Int
+end
+
+Curiosity.update!(learner::NoLearner, args...) = nothing
+
+Base.get(π::NoLearner; state_t, action_t, kwargs...) =
+    get_action_probs(π, state_t, nothing)[action_t]
+
+function Curiosity.get_action_probs(l::NoLearner, features, state)
+    return ones(l.num_demons,length(action_set)) ./ length(action_set)
+end
+(l::NoLearner)(ϕ,a) = zeros(l.num_demons)
+(l::NoLearner)(ϕ) = [zeros(l.num_demons) for a in l.action_set]
+function zero_eligibility_traces!(l::NoLearner) nothing end

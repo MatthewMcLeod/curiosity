@@ -56,6 +56,26 @@ function get_best(ic, sweep_params, metric)
 
     return search(ic, splits[low_err_ind])
 end
+function get_best_final_perf(ic, sweep_params, metric, cut_per)
+    splits = split_algo(ic,sweep_params)
+    errors = ones(length(splits)) * Inf
+    for (ind, split) in enumerate(splits)
+        candidate_best = search(ic, split)
+        if length(candidate_best.items) == 0
+            @warn "$(split) results in not a valid combination"
+            continue
+        end
+        res = load_results(candidate_best, metric)
+        num_steps = size(res)[2]
+        cut_ind = Int(floor(num_steps * (1-cut_per)))
+        error = mean(res[:,cut_ind:end,:])
+        errors[ind] = error
+    end
+    low_err, low_err_ind = findmin(errors)
+    println(errors)
+
+    return search(ic, splits[low_err_ind])
+end
 
 function get_stats(data;per_gvf=false)
     mean_per_gvf, std_per_gvf = mean(data,dims=3)[:,:,1], std(data,dims=3)[:,:,1]
@@ -69,6 +89,27 @@ function get_stats(data;per_gvf=false)
         # @show size(std(error_tot,dims=1))
         sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=2)[:,1]
     end
+end
+
+function get_min_length(arrs)
+    return minimum([length(arr) for arr in arrs])
+end
+
+function goal_visits_per_episode(arr_of_episodes, max_length; num_gvfs = 4)
+    goal_visits = zeros(num_gvfs, max_length)
+    for run in 1:length(arr_of_episodes)
+        goal_visits += onehot(arr_of_episodes[run],num_gvfs)[:,1:max_length]
+    end
+    goal_visit_percentage = goal_visits / length(arr_of_episodes)
+    return goal_visit_percentage
+end
+
+function onehot(data, num_gvfs = 4)
+    onehot_enc = zeros(num_gvfs, length(data))
+    for gvf_i in 1:num_gvfs
+        onehot_enc[gvf_i,:] += (data .== gvf_i)
+    end
+    return onehot_enc
 end
 
 function get_label(ic, params)

@@ -65,9 +65,9 @@ function monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_th
     ret = Vector{Vector{Float64}}(undef, length(states_actions))
     prg_meter = ProgressMeter.Progress(length(states_actions))
     Threads.@threads for i ∈ 1:length(states_actions)
-        ret[i] = monte_carlo_return(env, gvf, start_states[i], a[i], num_returns, γ_thres, max_steps)
-        next!(prg_meter)
+        ret[i] = monte_carlo_return(env, gvf, start_states[i], actions[i], num_returns, γ_thresh, max_steps)
+        # next!(prg_meter)
     end
     ret
-    
+
 end
