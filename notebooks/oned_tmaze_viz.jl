@@ -1,13 +1,19 @@
-using Revise
-using ProgressMeter
+### A Pluto.jl notebook ###
+# v0.14.1
 
+using Markdown
+using InteractiveUtils
 
-using Curiosity, Plots, PlutoUI, Statistics, Random
+# ╔═╡ caa2cdba-a76b-11eb-3461-bb8695eb2e3b
+using Revise, Curiosity, Plots, PlutoUI, Statistics, Random
 
-include("./experiments/1d-tmaze.jl")
+# ╔═╡ cfb65788-a6be-4d5e-a404-3ebd38a1c539
+include("../experiments/1d-tmaze.jl")
 
+# ╔═╡ dfd01378-0c1d-4385-b84c-d06fb049364e
 ODTMU = Curiosity.OneDTMazeUtils
 
+# ╔═╡ 578231af-8b90-4f2f-9745-989eae047a38
 default_args(ϵ) =
 Dict(
 	"logger_interval" => 100,
@@ -67,15 +73,43 @@ Dict(
 	# "logger_keys" => [LoggerKey.TTMAZE_ERROR],
 	"save_dir" => "OneDTMazeExperiment",
 	"seed" => 1,
-	"steps" => 10000,
+	"steps" => 100,
 	"use_external_reward" => true,
 
 	"logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
 )
 
-env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"], parsed["env_step_penalty"])
+# ╔═╡ 6d51db0c-72b1-47ed-8ce2-8822f15473cc
+env = OneDTMaze(Curiosity.TMazeCumulantSchedules.Constant(1), "beg")
 
-begin
-	start!(env)
+# ╔═╡ dd541710-f2c0-4723-8f5c-03dd37240eb5
+begin 
+	# @userplot OneDTMaze
+	# function Plots.plot(env::OneDTMaze)
+	# 	p = scatter(env.pos[1:1],env.pos[2:2])
+	# 	plot!([0.5,0.5],[0.0,0.8], label="", color=:black)
+	# 	plot!([0.0,0.0],[0.6,1.0], label="", color=:black)
+	# 	plot!([1.0,1.0],[0.6,1.0], label="", color=:black)
+	# 	plot!([0.0,1.0],[0.8,0.8], label="", color=:black)
+	# 	return p
+	# end
+end
+
+# ╔═╡ db493356-572c-4475-93ac-f9c785d8cefd
+let
+	@show MinimalRLCore.step!(env, 2)
 	plot(env)
 end
+
+# ╔═╡ 99ad1698-d4f7-449d-8865-18a5917bb47c
+
+
+# ╔═╡ Cell order:
+# ╠═caa2cdba-a76b-11eb-3461-bb8695eb2e3b
+# ╠═cfb65788-a6be-4d5e-a404-3ebd38a1c539
+# ╠═dfd01378-0c1d-4385-b84c-d06fb049364e
+# ╠═578231af-8b90-4f2f-9745-989eae047a38
+# ╠═6d51db0c-72b1-47ed-8ce2-8822f15473cc
+# ╠═dd541710-f2c0-4723-8f5c-03dd37240eb5
+# ╠═db493356-572c-4475-93ac-f9c785d8cefd
+# ╠═99ad1698-d4f7-449d-8865-18a5917bb47c

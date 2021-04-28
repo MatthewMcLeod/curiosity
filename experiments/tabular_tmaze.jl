@@ -235,6 +235,13 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     exploring_starts = parsed["exploring_starts"]
     env = TabularTMaze(exploring_starts, cumulant_schedule)
 
+    if "eta" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
+    end
+
     agent = construct_agent(parsed)
 
     goal_visitations = zeros(4)

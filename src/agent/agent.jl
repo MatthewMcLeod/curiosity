@@ -145,7 +145,6 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
     total_reward = agent.use_external_reward ? r_int + r : r_int
-
     update_behaviour!(agent,
                       agent.last_obs,
                       obs,
@@ -187,8 +186,8 @@ end
 
 function update_behaviour!(agent, obs, next_obs, state, action, next_state, next_action, is_terminal, reward)
 
-    behaviour_pis = get_behaviour_pis(agent, state, obs)
-    next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
+    # behaviour_pis = get_behaviour_pis(agent, state, obs)
+    # next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
 
         #NOTE: Different call than demon updates as the reward and environment pseudotermination function
     update!(agent.behaviour_learner,
