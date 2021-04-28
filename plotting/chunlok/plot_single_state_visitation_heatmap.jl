@@ -9,7 +9,7 @@ ENV["GKSwstype"] = "100"
 
 
 p = plot()
-folder = "OneDTMazeExperiment/RP_0_0xa59186950e76228a/"
+folder = "OneDTMazeExperimentDebug/RP_0_0xad831c619d38f06a/"
 save_file = "plotting/chunlok/generated_plots/state_vistation_heatmap.gif"
 
 
@@ -35,8 +35,8 @@ anim = @animate for i ∈ 1:num_frames
 
     frame_info = dropdims(sum(frame_info, dims=3), dims=3)
     # println(frame_info)
-    display("text/plain", frame_info)
-    asdasd
+    # display("text/plain", frame_info)
+    # asdasd
 
     # println(sum(frame_info))
     frame_info = frame_info ./ sum(frame_info)

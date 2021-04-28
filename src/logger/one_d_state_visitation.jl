@@ -26,11 +26,10 @@ function lg_step!(self::OneDStateVisitation, env, agent, s, a, s_next, r, is_ter
     if (y == 0)
         y = 1
     end
-
-    if (y == 7)
-        println()
-        println(s[1:2])
-    end
+    # if (y == 7)
+    #     println()
+    #     println(s[1:2])
+    # end
 
     # println("state: $(s[1]), $(s[2])")
     # println("$(x), $(y)")
