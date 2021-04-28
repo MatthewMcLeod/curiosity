@@ -13,7 +13,6 @@ function load_results(ic, logger_key; return_type = "tensor")
     end
 
     if return_type == "tensor"
-        @show length(results)
         return cat(results..., dims = 3)
     elseif return_type == "array"
         return results

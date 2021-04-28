@@ -35,3 +35,7 @@ mutable struct NoReward <: IntrinsicReward end
 function update_reward!(::NoReward, agent)
     return 0
 end
+
+function get_reward(NR::NoReward, agent)
+    return 0.0
+end

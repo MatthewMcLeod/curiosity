@@ -145,7 +145,6 @@ function MinimalRLCore.step!(agent::Agent, obs, r, is_terminal, args...)
     #get intrinssic reward
     r_int = update_reward!(agent.intrinsic_reward, agent)
     total_reward = agent.use_external_reward ? r_int + r : r_int
-
     update_behaviour!(agent,
                       agent.last_obs,
                       obs,

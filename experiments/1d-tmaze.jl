@@ -22,12 +22,12 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "RoundRobin",
+        "behaviour_learner" => "Q",
         "behaviour_update" => "ESARSA",
         "behaviour_reward_projector" => "base",
         "behaviour_rp_tilings" => 1,
         "behaviour_rp_tiles" => 16,
-        "behaviour_trace" => "AccumulatingTraces",
+        "behaviour_trace" => "ReplacingTraces",
         "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.95,
         "behaviour_alpha_init" => 0.1,
@@ -42,7 +42,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "RoundRobin",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -52,8 +52,9 @@ default_args() =
         "demon_beta_v" => 0.99,
 
         #shared
-        "num_tiles" => 2,
-        "num_tilings" =>8,
+        # "num_tiles" => 2,
+        # "num_tilings" =>8,
+        "tiling_structure" => [1,16],
         "demon_rep" => "ideal_martha",
         # "demon_rep" => "tilecoding",
         "demon_num_tiles" => 8,
@@ -66,30 +67,33 @@ default_args() =
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"whole",
-        "env_step_penalty" => -0.005,
+        "env_step_penalty" => -0.1,
 
 
         # Agent and Logger
         "horde_type" => "regular",
-        "intrinsic_reward" => "weight_change",
+        "intrinsic_reward" => "no_reward",
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 40000,
+        "steps" => 2000,
         "use_external_reward" => true,
 
-        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
+        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.BEHAVIOUR_ACTION_VALUES]
     )
 
 
 function construct_agent(parsed)
-
-
     action_space = 4
     obs_size = 6
 
     intrinsic_reward_type = parsed["intrinsic_reward"]
     use_external_reward = parsed["use_external_reward"]
+
+    if "tiling_structure" ∈ keys(parsed)
+        parsed["num_tilings"] = parsed["tiling_structure"][1]
+        parsed["num_tiles"] = parsed["tiling_structure"][2]
+    end
 
     if parsed["demon_opt"] == "Auto"
         parsed["demon_alpha_init"] =
@@ -108,6 +112,10 @@ function construct_agent(parsed)
         if "demon_eta" in keys(parsed)
             parsed["demon_eta"] = parsed["demon_eta"] / parsed["num_tilings"]
         end
+    end
+
+    if parsed["behaviour_w_init"] != 0.0
+        parsed["behaviour_w_init"] = parsed["behaviour_w_init"] / parsed["num_tilings"]
     end
 
 
@@ -135,12 +143,13 @@ function construct_agent(parsed)
 
     demons = ODTMU.create_demons(parsed, demon_projected_fc)
 
-    demon_learner = Curiosity.get_linear_learner(parsed,
-                                                 feat_size,
-                                                 action_space,
-                                                 demons,
-                                                 "demon",
-                                                 demon_projected_fc)
+
+    Curiosity.get_linear_learner(parsed,
+                                feat_size,
+                                action_space,
+                                demons,
+                                "demon",
+                                demon_projected_fc)
 
     exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
@@ -264,7 +273,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     #This is a callback for every timestep where logger can go
                     # agent is accesible in this scope
-
                     if t == true && working==true
                         goals = s_next[3:end]
                         f = findfirst(!iszero, goals)

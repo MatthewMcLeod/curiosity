@@ -43,7 +43,7 @@ volume(::OneDTMaze) = 0.8 + 1.0 + 2*0.4
 
 MinimalRLCore.get_actions(env::OneDTMaze) = OneDTmazeConst.ACTIONS
 valid_action(env::OneDTMaze, action) = action in MinimalRLCore.get_actions(env)
-MinimalRLCore.get_reward(env::OneDTMaze) = 0.0 # -> determines if the agent_state is terminal
+MinimalRLCore.get_reward(env::OneDTMaze) = env.env_reward # -> determines if the agent_state is terminal
 MinimalRLCore.is_terminal(env::OneDTMaze, pos=env.pos) = any(check_goal.([env], 1:4, [pos]))
 
 check_goal(env::OneDTMaze, goal, pos=env.pos) = check_goal(OneDTMaze, goal, pos)

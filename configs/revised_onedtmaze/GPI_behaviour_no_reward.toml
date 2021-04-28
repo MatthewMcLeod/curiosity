@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_ReplacingTraces"
+save_dir = "OneDTMaze_No_Reward_GPI"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,18 +7,20 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 120000
+steps = 150
 
 logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
 behaviour_gamma = 0.90
-behaviour_reward_projector = "ideal_martha"
+behaviour_reward_projector = "base"
+behaviour_rp_tilings = 1
+behaviour_rp_tiles = 1
 exploration_strategy = "epsilon_greedy"
 # behaviour_trace = "AccumulatingTraces"
 behaviour_lambda = 0.95
-behaviour_w_init = 1.0
+behaviour_w_init = 0.0
 
 # Demon Attributes
 
@@ -38,14 +40,14 @@ demon_opt = "Auto"
 constant_target= [-10.0,10.0]
 distractor = [1.0, 5.0]
 drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
-env_step_penalty = -0.005
+env_step_penalty = -1.0
 
 
 # exploring_starts="beg"
 
 # Agent and Logger
 horde_type = "regular"
-intrinsic_reward = "weight_change"
+intrinsic_reward = "no_reward"
 
 use_external_reward = true
 
@@ -54,16 +56,18 @@ use_external_reward = true
 
 
 [sweep_args]
-seed = "1:15"
+seed = "1:1"
 cumulant_schedule = ["DrifterDistractor"]
 eta = "5.0.^(-3:-1)"
 behaviour_opt = ["Auto"]
-behaviour_learner = ["Q"]
-behaviour_update = ["ESARSA"]
-exploration_param = [0.1, 0.3]
-demon_learner = ["Q", "SR"]
+behaviour_learner = ["GPI"]
+behaviour_update = ["TB"]
+exploration_param = [0.1]
+demon_learner = ["Q"]
 demon_update = ["TB"]
-num_tilings = [4, 8]
-num_tiles = [2]
+# num_tilings = [1]
+# num_tiles = [16]
+tiling_structure = [[1,16],[32,2],[2,8],[8,8]]
+
 exploring_starts= ["beg"]
-behaviour_trace = ["ReplacingTraces"]
+behaviour_trace = ["AccumulatingTraces"]
