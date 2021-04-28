@@ -228,4 +228,4 @@ function Curiosity.get_action_probs(l::NoLearner, features, state)
 end
 (l::NoLearner)(ϕ,a) = zeros(l.num_demons)
 (l::NoLearner)(ϕ) = [zeros(l.num_demons) for a in l.action_set]
-function zero_eligibility_traces!(l::Learner) nothing end
+function zero_eligibility_traces!(l::NoLearner) nothing end
