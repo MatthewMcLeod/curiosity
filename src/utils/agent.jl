@@ -19,23 +19,8 @@ end
 _init_optimizer(opt, ::Dict) =
     throw("$(string(opt)) optimizer initialization not found.")
 
-function _get_eta_str(parsed::Dict, prefix = "")
-    eta_str = if "eta" in keys(parsed)
-        if (join([prefix, "eta"], "_")) in keys(parsed)
-            @warn "config has both $(prefix)_eta and eta. Defaulting to eta"
-        end
-        "eta"
-    elseif prefix == ""
-        "eta"
-    else
-        join([prefix, "eta"], "_")
-    end
-    return eta_str
-end
-
 function _init_optimizer(opt_type::Union{Type{Descent}, Type{ADAGrad}, Type{ADADelta}}, parsed::Dict, prefix = "")
-    # eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
-    eta_str = _get_eta_str(parsed, prefix)
+    eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
     try
         η = parsed[eta_str]
         opt_type(η)
@@ -49,9 +34,7 @@ function _init_optimizer(opt_type::Union{Type{RMSProp},
                                          Type{Nesterov}},
                          parsed::Dict, prefix="")
 
-    # eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
-    eta_str = _get_eta_str(parsed, prefix)
-
+    eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
     rho_str = prefix == "" ? "rho" : join([prefix, "rho"], "_")
     try
         η = parsed[eta_str]
@@ -69,9 +52,7 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
                                          Type{AMSGrad}},
                          parsed::Dict, prefix="")
 
-    # eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
-    eta_str = _get_eta_str(parsed, prefix)
-
+    eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
     beta_str = prefix == "" ? "beta" : join([prefix, "beta"], "_")
     try
         η = parsed[eta_str]
@@ -88,8 +69,7 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
 end
 
 function _init_optimizer(opt_type::Union{Type{Auto}}, parsed::Dict, prefix="")
-    # α_str = prefix == "" ? "alpha" : join([prefix, "eta"], "_")
-    α_str = _get_eta_str(parsed, prefix)
+    α_str = prefix == "" ? "alpha" : join([prefix, "eta"], "_")
     α_init_str = prefix == "" ?  "alpha_init" : join([prefix, "alpha_init"], "_")
     try
         α = parsed[α_str]
@@ -143,7 +123,8 @@ function get_linear_learner(parsed::Dict,
                     feature_size,
                     num_actions,
                     num_demons)
-
+    elseif learner_str ∈ ["NoLearner", "nolearner"]
+        NoLearner(collect(1:num_actions), num_demons)
     else
         throw(ArgumentError("Not a valid demon learner"))
     end
@@ -169,48 +150,6 @@ function get_linear_learner(parsed::Dict,
         num_tasks,
         prefix,
         feature_projector)
-
-
-    # num_demons = if demons isa Nothing
-    #     1
-    # else
-    #     length(demons)
-    # end
-    #
-    # learner_key = prefix == "" ? "learner" : join([prefix, "learner"], "_")
-    # opt = get_optimizer(parsed, prefix)
-    # lu = get_learning_update(parsed, opt, prefix)
-    #
-    # learner_str = parsed[learner_key]
-    # demon_learner = if learner_str ∈ ["Q", "QLearner", "q"]
-    #     LinearQLearner(lu,
-    #                    feature_size,
-    #                    num_actions,
-    #                    num_demons)
-    # elseif learner_str ∈ ["SR", "SRLearner", "sr"]
-    #     SRLearner(lu,
-    #               feature_size,
-    #               num_demons,
-    #               num_actions,
-    #               demons.num_tasks,
-    #               feature_projector)
-    # elseif learner_str ∈ ["GPI", "gpi"]
-    #     GPI(lu,
-    #         feature_size,
-    #         num_demons,
-    #         num_actions,
-    #         demons.num_tasks,
-    #         feature_projector)
-    # elseif learner_str ∈ ["LSTD", "LSTDLearner"]
-    #     eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
-    #     LSTDLearner(lu,
-    #                 parsed[eta_str],
-    #                 feature_size,
-    #                 num_actions,
-    #                 num_demons)
-    # else
-    #     throw(ArgumentError("Not a valid demon learner"))
-    # end
 end
 
 function get_learning_update(parsed::Dict, opt, prefix="")
@@ -273,3 +212,20 @@ function get_exploration_strategy(parsed, action_set)
         throw(ArgumentError("Not a Valid Exploration Strategy"))
     end
 end
+
+Base.@kwdef struct NoLearner <: Learner
+    action_set::Array{Int,1}
+    num_demons::Int
+end
+
+Curiosity.update!(learner::NoLearner, args...) = nothing
+
+Base.get(π::NoLearner; state_t, action_t, kwargs...) =
+    get_action_probs(π, state_t, nothing)[action_t]
+
+function Curiosity.get_action_probs(l::NoLearner, features, state)
+    return ones(l.num_demons,length(action_set)) ./ length(action_set)
+end
+(l::NoLearner)(ϕ,a) = zeros(l.num_demons)
+(l::NoLearner)(ϕ) = [zeros(l.num_demons) for a in l.action_set]
+function zero_eligibility_traces!(l::Learner) nothing end

@@ -22,8 +22,8 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "Q",
-        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_reward_projector" => "base",
         "behaviour_rp_tilings" => 1,
         "behaviour_rp_tiles" => 16,
@@ -42,7 +42,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "RoundRobin",
+        "demon_learner" => "NoLearner",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -76,7 +76,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 2000,
+        "steps" => 100,
         "use_external_reward" => true,
 
         "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.BEHAVIOUR_ACTION_VALUES]
@@ -93,6 +93,13 @@ function construct_agent(parsed)
     if "tiling_structure" ∈ keys(parsed)
         parsed["num_tilings"] = parsed["tiling_structure"][1]
         parsed["num_tiles"] = parsed["tiling_structure"][2]
+    end
+
+    if "eta" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
     end
 
     if parsed["demon_opt"] == "Auto"
@@ -117,7 +124,6 @@ function construct_agent(parsed)
     if parsed["behaviour_w_init"] != 0.0
         parsed["behaviour_w_init"] = parsed["behaviour_w_init"] / parsed["num_tilings"]
     end
-
 
     fc = Curiosity.FeatureSubset(
         Curiosity.SparseTileCoder(parsed["num_tilings"], parsed["num_tiles"], 2),
@@ -144,7 +150,7 @@ function construct_agent(parsed)
     demons = ODTMU.create_demons(parsed, demon_projected_fc)
 
 
-    Curiosity.get_linear_learner(parsed,
+    demon_learner = Curiosity.get_linear_learner(parsed,
                                 feat_size,
                                 action_space,
                                 demons,
@@ -293,7 +299,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         if working == true
             println("Goal Visitation: ", goal_visitations)
         end
-        agent
+        # agent
     end
 
 end

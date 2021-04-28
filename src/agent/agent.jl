@@ -186,8 +186,8 @@ end
 
 function update_behaviour!(agent, obs, next_obs, state, action, next_state, next_action, is_terminal, reward)
 
-    behaviour_pis = get_behaviour_pis(agent, state, obs)
-    next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
+    # behaviour_pis = get_behaviour_pis(agent, state, obs)
+    # next_behaviour_pis = get_behaviour_pis(agent, next_state, next_obs)
 
         #NOTE: Different call than demon updates as the reward and environment pseudotermination function
     update!(agent.behaviour_learner,
