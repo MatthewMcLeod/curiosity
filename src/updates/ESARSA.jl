@@ -65,7 +65,7 @@ function update!(lu::ESARSA,
     td_err = C .+ next_discounts .* sum(next_target_pis .* Qs, dims = 2) - pred
     td_err_across_demons = repeat(vec(td_err), inner=learner.num_actions)
 
-    if lu.opt isa Auto
+    if lu.opt isa Auto || lu.opt isa SparseAuto
         next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
         state_discount = zero(e)
         state_discount[state_action_row_ind,:] .+= state'
@@ -166,7 +166,7 @@ function update!(lu::ESARSA,
     #td_err is (336x1)
     # TD err is applied across rows
 
-    if lu.opt isa Auto
+    if lu.opt isa Auto || lu.opt isa SparseAuto
         # next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
         state_discount = -SF_next_discounts * next_active_state_action'
         state_discount .+= active_state_action'

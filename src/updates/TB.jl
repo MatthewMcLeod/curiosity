@@ -167,16 +167,22 @@ function update!(lu::TB,
     @assert sum(reward_discounts) == 0
     # TD err is applied across rows
 
-    if lu.opt isa Auto
+    if lu.opt isa Auto || lu.opt isa SparseAuto
         # next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
         state_discount = -SF_next_discounts * next_active_state_action'
         state_discount .+= active_state_action'
-        abs_ϕ_ψ = if λ == 0.0
-            abs.(repeat(active_state_action, outer=(1, length(td_err)))')
+        # @show typeof(state_discount)
+        # @tullio state_discount[i, j] := active_state_action[j] - SF_next_discounts[i] * next_active_state_action[j]
+
+        z = zero(e_ψ)
+        if λ == 0.0
+            active_state_action_col = collect(active_state_action)
+            @tullio z[i, j] = @inbounds(abs(active_state_action_col[j])*max(abs(active_state_action_col[j]), state_discount[i, j]))
         else
-            abs.(e_ψ)
+            sd_col = state_discount
+            @tullio z[i, j] = @inbounds(abs(e_ψ[i, j])*max(abs(e_ψ[i, j]), sd_col[i, j]))
         end
-        z = abs_ϕ_ψ .* max.(abs_ϕ_ψ, state_discount)
+        
         update!(lu.opt, ψ, e_ψ, td_err, z,  learner.num_demons - learner.num_tasks, 1)
 
         # reward state discount is always  0 so no need for next_state_action.

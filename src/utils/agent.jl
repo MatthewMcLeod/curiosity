@@ -10,6 +10,8 @@ end
 function get_optimizer(opt_string, parsed::Dict, prefix)
     opt_type = if opt_string == "Auto"
         Auto
+    elseif opt_string == "SparseAuto"
+        SparseAuto
     else
         getproperty(Flux, Symbol(opt_string))
     end
@@ -68,7 +70,7 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
     end
 end
 
-function _init_optimizer(opt_type::Union{Type{Auto}}, parsed::Dict, prefix="")
+function _init_optimizer(opt_type::Union{Type{Auto}, Type{SparseAuto}}, parsed::Dict, prefix="")
     α_str = prefix == "" ? "alpha" : join([prefix, "eta"], "_")
     α_init_str = prefix == "" ?  "alpha_init" : join([prefix, "alpha_init"], "_")
     try

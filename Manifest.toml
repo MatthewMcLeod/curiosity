@@ -975,6 +975,12 @@ git-tree-sha1 = "7c53c35547de1c5b9d46a4797cf6d8253807108c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.5"
 
+[[Tullio]]
+deps = ["DiffRules", "LinearAlgebra", "Requires"]
+git-tree-sha1 = "7201bbb4c138c18bf14511c4cc8daeac6a52c148"
+uuid = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
+version = "0.2.14"
+
 [[URIParser]]
 deps = ["Unicode"]
 git-tree-sha1 = "53a9f49546b8d2dd2e688d216421d050c9a31d0d"

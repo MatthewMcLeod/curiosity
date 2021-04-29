@@ -22,6 +22,7 @@ include("utils/SRHorde.jl")
 
 export Auto
 include("optimizers/Auto.jl")
+include("optimizers/SparseAuto.jl")
 
 
 export QLearner, LinearQLearner, VLearner, SRLearner, GPI, predict, predict_SF
