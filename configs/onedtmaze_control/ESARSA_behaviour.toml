@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 200
+steps = 60000
 
 logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
@@ -54,7 +54,7 @@ use_external_reward = true
 
 
 [sweep_args]
-seed = "1:1"
+seed = "1:15"
 cumulant_schedule = ["DrifterDistractor"]
 eta = "5.0.^(-4:0)"
 behaviour_opt = ["Auto"]
