@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_No_Reward"
+save_dir = "OneDTMaze_No_Reward_ESARSA"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -67,7 +67,7 @@ demon_learner = ["NoLearner"]
 demon_update = ["TB"]
 # num_tilings = [1]
 # num_tiles = [16]
-tiling_structure = [[1,8],[2,8],[16,2]]
+tiling_structure = [[1,8],[2,8],[16,2],[32,2],[1,16]]
 
 exploring_starts= ["beg"]
 behaviour_trace = ["AccumulatingTraces"]

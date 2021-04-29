@@ -189,7 +189,7 @@ struct MarthaIdealDemonFeatures <: FeatureCreator
 end
 
 function project_features(fc::MarthaIdealDemonFeatures, state)
-    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state, ODTMC.ACTION_STEP + ODTMC.EPSILON + 0.001) for i in 1:4]))
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state, ODTMC.ACTION_STEP + ODTMC.EPSILON + 0.00001) for i in 1:4]))
     # alt_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state_tp1) for i in 1:4]))
     return new_state
 end
