@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 150
+steps = 50000
 
 logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
@@ -56,18 +56,18 @@ use_external_reward = true
 
 
 [sweep_args]
-seed = "1:1"
+seed = "1:15"
 cumulant_schedule = ["DrifterDistractor"]
 eta = "5.0.^(-3:-1)"
 behaviour_opt = ["Auto"]
 behaviour_learner = ["GPI"]
 behaviour_update = ["TB"]
 exploration_param = [0.1]
-demon_learner = ["Q"]
+demon_learner = ["NoLearner"]
 demon_update = ["TB"]
 # num_tilings = [1]
 # num_tiles = [16]
-tiling_structure = [[1,16],[32,2],[2,8],[8,8]]
+tiling_structure = [[1,8],[2,8],[16,2]]
 
 exploring_starts= ["beg"]
 behaviour_trace = ["AccumulatingTraces"]
