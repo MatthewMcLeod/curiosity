@@ -22,8 +22,8 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "RoundRobin",
-        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_reward_projector" => "base",
         "behaviour_rp_tilings" => 1,
         "behaviour_rp_tiles" => 16,
@@ -45,7 +45,7 @@ default_args() =
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Auto",
+        "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.99,
@@ -54,7 +54,7 @@ default_args() =
         #shared
         # "num_tiles" => 2,
         # "num_tilings" =>8,
-        "tiling_structure" => [8,8],
+        "tiling_structure" => [2,8],
         "demon_rep" => "ideal_martha",
         # "demon_rep" => "tilecoding",
         "demon_num_tiles" => 8,
@@ -66,7 +66,7 @@ default_args() =
         "cumulant_schedule" => "DrifterDistractor",
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
-        "exploring_starts"=>"whole",
+        "exploring_starts"=>"beg",
         "env_step_penalty" => -0.1,
 
 
@@ -76,7 +76,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 500,
         "use_external_reward" => true,
 
         "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]

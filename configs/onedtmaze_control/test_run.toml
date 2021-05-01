@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_ESARSA_Control_No_Penalty"
+save_dir = "OneDTMaze_TEST"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -14,7 +14,7 @@ logger_interval = 100
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
 behaviour_gamma = 0.90
-behaviour_reward_projector = "ideal_martha"
+behaviour_reward_projector = "base"
 exploration_strategy = "epsilon_greedy"
 # behaviour_trace = "AccumulatingTraces"
 behaviour_lambda = 0.95
