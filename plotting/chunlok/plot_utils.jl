@@ -65,7 +65,6 @@ function load_results(ic, logger_key; return_type = "tensor")
     for itm in ic.items
         file_path = joinpath(itm.folder_str, "results.jld2")
         if (isfile(file_path))
-            # println(file_path)
             try
                 data = FileIO.load(file_path)["results"]
                 push!(results,data[logger_key])

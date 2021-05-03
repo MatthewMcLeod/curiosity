@@ -38,58 +38,31 @@ p = plot()
 
 
 # ic = ItemCollection("M:/globus/Experiment2/Experiment2_GPI/")
-ic = ItemCollection("./Test_Large_Distractor_GPI/")
-best_ic = ic
+ic = ItemCollection("./OneDTMaze_NEW_DYNAMICS_NEW_EVAL/")
+ic = search(ic, Dict("steps" => 60000))
 
 print(diff(ic))
 
-# best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error)
-# print_params(best_ic, sweep_params, [])
+etb_ic = search(ic, Dict("demon_update" => "ETB"))
 
-# best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error, (0.9, 1))
-# print_params(best_ic, sweep_params, [])
-
-# best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.4, "behaviour_eta" => 0.5))
-# best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.1, "behaviour_eta" => 0.0625))
-
-print_params(best_ic, sweep_params, [])
-
-
-
-data = load_results(best_ic, :ttmaze_uniform_error)
+data = load_results(etb_ic, :oned_tmaze_start_error)
 
 xs, mean_line, std_err_line = get_lines(data)
-plot!(p, mean_line, ribbons=std_err_line, label="GPI")
+plot!(p, mean_line, ribbons=std_err_line, label="ETB")
 
 
 
-# ic = ItemCollection("M:/globus/Experiment2/Experiment2_GPI/")
-ic = ItemCollection("./Test_Large_Distractor/")
-best_ic = ic
+tb_ic = search(ic, Dict("demon_update" => "TB"))
 
-print(diff(ic))
-
-# best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error)
-# print_params(best_ic, sweep_params, [])
-
-# best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error, (0.9, 1))
-# print_params(best_ic, sweep_params, [])
-
-# best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.4, "behaviour_eta" => 0.5))
-# best_ic = search(ic, Dict("demon_eta" => 0.5, "exploration_param" => 0.1, "behaviour_eta" => 0.0625))
-
-print_params(best_ic, sweep_params, [])
-
-
-
-data = load_results(best_ic, :ttmaze_uniform_error)
+data = load_results(tb_ic, :oned_tmaze_start_error)
 
 xs, mean_line, std_err_line = get_lines(data)
-plot!(p, mean_line, ribbons=std_err_line, label="Naive")
+plot!(p, mean_line, ribbons=std_err_line, label="TB")
 
 
 
 
 
 
-savefig("plotting/chunlok/generated_plots/test_plot_reproduce_naive.svg")
+
+savefig("plotting/chunlok/generated_plots/test_plot_reproduce.svg")

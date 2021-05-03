@@ -134,31 +134,66 @@ function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRN
 
     cur_x = env.pos[1]
     cur_y = env.pos[2]
-    if (cur_x == 0.5 || cur_x == 0.0 || cur_x == 1.0) # in a vertical hallway
-        if !range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON) # can't go to horiz hallway
-            x_mov = 0.0
-        elseif ODTMC.LEFT == action || ODTMC.RIGHT == action
-            cur_y = 0.8
-        end
-    elseif !(range_check(cur_x, 0.0, 0.0 + ODTMC.EPSILON) ||
-             range_check(cur_x, 0.5 - ODTMC.EPSILON, 0.5 + ODTMC.EPSILON) || # In horizontal Hallway
-             range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0))
-        y_mov = 0.0
-    elseif range_check(cur_x, 0.0, 0.0 + ODTMC.EPSILON)
-        cur_x = 0.0
-    elseif range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0)
-        if ODTMC.UP == action || ODTMC.DOWN == action
-            cur_x = 1.0
-        end
-    end
 
-    env.pos[1] = clamp(x_mov + cur_x, 0.0, 1.0)
-    if env.pos[1] == 0.0 || env.pos[1] == 1.0
-        env.pos[2] = clamp(y_mov + cur_y, 0.6, 1.0)
+    # checking for hallways
+    if (cur_x == 0.0 && cur_y == 0.8)
+        # In left junction
+        # Can't move left
+        if (x_mov < 0)
+            x_mov = 0
+        end
+    elseif (cur_x == 0.5 && cur_y == 0.8)
+        # In middle junction
+        # Can't move up
+        if (y_mov > 0)
+            y_mov = 0
+        end
+    elseif (cur_x == 1.0 && cur_y == 0.8)
+        # in right junction
+        # can't move right
+        if (x_mov > 0)
+            x_mov = 0
+        end
+    elseif (cur_x == 0.5 || cur_x == 0.0 || cur_x == 1.0)
+        # in one of the vertical hallways
+        # can't move horizontally
+        x_mov = 0
+    elseif (cur_y == 0.8)
+        # in horizontal hallway
+        # can't move vertically
+        y_mov = 0
     else
-        env.pos[2] = clamp(y_mov + cur_y, 0.0, 0.8)
+        println("SOMETHING IS BROKEN WITH 1D TMaze")
     end
 
+    # Moving
+    cur_x += x_mov
+    cur_y += y_mov
+
+    # clamping between known bounds
+    cur_x = clamp(cur_x, 0.0, 1.0)
+    cur_y = clamp(cur_y, 0.0, 1.0)
+
+    # snapping to junctions
+    if (range_check(cur_x, 0.0, 0.0 + ODTMC.EPSILON) 
+        && range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON))
+        # Snapping to left junction
+        cur_x, cur_y = 0.0, 0.8
+    elseif (range_check(cur_x, 0.5 - ODTMC.EPSILON, 0.5 + ODTMC.EPSILON) 
+        && range_check(cur_y, 0.8 - ODTMC.EPSILON , 0.8 + ODTMC.ACTION_STEP + env.move_noise))
+        # second condition checks for whether the agent somehow makes too big of a step upwards.
+        # In middle junction
+        # Snapping to middle junction
+        cur_x, cur_y = 0.5, 0.8
+    elseif (range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0) 
+        && range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON))
+        # in right junction
+        # Snapping to right junction
+        cur_x, cur_y = 1.0, 0.8
+    end
+
+    env.pos[1] = cur_x
+    env.pos[2] = cur_y
 
     update!(env.cumulant_schedule, env.pos)
 

@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_No_Reward"
+save_dir = "OneDTMaze_No_Reward_ESARSA"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -56,16 +56,18 @@ use_external_reward = true
 
 
 [sweep_args]
-seed = "1:10"
+seed = "1:15"
 cumulant_schedule = ["DrifterDistractor"]
 eta = "5.0.^(-3:-1)"
 behaviour_opt = ["Auto"]
-behaviour_learner = ["GPI"]
-behaviour_update = ["TB"]
+behaviour_learner = ["Q"]
+behaviour_update = ["ESARSA"]
 exploration_param = [0.1]
-demon_learner = ["Q"]
+demon_learner = ["NoLearner"]
 demon_update = ["TB"]
-num_tilings = [1]
-num_tiles = [16]
+# num_tilings = [1]
+# num_tiles = [16]
+tiling_structure = [[1,8],[2,8],[16,2],[32,2],[1,16]]
+
 exploring_starts= ["beg"]
 behaviour_trace = ["AccumulatingTraces"]

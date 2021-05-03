@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_No_Reward_GPI"
+save_dir = "OneDTMaze_ESARSA_Control_No_Penalty"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,20 +7,18 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 25000
+steps = 60000
 
 logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
 behaviour_gamma = 0.90
-behaviour_reward_projector = "base"
-behaviour_rp_tilings = 1
-behaviour_rp_tiles = 1
+behaviour_reward_projector = "ideal_martha"
 exploration_strategy = "epsilon_greedy"
 # behaviour_trace = "AccumulatingTraces"
 behaviour_lambda = 0.95
-behaviour_w_init = 0.0
+behaviour_w_init = 4.0
 
 # Demon Attributes
 
@@ -34,20 +32,20 @@ demon_trace = "AccumulatingTraces"
 demon_rep = "ideal_martha"
 # demon_update = "TB"
 # demon_eta = 0.15
-demon_opt = "Auto"
+# demon_opt = "Auto"
 
 # Environment Config
 constant_target= [-10.0,10.0]
 distractor = [1.0, 5.0]
 drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
-env_step_penalty = -1.0
+# env_step_penalty = -0.01
 
 
 # exploring_starts="beg"
 
 # Agent and Logger
 horde_type = "regular"
-intrinsic_reward = "no_reward"
+intrinsic_reward = "weight_change"
 
 use_external_reward = true
 
@@ -56,18 +54,20 @@ use_external_reward = true
 
 
 [sweep_args]
-seed = "6:7"
+seed = "16:30"
 cumulant_schedule = ["DrifterDistractor"]
-eta = "5.0.^(-2:-2)"
+eta = "5.0.^(-4:-1)"
 behaviour_opt = ["Auto"]
-behaviour_learner = ["GPI"]
-behaviour_update = ["TB"]
+behaviour_learner = ["Q"]
+behaviour_update = ["ESARSA"]
 exploration_param = [0.1]
-demon_learner = ["NoLearner"]
+demon_learner = ["Q"]
 demon_update = ["TB"]
-# num_tilings = [1]
-# num_tiles = [16]
-tiling_structure = [[1,8],[2,8],[16,2]]
+demon_opt = ["Auto", "Descent"]
 
+# num_tilings = [4, 8]
+# num_tiles = [2]
+tiling_structure = [[8,8]]
 exploring_starts= ["beg"]
-behaviour_trace = ["AccumulatingTraces"]
+behaviour_trace = ["ReplacingTraces"]
+env_step_penalty = [-0.01,0.0]
