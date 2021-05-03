@@ -10,8 +10,9 @@ _accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractVector, pr
 
 _accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_inds::Nothing) =
     e .+= s
-_accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_inds) =
+_accumulate_trace(::AccumulatingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_inds) = begin
     e[pred_inds,:] .+= s
+end
 
 _accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractVector, pred_inds::Nothing) =
     e .= s'
@@ -23,9 +24,15 @@ _accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_
 _accumulate_trace(::ReplacingTraces, e::AbstractMatrix, s::AbstractMatrix, pred_inds) =
     e[pred_inds,:] .= s
 
-function update_trace!(t::AbstractTraceUpdate, e::AbstractMatrix, s, λ, discounts, ρ, pred_inds=nothing)
+function update_trace!(t::AbstractTraceUpdate, e::AbstractMatrix, s, λ, discounts, ρ, pred_inds=nothing; emphasis=nothing)
     e .*= λ * discounts .* ρ
-    _accumulate_trace(t, e, s, pred_inds)
+
+    if !isnothing(emphasis)
+        emphasized_s = emphasis * s'
+        _accumulate_trace(t, e, emphasized_s, pred_inds)
+    else
+        _accumulate_trace(t, e, s, pred_inds)
+    end
 end
 
 function get_demon_pis(horde::GVFSRHordes.SRHorde, num_actions, state, obs)

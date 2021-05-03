@@ -22,7 +22,7 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.95,
-        "behaviour_learner" => "Q",
+        "behaviour_learner" => "RoundRobin",
         "behaviour_update" => "ESARSA",
         "behaviour_reward_projector" => "ideal_martha",
         "behaviour_rp_tilings" => 1,
@@ -43,7 +43,7 @@ default_args() =
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
-        "demon_update" => "TB",
+        "demon_update" => "TD",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
@@ -76,10 +76,10 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperimentDebug",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 60000,
         "use_external_reward" => true,
 
-        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.BEHAVIOUR_ACTION_VALUES, LoggerKey.ONED_STATE_VISITATION]
+        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.ONED_STATE_VISITATION]
     )
 
 
@@ -293,6 +293,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                     cur_step+=1
                 end
                 logger_episode_end!(logger)
+                # println("EPISODE ENDED")
             push!(steps, stp)
             eps += 1
         end

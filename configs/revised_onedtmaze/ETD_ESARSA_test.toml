@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 40000
+steps = 60000
 
 logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "ONED_STATE_VISITATION"]
 logger_interval = 100
@@ -62,7 +62,7 @@ behaviour_learner = ["Q"]
 behaviour_update = ["ESARSA"]
 exploration_param = [0.1]
 demon_learner = ["SR"]
-demon_update = ["TB"]
+demon_update = ["TB", "ETB"]
 num_tilings = [8]
 num_tiles = [4]
 exploring_starts= ["beg"]
