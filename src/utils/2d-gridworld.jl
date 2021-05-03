@@ -266,52 +266,52 @@ end
 Base.size(FP::MarthaIdealDemonFeatures) = 4
 
 
-Base.@kwdef struct RoundRobinPolicy <: Learner
-    update = Nothing
-end
+# Base.@kwdef struct RoundRobinPolicy <: Learner
+#     update = Nothing
+# end
 
-Curiosity.update!(learner::RoundRobinPolicy, args...) = nothing
+# Curiosity.update!(learner::RoundRobinPolicy, args...) = nothing
 
-Base.get(π::RoundRobinPolicy; state_t, action_t, kwargs...) =
-    get_action_probs(π, state_t, nothing)[action_t]
+# Base.get(π::RoundRobinPolicy; state_t, action_t, kwargs...) =
+#     get_action_probs(π, state_t, nothing)[action_t]
 
-function Curiosity.get_action_probs(π::RoundRobinPolicy, features, state)
-    cur_x = state[2]
-    cur_y = state[1]
-    # ret = zeros(4)
+# function Curiosity.get_action_probs(π::RoundRobinPolicy, features, state)
+#     cur_x = state[2]
+#     cur_y = state[1]
+#     # ret = zeros(4)
 
-    # if cur_x == 0.5
-    #     if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON) # Middle Junction
-    #         ret[ODTMC.LEFT] = 0.5
-    #         ret[ODTMC.RIGHT] = 0.5
-    #     else # Middle Hallway
-    #         ret[ODTMC.UP] = 1.0
-    #     end
-    # elseif cur_y == 0.8 && range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON) # Left Junction
-    #     ret[ODTMC.UP] = 0.5
-    #     ret[ODTMC.DOWN] = 0.5
-    # elseif cur_y == 0.8 && range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
-    #     ret[ODTMC.UP] = 0.5
-    #     ret[ODTMC.DOWN] = 0.5
-    # elseif cur_x == 0.0
-    #     if cur_y > 0.8
-    #         ret[ODTMC.UP] = 1.0
-    #     else
-    #         ret[ODTMC.DOWN] = 1.0
-    #     end
-    # elseif cur_x == 1.0
-    #     if cur_y > 0.8
-    #         ret[ODTMC.UP] = 1.0
-    #     else
-    #         ret[ODTMC.DOWN] = 1.0
-    #     end
-    # elseif cur_x < 0.5
-    #     ret[ODTMC.LEFT] = 1.0
-    # else
-    #     ret[ODTMC.RIGHT] = 1.0
-    # end
-    # ret
-end
+#     # if cur_x == 0.5
+#     #     if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON) # Middle Junction
+#     #         ret[ODTMC.LEFT] = 0.5
+#     #         ret[ODTMC.RIGHT] = 0.5
+#     #     else # Middle Hallway
+#     #         ret[ODTMC.UP] = 1.0
+#     #     end
+#     # elseif cur_y == 0.8 && range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON) # Left Junction
+#     #     ret[ODTMC.UP] = 0.5
+#     #     ret[ODTMC.DOWN] = 0.5
+#     # elseif cur_y == 0.8 && range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
+#     #     ret[ODTMC.UP] = 0.5
+#     #     ret[ODTMC.DOWN] = 0.5
+#     # elseif cur_x == 0.0
+#     #     if cur_y > 0.8
+#     #         ret[ODTMC.UP] = 1.0
+#     #     else
+#     #         ret[ODTMC.DOWN] = 1.0
+#     #     end
+#     # elseif cur_x == 1.0
+#     #     if cur_y > 0.8
+#     #         ret[ODTMC.UP] = 1.0
+#     #     else
+#     #         ret[ODTMC.DOWN] = 1.0
+#     #     end
+#     # elseif cur_x < 0.5
+#     #     ret[ODTMC.LEFT] = 1.0
+#     # else
+#     #     ret[ODTMC.RIGHT] = 1.0
+#     # end
+#     # ret
+# end
 
 
 end
