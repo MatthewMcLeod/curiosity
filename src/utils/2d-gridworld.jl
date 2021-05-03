@@ -1,4 +1,4 @@
-module TwoDGridWorlds
+module TwoDGridWorldUtils
 
 using SparseArrays
 
@@ -63,7 +63,13 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
                 0.0
             end
         else
-            throw("What?")
+            if CGWP.UP == action_t
+                1.0
+            else
+                0.0
+            end
+            # @show action_t, state_t
+            # throw("What?")
         end
     elseif π.goal == 2
         boundry_y = π.normalized ? 0.1 : 1.0
@@ -87,7 +93,13 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
                 0.0
             end
         else
-            throw("What?")
+            if CGWP.DOWN == action_t
+                1.0
+            else
+                0.0
+            end
+            # @show action_t, state_t
+            # throw("What?")
         end
     elseif π.goal == 3
         boundry_y = π.normalized ? 0.9 : 9.0
@@ -111,7 +123,13 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
                 0.0
             end
         else
-            throw("What?")
+            if CGWP.UP == action_t
+                1.0
+            else
+                0.0
+            end
+            # @show action_t, state_t
+            # throw("What?")
         end
     elseif π.goal == 4
         boundry_y = π.normalized ? 0.1 : 1.0
@@ -135,7 +153,13 @@ function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
                 0.0
             end
         else
-            throw("What?")
+            if CGWP.DOWN == action_t
+                1.0
+            else
+                0.0
+            end
+            # @show action_t, state_t
+            # throw("What?")
         end
     end
 end
@@ -312,6 +336,42 @@ Base.size(FP::MarthaIdealDemonFeatures) = 4
 #     # end
 #     # ret
 # end
+DrifterDistractor(parsed) = begin
+    c_dist = Uniform(parsed["constant_target"][1],parsed["constant_target"][2])
+    c1,c2 = rand(c_dist,2)
+    if "drifter" ∈ keys(parsed)
+        TMCS.DrifterDistractor(
+            c1,
+            c2,
+            parsed["drifter"][1],
+            parsed["drifter"][2],
+            parsed["distractor"][1],
+            parsed["distractor"][2])
+    else
+        TMCS.DrifterDistractor(
+            c1,
+            c2,
+            parsed["drifter_init"],
+            parsed["drifter_std"],
+            parsed["distractor_mean"],
+            parsed["distractor_std"])
+    end
+end
 
+function get_cumulant_schedule(parsed)
+    sched = parsed["cumulant_schedule"]
+    if parsed["cumulant_schedule"] == "DrifterDistractor"
+        DrifterDistractor(parsed)
+    elseif parsed["cumulant_schedule"] == "Constant"
+        if parsed["cumulant"] isa Number
+            TMCS.Constant(parsed["cumulant"])
+        else
+            TMCS.Constant(parsed["cumulant"]...)
+        end
+
+    else
+        throw("$(sched) Not Implemented")
+    end
+end
 
 end
