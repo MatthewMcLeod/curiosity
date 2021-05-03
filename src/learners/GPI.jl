@@ -47,7 +47,6 @@ end
 function predict(learner::GPI, ϕ::SparseVector, action)
 
     SF = predict_SF(learner, ϕ, action)
-
     #Column is SF per task
     # reshaped_SF = reshape(SF, :, learner.num_tasks)
     reshaped_SF = reshape(SF, length(learner.r_w), :)

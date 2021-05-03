@@ -30,6 +30,7 @@ include("tabular_tmaze_old_error.jl")
 include("tabular_tmaze_error_map.jl")
 include("intrinsic_reward.jl")
 include("behaviour_action_values.jl")
+include("one_d_state_visitation.jl")
 
 # Module for scoping key names
 module LoggerKey
@@ -48,6 +49,7 @@ module LoggerKey
     const INTRINSIC_REWARD = "INTRINSIC_REWARD"
     const TTMAZE_DIRECT_ERROR = "TTMAZE_DIRECT_ERROR"
     const BEHAVIOUR_ACTION_VALUES = "BEHAVIOUR_ACTION_VALUES"
+    const ONED_STATE_VISITATION = "ONED_STATE_VISITATION"
 end
 
 module LoggerInitKey
@@ -71,7 +73,8 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TTMAZE_ERROR_MAP => TTMazeErrorMap,
     LoggerKey.INTRINSIC_REWARD => IntrinsicRewardLogger,
     LoggerKey.TTMAZE_DIRECT_ERROR => TTMazeDirectError,
-    LoggerKey.BEHAVIOUR_ACTION_VALUES => BehaviourActionValues
+    LoggerKey.BEHAVIOUR_ACTION_VALUES => BehaviourActionValues,
+    LoggerKey.ONED_STATE_VISITATION => OneDStateVisitation,
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started

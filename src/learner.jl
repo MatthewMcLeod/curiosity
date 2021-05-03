@@ -25,3 +25,7 @@ include("updates/SARSA.jl")
 # include("updates/TB_Auto.jl")
 include("updates/ESARSA.jl")
 # include("updates/SR.jl")
+include("updates/TD.jl")
+include("updates/ETD.jl")
+include("updates/ETB.jl")
+
