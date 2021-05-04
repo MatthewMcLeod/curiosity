@@ -6,11 +6,16 @@ using Statistics
 
 include("plot_utils.jl")
 
+num_steps = 4000
+log_interval = 10
+
+
 function get_lines(data)
     means = []
     step = 10
     for start in 1:step:size(data)[2]
-        chunk = data[:, start:min(start + step - 1, length(data)),: ]
+        print()
+        chunk = data[:, start:min(start + step - 1, size(data)[2]),: ]
         # println(size(chunk))
         chunk_mean = mean(chunk, dims=2)
         push!(means, chunk_mean)
@@ -23,24 +28,41 @@ function get_lines(data)
     std_err_line = dropdims(std(sum_lines, dims=3), dims=(1, 3)) / sqrt(num_runs)
 
 
-    xs = 1:100*step:30000
+    xs = 1:log_interval*step:num_steps + 1
+    println(size(xs))
+    println(size(mean_line))
+    println(size(std_err_line))
     return xs, mean_line, std_err_line
 end
 
-num_steps = 30000
-log_interval = 100
-
-
-sweep_params = ["demon_eta", "exploration_param", "behaviour_eta"]
+sweep_params = ["demon_eta"]
 
 
 p = plot()
 
 
-ic = ItemCollection("M:/globus/Experiment2/Experiment2_GPI/")
+ic = ItemCollection("experiment_data/EmphaticTest")
 
+# EmphaticTest
 print(diff(ic))
 
+
+function plot_line(ic, demon_update_algo)
+    filtered_ic = search(ic, Dict("demon_update" => "TD"))
+
+    best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error)
+    print_params(best_ic, sweep_params, [])
+    
+    data = load_results(best_ic, :ttmaze_uniform_error)
+    
+    xs, mean_line, std_err_line = get_lines(data)
+    plot!(p, xs, mean_line, ribbons=std_err_line, label="TD")
+end
+
+
+savefig("plotting/chunlok/generated_plots/test_plot_reproduce.svg")
+
+sdfsdf
 # best_ic = get_best(ic, sweep_params, :ttmaze_uniform_error)
 # print_params(best_ic, sweep_params, [])
 

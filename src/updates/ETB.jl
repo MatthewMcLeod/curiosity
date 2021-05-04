@@ -68,7 +68,7 @@ function update!(lu::ETB,
     followon[:] .+= interest
 
     # Get Emphasis vector - size is # demons
-    emphasis = λ *  behaviour_pis[action] * interest + (1 - λ *  behaviour_pis[action]) * followon 
+    emphasis = λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon 
 
     # Update eligibility trace
     update_trace!(lu.trace,
