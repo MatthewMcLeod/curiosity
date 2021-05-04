@@ -52,7 +52,7 @@ function gen_dataset(num_start_states=500)
     actions = rand(1:4, length(start_states))
     # actions = fill(1, length(start_states))
     for (gvf_i,gvf) in enumerate(horde.gvfs)
-        rets = monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_thresh; agg=mean)
+        rets = monte_carlo_returns_agg(env, gvf, start_states, actions, num_returns, γ_thresh; agg=mean)
         horde_rets[gvf_i, :] = rets
     end
 

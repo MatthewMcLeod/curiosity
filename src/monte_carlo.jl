@@ -73,7 +73,7 @@ function monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_th
 
 end
 
-function monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_thresh, max_steps=Int(1e6), rng=Random.GLOBAL_RNG; agg)
+function monte_carlo_returns_agg(env, gvf, start_states, actions, num_returns, γ_thresh, max_steps=Int(1e6), rng=Random.GLOBAL_RNG; agg)
 
     # states_actions = zip(start_states, actions)
     ret = Vector{Float64}(undef, length(start_states))

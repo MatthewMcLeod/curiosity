@@ -1,6 +1,7 @@
 module TwoDGridWorldUtils
 
 using SparseArrays
+using Distributions
 
 import ..TMazeCumulantSchedules
 import ..ContGridWorldParams

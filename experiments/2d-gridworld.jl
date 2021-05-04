@@ -87,6 +87,18 @@ function construct_agent(parsed)
     intrinsic_reward_type = parsed["intrinsic_reward"]
     use_external_reward = parsed["use_external_reward"]
 
+    if "tiling_structure" ∈ keys(parsed)
+        parsed["num_tilings"] = parsed["tiling_structure"][1]
+        parsed["num_tiles"] = parsed["tiling_structure"][2]
+    end
+    
+    if "eta" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
+    end
+    
     if parsed["demon_opt"] == "Auto"
         parsed["demon_alpha_init"] =
             parsed["demon_alpha_init"] / parsed["num_tilings"]
