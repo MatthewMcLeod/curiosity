@@ -9,7 +9,7 @@ ENV["GKSwstype"] = "100"
 
 
 p = plot()
-folder = "OneDTMazeExperimentDebug/RP_0_0x53f833f502c3599b/"
+folder = "OneDTMazeExperimentDebug/RP_0_0x5baa87493c3611c3/"
 save_file = "plotting/chunlok/generated_plots/state_vistation_heatmap.gif"
 
 
@@ -23,6 +23,7 @@ settings = FileIO.load(settings_file)["parsed_args"]
 state_visitation_data = results[:oned_tmaze_state_visitation]
 
 num_log = size(state_visitation_data)[3]
+log_interval = 100
 num_frames = 50
 frames_between = floor(Int32, num_log / num_frames)
 
@@ -45,7 +46,7 @@ anim = @animate for i ∈ 1:num_frames
 
     frame_info = permutedims(frame_info, [2, 1])
     cgradient = cgrad(:rainbow, scale=:exp)
-    heatmap!(frame_info, title="$(i)", c=cgradient, clim=(0, 1), zscale=:log10)
+    heatmap!(frame_info, title="Step: $(i * frames_between * log_interval)", c=cgradient, clim=(0, 1), zscale=:log10)
 end
 
 
