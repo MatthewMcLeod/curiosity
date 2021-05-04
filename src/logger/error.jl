@@ -40,6 +40,19 @@ mutable struct OneDTMazeError <: ErrorRecorder
     end
 end
 
+mutable struct TwoDGridWorldError <: ErrorRecorder
+    error::Array{Float64,2}
+    eval_set::Dict
+    log_interval::Int
+    save_key::Symbol
+    get_true_values::Function
+    function TwoDGridWorldError(logger_init_info)
+        @load string(pwd(),"/src/data/TwoDGridWorldSet.jld2") eval_set
+        num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL]) + 1
+        new(zeros(4, num_logged_steps), eval_set, logger_init_info[LoggerInitKey.INTERVAL], :twod_grid_world_error, TwoDGridWorldUtils.get_true_values)
+    end
+end
+
 mutable struct TTMazeError <: ErrorRecorder
     error::Array{Float64,2}
     eval_set::Dict
