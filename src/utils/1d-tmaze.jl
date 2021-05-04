@@ -258,8 +258,7 @@ function project_features(fc::FeatureCreator, obs)
     if partition_offset == 0
         @show x,y,segment
     end
-    state[(segment-1)*fc.num_partitions + partition_offset]
-
+    state[(segment-1)*fc.num_partitions + partition_offset] = 1
     return sparsevec(state)
 end
 (FP::TMazeEncoding)(state) = project_features(FP, state)

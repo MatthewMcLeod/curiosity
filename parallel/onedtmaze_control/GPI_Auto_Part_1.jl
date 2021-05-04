@@ -4,8 +4,8 @@
 #SBATCH -o onedtmaze_GPI_Auto_Part_1.out # Standard output
 #SBATCH -e onedtmaze_GPI_Auto_Part_1.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3GB
-#SBATCH --time=05:30:00 #
-#SBATCH --ntasks=36
+#SBATCH --time=03:00:00 #
+#SBATCH --ntasks=50
 #SBATCH --account=def-amw8
 
 using Pkg

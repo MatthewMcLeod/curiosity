@@ -59,7 +59,7 @@ default_args() =
         # "demon_rep" => "tilecoding",
         "demon_num_tiles" => 8,
         "demon_num_tilings" => 1,
-        "eta" => 0.2,
+        "eta" => 0.1,
         "alpha_init" => 0.5,
 
         # Environment Config
@@ -68,16 +68,16 @@ default_args() =
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"beg",
-        "env_step_penalty" => -1.0,
+        "env_step_penalty" => -0.01,
 
 
         # Agent and Logger
         "horde_type" => "regular",
-        "intrinsic_reward" => "no_reward",
+        "intrinsic_reward" => "weight_change",
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 20000,
+        "steps" => 50000,
         "use_external_reward" => true,
         "random_first_action" => false,
         "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.BEHAVIOUR_ACTION_VALUES]
