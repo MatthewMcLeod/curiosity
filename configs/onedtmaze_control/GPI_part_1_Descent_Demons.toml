@@ -48,6 +48,8 @@ horde_type = "regular"
 intrinsic_reward = "weight_change"
 
 use_external_reward = true
+random_first_action = false
+
 
 # num_tilings = 8
 # num_tiles = 2

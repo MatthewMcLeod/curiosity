@@ -24,7 +24,7 @@ default_args() =
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "GPI",
         "behaviour_update" => "TB",
-        "behaviour_reward_projector" => "base",
+        "behaviour_reward_projector" => "maze",
         "behaviour_rp_tilings" => 1,
         "behaviour_rp_tiles" => 16,
         "behaviour_trace" => "ReplacingTraces",
@@ -36,7 +36,7 @@ default_args() =
         "ϵ_range" => (0.4,0.1),
         "decay_period" => 5000,
         "warmup_steps" => 12000,
-        "behaviour_w_init" => 1,
+        "behaviour_w_init" => 4,
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
@@ -45,7 +45,7 @@ default_args() =
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
-        "demon_opt" => "Descent",
+        "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.99,
@@ -59,7 +59,8 @@ default_args() =
         # "demon_rep" => "tilecoding",
         "demon_num_tiles" => 8,
         "demon_num_tilings" => 1,
-        "eta" => 0.01,
+        "eta" => 0.2,
+        "alpha_init" => 0.5,
 
         # Environment Config
         "constant_target"=> [-10.0,10.0],
@@ -67,19 +68,19 @@ default_args() =
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"beg",
-        "env_step_penalty" => -0.1,
+        "env_step_penalty" => -1.0,
 
 
         # Agent and Logger
         "horde_type" => "regular",
-        "intrinsic_reward" => "weight_change",
+        "intrinsic_reward" => "no_reward",
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 500,
+        "steps" => 20000,
         "use_external_reward" => true,
-
-        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
+        "random_first_action" => false,
+        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.BEHAVIOUR_ACTION_VALUES]
     )
 
 
@@ -90,18 +91,26 @@ function construct_agent(parsed)
     intrinsic_reward_type = parsed["intrinsic_reward"]
     use_external_reward = parsed["use_external_reward"]
 
+    # Unpack Tiling Config
     if "tiling_structure" ∈ keys(parsed)
         parsed["num_tilings"] = parsed["tiling_structure"][1]
         parsed["num_tiles"] = parsed["tiling_structure"][2]
     end
-
+    # Unpack joint eta param
     if "eta" in keys(parsed)
         prefixes = ["behaviour","demon"]
         for prefix in prefixes
             parsed[join([prefix, "eta"], "_")] = parsed["eta"]
         end
     end
+    if "alpha_init" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "alpha_init"], "_")] = parsed["alpha_init"]
+        end
+    end
 
+    # Unpack Auto Init
     if parsed["demon_opt"] == "Auto"
         parsed["demon_alpha_init"] =
             parsed["demon_alpha_init"] / parsed["num_tilings"]
@@ -113,11 +122,13 @@ function construct_agent(parsed)
     end
 
     if parsed["demon_opt"] == "Descent"
-        if "eta" in keys(parsed)
-            parsed["eta"] = parsed["eta"]/ parsed["num_tilings"]
-        end
         if "demon_eta" in keys(parsed)
             parsed["demon_eta"] = parsed["demon_eta"] / parsed["num_tilings"]
+        end
+    end
+    if parsed["behaviour_opt"] == "Descent"
+        if "behaviour_eta" in keys(parsed)
+            parsed["behaviour_eta"] = parsed["behaviour_eta"] / parsed["num_tilings"]
         end
     end
 
@@ -174,7 +185,10 @@ function construct_agent(parsed)
             ODTMU.IdealDemonFeatures(), 1:2), true)
     elseif parsed["behaviour_reward_projector"] == "ideal_martha"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            ODTMU.MarthaIdealDemonFeatures(), 1:2), true)
+            ODTMU.MarthaIdealDemonFeatures(), 1:2), false)
+    elseif parsed["behaviour_reward_projector"] == "maze"
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+            ODTMU.TMazeEncoding(),1:2),false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
@@ -230,6 +244,15 @@ function construct_agent(parsed)
         behaviour_learner, behaviour_demons, parsed["behaviour_gamma"]
     end #end behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
 
+        random_first_action = parsed["random_first_action"]
+        if behaviour_learner isa ODTMU.RoundRobinPolicy
+            if random_first_action == false
+                @warn "Round Robin with random first action is recommended"
+            end
+        elseif random_first_action == true
+            @warn "Random first action is enabled"
+        end
+
     Agent(demons,
           feat_size,
           behaviour_learner,
@@ -241,7 +264,8 @@ function construct_agent(parsed)
           intrinsic_reward_type,
           fc,
           use_external_reward,
-          exploration_strategy)
+          exploration_strategy,
+          random_first_action)
 end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
