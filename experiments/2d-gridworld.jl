@@ -1,10 +1,11 @@
-module TwoDGridWorld
+module TwoDGridWorldExperiment
 
 import Flux: Descent, ADAM
 import Random
 
 using GVFHordes
 using Curiosity
+using Curiosity: OpenWorld
 using MinimalRLCore
 using SparseArrays
 using ProgressMeter
@@ -12,7 +13,7 @@ using ProgressMeter
 
 
 # const TTMU = Curiosity.TabularTMazeUtils
-const ODTMU = Curiosity.OneDTMazeUtils
+const TDGWU = Curiosity.TwoDGridWorldUtils
 const SRCU = Curiosity.SRCreationUtils
 
 default_args() =
@@ -51,7 +52,7 @@ default_args() =
 
         #shared
         "num_tiles" => 4,
-        "num_tilings" =>8,
+        "num_tilings" => 8,
         "demon_rep" => "tilecoding",
         "demon_num_tiles" => 6,
         "demon_num_tilings" => 1,
@@ -68,12 +69,12 @@ default_args() =
         "horde_type" => "regular",
         "intrinsic_reward" => "weight_change",
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
-        "save_dir" => "OneDTMazeExperiment",
+        "save_dir" => "TwoDGridWorldExperiment",
         "seed" => 1,
-        "steps" => 1000,
+        "steps" => 100000,
         "use_external_reward" => true,
 
-        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH]
+        "logger_keys" => [LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.TWODGRIDWORLDERROR]
     )
 
 
@@ -110,15 +111,15 @@ function construct_agent(parsed)
             1:2), false)
     elseif parsed["demon_rep"] == "ideal"
         # ODTMU.IdealDemonFeatures()
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2), true)
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(TDGWU.IdealDemonFeatures(), 1:2), true)
     elseif parsed["demon_rep"] == "ideal_martha"
         # ODTMU.IdealDemonFeatures()
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.MarthaIdealDemonFeatures(), 1:2), false)
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(TDGWU.MarthaIdealDemonFeatures(), 1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
 
-    demons = ODTMU.create_demons(parsed, demon_projected_fc)
+    demons = TDGWU.create_demons(parsed, demon_projected_fc)
 
     demon_learner = Curiosity.get_linear_learner(parsed,
                                                  feat_size,
@@ -141,16 +142,17 @@ function construct_agent(parsed)
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(identity, 1:2), false)
     elseif parsed["behaviour_reward_projector"] == "ideal"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            ODTMU.IdealDemonFeatures(), 1:2), true)
+            TDGWU.IdealDemonFeatures(), 1:2), true)
     elseif parsed["behaviour_reward_projector"] == "ideal_martha"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            ODTMU.MarthaIdealDemonFeatures(), 1:2), true)
+            TDGWU.MarthaIdealDemonFeatures(), 1:2), true)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
 
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
-        ODTMU.RoundRobinPolicy(), nothing, 0.0
+        # ODTMU.RoundRobinPolicy(), nothing, 0.0
+        throw("Round Robin not available")
     else
         behaviour_num_tasks = 1
         num_SFs = 4
@@ -175,24 +177,24 @@ function construct_agent(parsed)
 
         behaviour_demons = if behaviour_learner isa GPI
             @assert !(behaviour_reward_projector isa Nothing)
-            bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
+            bh_gvf = TDGWU.make_behaviour_gvf(behaviour_learner,
                                               0.0,
                                               fc,
                                               exploration_strategy)
             pred_horde = GVFHordes.Horde([bh_gvf])
-            SF_policies = [ODTMU.GoalPolicy(i) for i in 1:4]
-            SF_discounts = [ODTMU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
+            SF_policies = [TDGWU.GoalPolicy(i) for i in 1:4]
+            SF_discounts = [TDGWU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
             num_SFs = length(SF_policies)
             SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
             Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_projector)
         elseif behaviour_learner isa QLearner
-            bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
+            bh_gvf = TDGWU.make_behaviour_gvf(behaviour_learner,
                                               parsed["behaviour_gamma"],
                                               fc,
                                               exploration_strategy)
             GVFHordes.Horde([bh_gvf])
-        elseif behaviour_learner isa ODTMU.RoundRobinPolicy
-            nothing
+        # elseif behaviour_learner isa ODTMU.RoundRobinPolicy
+        #     nothing
         else
             throw(ArgumentError("goes with which horde? " ))
         end
@@ -219,10 +221,10 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     num_steps = parsed["steps"]
     Random.seed!(parsed["seed"])
 
-    cumulant_schedule = ODTMU.get_cumulant_schedule(parsed)
+    cumulant_schedule = TDGWU.get_cumulant_schedule(parsed)
 
     # exploring_starts = parsed["exploring_starts"]
-    env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"])
+    env = OpenWorld(10, 10, cumulant_schedule=cumulant_schedule, start_type=:center)
 
     agent = construct_agent(parsed)
 
