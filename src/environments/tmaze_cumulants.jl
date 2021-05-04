@@ -1,9 +1,13 @@
-
+module TMazeCumulantConstants
+    const MAX = 50
+    const MIN = -50
+end
 module TMazeCumulantSchedules
 
 using Distributions
 import ..CumulantSchedule
 import ..Curiosity: get_cumulant, update!, get_cumulant_eval_values
+import ..TMazeCumulantConstants: MAX, MIN
 
 mutable struct DrifterDistractor <: CumulantSchedule
     constant1::Float64
@@ -21,7 +25,7 @@ end
 
 function get_cumulant(cs::DrifterDistractor, goal::String)
     if goal == "G1"
-        rand(Normal(cs.distractor_mean, cs.distractor_std))
+        clamp(MIN, rand(Normal(cs.distractor_mean, cs.distractor_std)), MAX)
     elseif goal == "G2"
         cs.constant1
     elseif goal == "G3"
@@ -45,7 +49,7 @@ end
 # function update!(env::TabularTMaze, self::DrifterDistractor, pos)
 function update!(self::DrifterDistractor, pos)
     self.drifter_mean += rand(Normal(0, self.drifter_std))
-    self.drifter_mean = clamp(-50,self.drifter_mean,50)
+    self.drifter_mean = clamp(MIN,self.drifter_mean,MAX)
 end
 
 
