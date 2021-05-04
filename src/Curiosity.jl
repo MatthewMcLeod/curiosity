@@ -57,6 +57,7 @@ export get_active_action_state_vector, ValueFeatureProjector
 include("utils/SRCreation.jl")
 include("utils/tmaze.jl")
 include("utils/1d-tmaze.jl")
+include("utils/2d-gridworld.jl")
 include("utils/mountain_car.jl")
 include("utils/experiment.jl")
 include("utils/agent.jl")

@@ -65,8 +65,23 @@ function monte_carlo_returns(env, gvf, start_states, actions, num_returns, γ_th
     ret = Vector{Vector{Float64}}(undef, length(states_actions))
     prg_meter = ProgressMeter.Progress(length(states_actions))
     Threads.@threads for i ∈ 1:length(states_actions)
-        ret[i] = monte_carlo_return(env, gvf, start_states[i], actions[i], num_returns, γ_thresh, max_steps)
-        # next!(prg_meter)
+        t_env = deepcopy(env)
+        ret[i] = monte_carlo_return(t_env, gvf, start_states[i], actions[i], num_returns, γ_thresh, max_steps)
+        ProgressMeter.next!(prg_meter)
+    end
+    ret
+
+end
+
+function monte_carlo_returns_agg(env, gvf, start_states, actions, num_returns, γ_thresh, max_steps=Int(1e6), rng=Random.GLOBAL_RNG; agg)
+
+    # states_actions = zip(start_states, actions)
+    ret = Vector{Float64}(undef, length(start_states))
+    prg_meter = ProgressMeter.Progress(length(start_states))
+    Threads.@threads for i ∈ 1:length(start_states)
+        t_env = deepcopy(env)
+        ret[i] = agg(monte_carlo_return(t_env, gvf, start_states[i], actions[i], num_returns, γ_thresh, max_steps))
+        ProgressMeter.next!(prg_meter)
     end
     ret
 

@@ -89,7 +89,7 @@ env = OneDTMaze(Curiosity.TMazeCumulantSchedules.Constant(1), "beg")
 
 # ╔═╡ db493356-572c-4475-93ac-f9c785d8cefd
 let
-	@show MinimalRLCore.step!(env, 2)
+	@show MinimalRLCore.step!(env, 1)
 	plot(env)
 end
 
@@ -151,6 +151,7 @@ anim = main_experiment(default_args(0.1),progress=true)
 
 # ╔═╡ bcea5162-66e6-4e1f-8bcc-b4d738277213
 mp4(anim,"../plotting/plots/tst2.mp4")
+
 
 # ╔═╡ Cell order:
 # ╠═caa2cdba-a76b-11eb-3461-bb8695eb2e3b

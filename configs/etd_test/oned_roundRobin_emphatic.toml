@@ -1,0 +1,69 @@
+[config]
+save_dir = "OneDTMaze_Revised_RoundRobin"
+exp_file = "experiments/1d-tmaze.jl"
+exp_module_name = "OneDTmazeExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+steps = 40000
+
+logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
+logger_interval = 100
+# Behaviour Items
+behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
+behaviour_gamma = 0.9
+# behaviour_reward_projector = "ideal_martha"
+behaviour_rp_tilings = 1
+behaviour_rp_tiles = 16
+exploration_strategy = "epsilon_greedy"
+behaviour_trace = "AccumulatingTraces"
+behaviour_lambda = 0.9
+behaviour_w_init = 10
+
+# Demon Attributes
+
+demon_alpha_init = 0.1 # Will be 1/tilings from sweep
+demon_discounts = 0.9
+demon_lambda = 0.9
+demon_policy_type = "greedy_to_cumulant"
+demon_trace = "AccumulatingTraces"
+
+# demon_learner = "SR"
+# demon_rep = "ideal_martha"
+# demon_update = "TB"
+demon_eta = 0.15
+# demon_opt = "Auto"
+
+# Environment Config
+constant_target= [-10.0,10.0]
+cumulant = 1.0
+distractor = [1.0, 5.0]
+drifter = [1.0, 0.1] # drifter is the sqrt(0.01), (std, mean)
+env_step_penalty = -0.01
+exploring_starts="whole"
+
+# Agent and Logger
+horde_type = "regular"
+intrinsic_reward = "weight_change"
+
+use_external_reward = true
+
+num_tilings = 8
+num_tiles = 2
+
+
+[sweep_args]
+seed = "1:30"
+cumulant_schedule = ["DrifterDistractor"]
+eta = "5.0.^(-5:-1)"
+behaviour_opt = ["Auto"]
+behaviour_learner = ["RoundRobin"]
+behaviour_update = ["TB"]
+exploration_param = [0.0]
+demon_learner = ["Q", "SR"]
+demon_update = ["TD", "ETD", "TB", "ETB"]
+demon_opt = ["Auto"]
+behaviour_reward_projector = ["base"]
+demon_rep = ["ideal_martha"]

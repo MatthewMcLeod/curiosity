@@ -138,7 +138,7 @@ end
 random_state(env::ContGridWorld, rng) = [rand(rng)*size(env.walls)[1], rand(rng)*size(env.walls)[2]]
 function random_start_state(env::ContGridWorld, rng)
     state = random_state(env, rng)
-    while is_wall(env, state)
+    while is_wall(env, state) || which_goal(env, state) > 0
         state = random_state(env, rng)
     end
     return state
@@ -238,12 +238,7 @@ end
 
 function MinimalRLCore.reset!(env::ContGridWorld, rng::Random.AbstractRNG=Random.GLOBAL_RNG)
     if env.start_func isa Nothing
-        state = random_state(env, rng)
-
-        while is_wall(env, state)
-            state = random_state(env, rng)
-        end
-        env.state = state
+        env.state = random_start_state(env, rng)
         env.state
     else
         env.state = env.start_func(env, rng)
@@ -252,12 +247,14 @@ function MinimalRLCore.reset!(env::ContGridWorld, rng::Random.AbstractRNG=Random
 end
 
 function MinimalRLCore.reset!(env::ContGridWorld, state::AbstractArray)
-    if is_wall(env, state)
+    s = env.normalized ? state.*size(env) : state
+
+    if is_wall(env, s)
         throw("Cannot reset environment to invalid state: $(state)")
     end
 
-    env.state = state
-    return state
+    env.state .= s
+    # @show env.state
 end
 
 function mini_step!(env::ContGridWorld, step, action)
