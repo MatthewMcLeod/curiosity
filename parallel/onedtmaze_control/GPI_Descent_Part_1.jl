@@ -4,7 +4,7 @@
 #SBATCH -o onedtmaze_GPI_Descent_Part_1.out # Standard output
 #SBATCH -e onedtmaze_GPI_Descent_Part_1.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3GB
-#SBATCH --time=04:00:00 #
+#SBATCH --time=01:40:00 #
 #SBATCH --ntasks=64
 #SBATCH --account=def-amw8
 
