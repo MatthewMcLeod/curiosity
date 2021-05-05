@@ -386,4 +386,11 @@ function get_true_values(env::Curiosity.ContGridWorld, eval_set)
     return copy_eval_est
 end
 
+function get_true_values(env::Curiosity.ContGridWorld, eval_set, gvf_idx)
+    copy_eval_est = deepcopy(eval_set)
+    goal_cumulants = TMCS.get_cumulant_eval_values(env.cumulant_schedule)
+    copy_eval_est .*= goal_cumulants[gvf_idx]
+    return copy_eval_est
+end
+
 end
