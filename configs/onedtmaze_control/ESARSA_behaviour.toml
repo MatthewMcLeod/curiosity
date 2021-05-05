@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_ESARSA_Control_No_Penalty"
+save_dir = "OneDTMaze_ESARSA_Control"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -48,26 +48,29 @@ horde_type = "regular"
 intrinsic_reward = "weight_change"
 
 use_external_reward = true
+random_first_action = false
+
 
 # num_tilings = 8
 # num_tiles = 2
 
 
 [sweep_args]
-seed = "16:30"
+seed = "1:15"
 cumulant_schedule = ["DrifterDistractor"]
 eta = "5.0.^(-4:-1)"
 behaviour_opt = ["Auto"]
 behaviour_learner = ["Q"]
 behaviour_update = ["ESARSA"]
 exploration_param = [0.1]
-demon_learner = ["Q"]
+demon_learner = ["Q","SR"]
 demon_update = ["TB"]
 demon_opt = ["Auto", "Descent"]
 
 # num_tilings = [4, 8]
 # num_tiles = [2]
-tiling_structure = [[8,8]]
+tiling_structure = [[2,8]]
 exploring_starts= ["beg"]
 behaviour_trace = ["ReplacingTraces"]
-env_step_penalty = [-0.01,0.0]
+env_step_penalty = [-0.01]
+alpha_init = [0.01, 0.1, 0.2]

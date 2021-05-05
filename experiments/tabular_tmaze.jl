@@ -65,6 +65,8 @@ default_args() =
         "steps" => 30000,
         "use_external_reward" => true,
         "logger_interval" => 100,
+        "random_first_action" => false,
+
     )
 
 
@@ -182,6 +184,14 @@ function construct_agent(parsed)
         throw(ArgumentError("goes with which horde? " ))
     end
 
+    random_first_action = parsed["random_first_action"]
+    if behaviour_learner isa TabularRoundRobin
+        if random_first_action == false
+            @warn "Round Robin with random first action is recommended"
+        end
+    elseif random_first_action == true
+        @warn "Random first action is enabled"
+    end
 
     Agent(demons,
           feature_size,
@@ -194,7 +204,8 @@ function construct_agent(parsed)
           intrinsic_reward_type,
           (obs) -> state_constructor(obs, feature_size),
           use_external_reward,
-          exploration_strategy)
+          exploration_strategy,
+          random_first_action)
 end
 
 function get_horde(parsed, feature_size, action_space, projected_feature_constructor)

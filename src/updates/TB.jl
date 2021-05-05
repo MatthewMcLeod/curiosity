@@ -117,7 +117,6 @@ function update!(lu::TB,
                              next_action,
                              env_reward)
 
-
     discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(next_discounts)
     e_nz = get!(()->Int[], lu.e, learner)::Array{Int, 1}
     e_w_nz = get!(()->Int[], lu.e, learner)::Array{Int, 1}
