@@ -230,7 +230,8 @@ function construct_agent(parsed)
           intrinsic_reward_type,
           fc,
           use_external_reward,
-          exploration_strategy)
+          exploration_strategy,
+          false)
 end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)

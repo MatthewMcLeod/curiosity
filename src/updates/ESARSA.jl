@@ -116,11 +116,8 @@ function update!(lu::ESARSA,
     next_active_state_action = get_active_action_state_vector(next_state, next_action,length(next_state), learner.num_actions)
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
 
-    projected_state = learner.feature_projector(obs)
+    projected_state = learner.feature_projector(obs, action, next_obs)
     projected_state_action = get_active_action_state_vector(projected_state, action, size(learner.feature_projector), learner.num_actions)
-    projected_next_state = learner.feature_projector(next_obs)
-    projected_next_state_action = get_active_action_state_vector(projected_next_state, next_action, size(learner.feature_projector), learner.num_actions)
-    # projected_next_state_next_action = learner.feature_projector(next_state,next_action)
 
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
     (reward_discounts, SF_discounts) = discounts[1:learner.num_tasks], discounts[learner.num_tasks+1:end]
@@ -178,8 +175,9 @@ function update!(lu::ESARSA,
         z = abs_ϕ_ψ .* max.(abs_ϕ_ψ, state_discount)
         update!(lu.opt, ψ, e_ψ, td_err, z,  learner.num_demons - learner.num_tasks, 1)
 
-        state_discount_r = -reward_next_discounts * projected_next_state_action'
-        state_discount_r .+= projected_state_action'
+        # Reward next_discounts is always 0, so don't need projected_next_state_action
+        # state_discount_r = -reward_next_discounts * projected_next_state_action'
+        state_discount_r = projected_state_action'
         abs_ϕ_w = if λ == 0.0
             abs.(repeat(projected_state_action, outer=(1, length(pred_err)))')
         else
