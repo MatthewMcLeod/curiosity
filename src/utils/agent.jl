@@ -165,7 +165,7 @@ function _init_learning_update(lu_type::Union{Type{TabularRoundRobin}}, args...)
     lu_type()
 end
 
-function _init_learning_update(lu_type::Union{Type{TB}, Type{ETD}, Type{ETB}, Type{TD}},
+function _init_learning_update(lu_type::Union{Type{TB}, Type{EmphESARSA}, Type{ETB}},
                                opt,
                                parsed::Dict,
                                prefix)

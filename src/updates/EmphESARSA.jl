@@ -3,7 +3,7 @@
 Base.@kwdef mutable struct EmphESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
-    trace::T = AccumulatingTraces()
+    trace::T = AccumulatingTraces() # Currently the trace is set to accumulating trace. However, this might want to change later to be more like ESARSA
     e::IdDict = IdDict()
     followon::IdDict = IdDict()
     prev_discounts::IdDict = IdDict()
