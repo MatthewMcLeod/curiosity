@@ -91,6 +91,11 @@ function construct_agent(parsed)
         parsed["num_tilings"] = parsed["tiling_structure"][1]
         parsed["num_tiles"] = parsed["tiling_structure"][2]
     end
+
+    if parsed["behaviour_w_init"] != 0.0
+        parsed["behaviour_w_init"] = parsed["behaviour_w_init"] / parsed["num_tilings"]
+    end
+
     
     if "eta" in keys(parsed)
         prefixes = ["behaviour","demon"]
