@@ -74,7 +74,7 @@ default_args() =
         "steps" => 100000,
         "use_external_reward" => true,
 
-        "logger_keys" => [LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.TWODGRIDWORLDERROR]
+        "logger_keys" => [LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.TWODGRIDWORLDERROR, LoggerKey.TWODGRIDWORLDERRORDPI]
     )
 
 
