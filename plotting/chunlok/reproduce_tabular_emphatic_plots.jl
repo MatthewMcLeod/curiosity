@@ -41,9 +41,9 @@ sweep_params = ["demon_eta"]
 p = plot()
 
 
-ic = ItemCollection("experiment_data/EmphaticTest")
+ic = ItemCollection("experiment_data/EmphaticTestStartStateInterest")
 # ic = search(ic, Dict("demon_learner" => "SR"))
-ic = search(ic, Dict("demon_learner" => "Q"))
+ic = search(ic, Dict("demon_learner" => "SR"))
 # EmphaticTest
 print(diff(ic))
 # asdfsdf
@@ -57,7 +57,7 @@ function plot_line(ic, demon_update_algo)
     print_params(best_ic, sweep_params, [])
     
     data = load_results(best_ic, :ttmaze_uniform_error)
-    
+
     xs, mean_line, std_err_line = get_lines(data)
     plot!(p, xs, mean_line, ribbons=std_err_line, label=demon_update_algo, ylabel="RMSE", xlabel="time step")
 end

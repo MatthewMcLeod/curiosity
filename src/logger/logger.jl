@@ -43,6 +43,7 @@ module LoggerKey
     const VALUE_MAP = "VALUE_MAP"
     const ONEDTMAZEERROR = "ONEDTMAZEERROR"
     const TWODGRIDWORLDERROR = "TWODGRIDWORLDERROR"
+    const TWODGRIDWORLDERRORDPI = "TWODGRIDWORLDERRORDPI"
     const AUTOSTEP_STEPSIZE = "AutostepStepSize"
     const TTMAZE_UNIFORM_ERROR = "TTMAZE_UNIFORM_ERROR"
     const TTMAZE_OLD_ERROR = "TTMAZE_OLD_ERROR"
@@ -68,6 +69,7 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.VALUE_MAP => ValueMap,
     LoggerKey.ONEDTMAZEERROR => OneDTMazeError,
     LoggerKey.TWODGRIDWORLDERROR => TwoDGridWorldError,
+    LoggerKey.TWODGRIDWORLDERRORDPI => TwoDGridWorldErrorCenterDPI,
     LoggerKey.ONED_GOAL_VISITATION => OneDGoalVisitation,
     LoggerKey.AUTOSTEP_STEPSIZE => AutostepStepSize,
     LoggerKey.TTMAZE_UNIFORM_ERROR => TTMazeUniformError,
