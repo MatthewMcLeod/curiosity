@@ -3,9 +3,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH -o onedtmaze_GPI_Descent_Part_1.out # Standard output
 #SBATCH -e onedtmaze_GPI_Descent_Part_1.err # Standard error
-#SBATCH --mem-per-cpu=6000M # Memory request of 3GB
-#SBATCH --time=05:00:00 #
-#SBATCH --ntasks=60
+#SBATCH --mem-per-cpu=4000M # Memory request of 3GB
+#SBATCH --time=04:00:00 #
+#SBATCH --ntasks=64
 #SBATCH --account=def-amw8
 
 using Pkg
