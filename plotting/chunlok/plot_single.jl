@@ -4,7 +4,7 @@ using JLD2
 using FileIO
 
 p = plot()
-folder = "experiment_data/TabularTMazeExperiment/RP_0_0xaa3ef5ee09768d83/"
+folder = "experiment_data/TabularTMazeExperiment/RP_0_0x77b3406accb4e6a5/"
 save_file = "plotting/chunlok/generated_plots/test_plot.svg"
 
 

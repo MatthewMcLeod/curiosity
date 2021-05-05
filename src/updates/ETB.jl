@@ -56,7 +56,7 @@ function update!(lu::ETB,
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    interest = ones(learner.num_demons)
+    interest = get_interest(learner, obs)
     # getting IS ratio
     if (behaviour_pis[action] == 0)
         ρ = zeros(size(target_pis[:, action]))
@@ -68,7 +68,8 @@ function update!(lu::ETB,
     followon[:] .+= interest
 
     # Get Emphasis vector - size is # demons
-    emphasis = λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon 
+    # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
+    emphasis = ρ * (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
 
     # Update eligibility trace
     update_trace!(lu.trace,
@@ -80,7 +81,7 @@ function update!(lu::ETB,
                   inds)
     
     # decaying followon
-    followon[:] .*= ρ .* discounts
+    followon[:] .*= ρ .* next_discounts
 
     pred = learner(next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
@@ -159,7 +160,7 @@ function update!(lu::ETB,
     followon = get!(()->zeros(learner.num_demons), lu.followon, weights)::typeof(zeros(learner.num_demons))
 
     # Setting interest to constant ones for now for each demon
-    interest = ones(learner.num_demons)
+    interest = get_interest(learner, obs)
     # getting IS ratio
     behaviour_pis = behaviour_pi_func(state, obs)
     if (behaviour_pis[action] == 0)
@@ -173,7 +174,8 @@ function update!(lu::ETB,
     followon[:] .+= interest
 
     # Get Emphasis vector - size is # demons
-    emphasis = λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon 
+    # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
+    emphasis = ρ * (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
     reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
 
     # Update Traces: See update_utils.jl
@@ -190,7 +192,7 @@ function update!(lu::ETB,
     end
 
     # decaying followon
-    followon[:] .*= ρ .* discounts
+    followon[:] .*= ρ .* next_discounts
 
 
     pred = ψ * next_active_state_action

@@ -71,3 +71,18 @@ function get_demon_parameters(lu::LearningUpdate, learner, demons, obs, state, a
     next_target_pis = get_demon_pis(demons, learner.num_actions, next_state, next_obs)
     C, next_discounts, target_pis, next_target_pis
 end
+
+function get_interest(learner, obs)
+    # An easy way to swap around the interest function easily.
+    # This might want to be included into the agent config at some point,
+    # but currently we can just leave it as is.
+
+    # 1 for all states
+    return ones(learner.num_demons)
+
+    # if (obs[1] == 14.0)
+    #     return ones(learner.num_demons)
+    # else
+    #     return zeros(learner.num_demons)
+    # end
+end
