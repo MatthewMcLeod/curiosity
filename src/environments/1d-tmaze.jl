@@ -175,17 +175,17 @@ function MinimalRLCore.environment_step!(env::OneDTMaze, action, rng::AbstractRN
     cur_y = clamp(cur_y, 0.0, 1.0)
 
     # snapping to junctions
-    if (range_check(cur_x, 0.0, 0.0 + ODTMC.EPSILON) 
+    if (range_check(cur_x, 0.0, 0.0 + ODTMC.EPSILON)
         && range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON))
         # Snapping to left junction
         cur_x, cur_y = 0.0, 0.8
-    elseif (range_check(cur_x, 0.5 - ODTMC.EPSILON, 0.5 + ODTMC.EPSILON) 
+    elseif (range_check(cur_x, 0.5 - ODTMC.EPSILON, 0.5 + ODTMC.EPSILON)
         && range_check(cur_y, 0.8 - ODTMC.EPSILON , 0.8 + ODTMC.ACTION_STEP + env.move_noise))
         # second condition checks for whether the agent somehow makes too big of a step upwards.
         # In middle junction
         # Snapping to middle junction
         cur_x, cur_y = 0.5, 0.8
-    elseif (range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0) 
+    elseif (range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0)
         && range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON))
         # in right junction
         # Snapping to right junction
@@ -242,12 +242,13 @@ end
         screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[4]
         screen[Int(22//2*PP.SIZE+1):Int(23//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[3]
     else
-        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE+PP.SIZE*ϵ), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[2]
-        screen[Int(22//2*PP.SIZE-PP.SIZE*ϵ+1):Int(23//2*PP.SIZE), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[1]
-        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE+PP.SIZE*ϵ), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[4]
-        screen[Int(22//2*PP.SIZE-PP.SIZE*ϵ+1):Int(23//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[3]
+        ϵ_min_size = maximum([Int(floor(PP.SIZE*ϵ)),1])
+        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE+ϵ_min_size), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[2]
+        screen[Int(22//2*PP.SIZE-ϵ_min_size+1):Int(23//2*PP.SIZE), Int(1//2*PP.SIZE+1):Int(3//2*PP.SIZE)] .= PP.GOAL_PALETTE[1]
+        screen[Int(13//2*PP.SIZE+1):Int(14//2*PP.SIZE+ϵ_min_size), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[4]
+        screen[Int(22//2*PP.SIZE-ϵ_min_size+1):Int(23//2*PP.SIZE), Int(21//2*PP.SIZE+1):Int(23//2*PP.SIZE)] .= PP.GOAL_PALETTE[3]
     end
-    
+
     state = env.pos
     x, y = Int(floor((env.pos[1]*10 + 1)*PP.SIZE)), Int(floor((env.pos[2]*10 + 1)*PP.SIZE))
 
@@ -255,6 +256,6 @@ end
     screen[Int(y-PP.SIZE//2 + 1):Int(y+PP.SIZE//2), Int(x-PP.SIZE//5 + 1):Int(x+PP.SIZE//5)] .= PP.AC
 
 
-    
+
     screen[end:-1:1, :]
 end

@@ -197,6 +197,72 @@ end
 (FP::MarthaIdealDemonFeatures)(state) = project_features(FP, state)
 Base.size(FP::MarthaIdealDemonFeatures) = 4
 
+####
+# GPI Feature Creation
+####
+struct TMazeEncoding <: FeatureCreator
+    num_segments::Int
+    num_partitions::Int
+    function TMazeEncoding()
+        new(7,3)
+    end
+end
+Base.size(FP::TMazeEncoding) = FP.num_segments * FP.num_partitions
+function project_features(fc::FeatureCreator, obs)
+    segment = Inf
+    partition = Inf
+    x,y = obs
+
+    #Segment 1: Top Right
+    if (x == 0.0 && y >= 0.8)
+        segment_length = (1.0 + ODTMC.ACTION_STEP) - (0.8)
+        segment = 1
+        partition = (y - 0.8) / segment_length
+    #Segment 2: Bottom Right
+    elseif (x == 0.0 && y < 0.8)
+        segment_length = (0.8) - (0.6 - ODTMC.ACTION_STEP)
+        segment = 2
+        partition = (y - 0.8) / segment_length
+    #Segment 3: Middle Left Branch
+    elseif (y == 0.8 && range_check(x,0.0,0.5))
+        segment_length = (0.5 - 0.0)
+        segment = 3
+        partition = (x) / segment_length
+    # Segment 4: Middle Right Branch
+    elseif (y == 0.8 && range_check(x,0.5,1.0))
+        segment_length = (1.0-0.5)
+        segment = 4
+        partition = (x - 0.5)/segment_length
+    #Segment 5: Bottom Branch
+    elseif (x == 0.5)
+        segment_length = (0.8 - 0.0)
+        segment = 5
+        partition = (y - 0.0)/segment_length
+    # #Segment 6: Top Left Branch
+    elseif (x == 1.0 && y >= 0.8)
+        segment_length = (1.0 + ODTMC.ACTION_STEP) - (0.8)
+        segment = 6
+        partition = (y - 0.8) / segment_length
+        #Segment 7: Bottom Left Branch
+    elseif (x == 1.0 && y < 0.8)
+        segment_length = (0.8) - (0.6 - ODTMC.ACTION_STEP)
+        segment = 7
+        partition = (y - 0.8) / segment_length
+    else
+        @warn "Not A Valid State (x,y)"
+    end
+
+    state = zeros(fc.num_segments * fc.num_partitions)
+    # Need maximum since if agent is right on boundary, ceil (0.0) is 0.
+    partition_offset = maximum([Int(ceil(partition * fc.num_partitions)),1])
+    if partition_offset == 0
+        @show x,y,segment
+    end
+    state[(segment-1)*fc.num_partitions + partition_offset] = 1
+    return sparsevec(state)
+end
+(FP::TMazeEncoding)(state) = project_features(FP, state)
+
 
 ####
 # Behaviour policies

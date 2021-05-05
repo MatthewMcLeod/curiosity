@@ -33,6 +33,8 @@ mutable struct Agent{#IR<:IntrinsicReward,
     use_external_reward::Bool
     exploration::ExplorationStrategy
 
+    random_first_action::Bool
+
 end
 
 function Agent(horde,
@@ -46,7 +48,8 @@ function Agent(horde,
                intrinsic_reward_type,
                state_constructor,
                use_external_reward,
-               exploration_strategy)
+               exploration_strategy,
+               random_first_action)
 
     behaviour_weight_dims = (num_actions, behaviour_feature_size)
 
@@ -78,7 +81,8 @@ function Agent(horde,
           state_constructor,
 
           use_external_reward,
-          exploration_strategy)
+          exploration_strategy,
+          random_first_action)
 
 end
 
@@ -113,12 +117,16 @@ function MinimalRLCore.start!(agent::Agent, obs, args...)
     next_state = proc_input(agent, obs)
     #Always exploring starts
     step!(agent.exploration)
-    next_action = sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
+    next_action = if agent.random_first_action
+        sample(1:agent.num_actions, Weights(ones(agent.num_actions)))
+    else
+        a, probs = get_action(agent,next_state, obs)
+        a
+    end
 
     # NOTE: IS THIS RIGHT, seems wierd!?
     _, discounts, _ = get(agent.demons; state_t = obs, action_t = next_action, state_tp1 = obs, action_tp1 = next_action)
 
-    # _, discounts, _ = get(agent.demons, obs, next_action, obs, next_action)
     agent.last_state = next_state
     agent.last_action = next_action
     agent.last_obs = obs

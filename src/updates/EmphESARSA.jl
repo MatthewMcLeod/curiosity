@@ -1,15 +1,15 @@
 
 # Implementation taken from p316 RL Textbook and incorporating TB
-Base.@kwdef mutable struct ETD{O, T<:AbstractTraceUpdate} <: LearningUpdate
+Base.@kwdef mutable struct EmphESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
-    trace::T = AccumulatingTraces()
+    trace::T = AccumulatingTraces() # Currently the trace is set to accumulating trace. However, this might want to change later to be more like ESARSA
     e::IdDict = IdDict()
     followon::IdDict = IdDict()
     prev_discounts::IdDict = IdDict()
 end
 
-function get_demon_parameters(lu::ETD, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
+function get_demon_parameters(lu::EmphESARSA, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
     # C, next_discounts, _ = get(demons, obs, action, next_obs, next_action)
     C, next_discounts, _ = get(demons; state_t = obs, action_t = action, state_tp1 = next_obs, action_tp1 = next_action, reward = env_reward)
     target_pis = get_demon_pis(demons, learner.num_actions, state, obs)
@@ -18,7 +18,7 @@ function get_demon_parameters(lu::ETD, learner, demons, obs, state, action, next
 end
 
 
-function update!(lu::ETD,
+function update!(lu::EmphESARSA,
                  learner::QLearner{M, LU},
                  demons,
                  obs,
@@ -29,7 +29,7 @@ function update!(lu::ETD,
                  next_action,
                  is_terminal,
                  behaviour_pi_func,
-                 env_reward) where {M<:AbstractMatrix, LU<:ETD}
+                 env_reward) where {M<:AbstractMatrix, LU<:EmphESARSA}
 
     weights = learner.model
     λ = lu.lambda
@@ -56,7 +56,8 @@ function update!(lu::ETD,
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    interest = ones(learner.num_demons)
+    interest = get_interest(learner, obs)
+
     # getting IS ratio
     if (behaviour_pis[action] == 0)
         ρ = zeros(size(target_pis[:, action]))
@@ -68,7 +69,9 @@ function update!(lu::ETD,
     followon[:] .+= interest
 
     # Get Emphasis vector - size is # demons
-    emphasis = λ * interest + (1 - λ) * followon 
+    # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
+    emphasis = ρ * (λ * interest + (1 - λ) * followon)
+
     # Update eligibility trace
     update_trace!(lu.trace,
                   e,
@@ -77,10 +80,10 @@ function update!(lu::ETD,
                   repeat(discounts, inner = learner.num_actions),
                   repeat(ρ, inner = learner.num_actions),
                   inds;
-                  emphasis=emphasis)
+                emphasis=emphasis)
 
     # decaying followon
-    followon[:] .*= ρ .* discounts
+    followon[:] .*= ρ .* next_discounts
 
     pred = learner(next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
@@ -107,7 +110,7 @@ function update!(lu::ETD,
     end
 end
 
-function update!(lu::ETD,
+function update!(lu::EmphESARSA,
                  learner::Union{SRLearner,GPI},
                  demons,
                  obs,
@@ -159,7 +162,7 @@ function update!(lu::ETD,
     followon = get!(()->zeros(learner.num_demons), lu.followon, weights)::typeof(zeros(learner.num_demons))
 
     # Setting interest to constant ones for now for each demon
-    interest = ones(learner.num_demons)
+    interest = get_interest(learner, obs)
     # getting IS ratio
     behaviour_pis = behaviour_pi_func(state, obs)
     if (behaviour_pis[action] == 0)
@@ -173,7 +176,8 @@ function update!(lu::ETD,
     followon[:] .+= interest
 
     # Get Emphasis vector - size is # demons
-    emphasis = λ * interest + (1 - λ) * followon 
+    # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
+    emphasis = ρ * (λ * interest + (1 - λ) * followon)
     reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
 
     # Update Traces: See update_utils.jl
@@ -190,7 +194,7 @@ function update!(lu::ETD,
     end
 
     # decaying followon
-    followon[:] .*= ρ .* discounts
+    followon[:] .*= ρ .* next_discounts
 
 
     pred = ψ * next_active_state_action
@@ -248,7 +252,7 @@ function update!(lu::ETD,
 end
 
 
-function zero_eligibility_traces!(lu::ETD)
+function zero_eligibility_traces!(lu::EmphESARSA)
     for (k, v) ∈ lu.e
         if eltype(v) <: Integer
             lu.e[k] = Int[]
@@ -262,7 +266,7 @@ function zero_eligibility_traces!(lu::ETD)
 end
 
 
-# function update!(lu::ETD,
+# function update!(lu::EmphESARSA,
 #                  learner::LSTDLearner,
 #                  demons,
 #                  obs,
