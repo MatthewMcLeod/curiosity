@@ -1,5 +1,5 @@
 [config]
-save_dir = "experiment_data/EmphaticTest"
+save_dir = "EmphaticControlTest"
 exp_file = "experiments/tabular_tmaze.jl"
 exp_module_name = "TabularTMazeExperiment"
 exp_func_name = "main_experiment"
@@ -10,9 +10,9 @@ arg_iter_type = "iter"
 # Behaviour Items
 behaviour_gamma = 0.9
 behaviour_learner = "Q"
-behaviour_update = "TabularRoundRobin"
-behaviour_trace = "AccumulatingTraces"
-behaviour_opt = "Descent"
+behaviour_update = "ESARSA"
+behaviour_trace = "ReplacingTraces"
+behaviour_opt = "Auto"
 behaviour_lambda = 0.9
 behaviour_alpha_init = 0.1
 exploration_param = 0.1
@@ -49,11 +49,12 @@ env_step_penalty = -0.01
 # Agent and Logger100
 horde_type = "regular"
 intrinsic_reward = "weight_change"
-logger_interval = 10
+logger_interval = 100
 logger_keys = ["TTMAZE_ERROR", "TTMAZE_UNIFORM_ERROR", "TTMAZE_OLD_ERROR", "TTMAZE_DIRECT_ERROR"]
 # save_dir = "TabularTMazeExperiment"
 # seed = 1
-steps = 4000
+# steps = 30000
+steps = 100
 use_external_reward = true
 random_first_action = false
 

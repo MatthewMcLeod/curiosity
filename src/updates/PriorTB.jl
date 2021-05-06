@@ -1,15 +1,15 @@
 
 # Implementation taken from p316 RL Textbook and incorporating TB
-Base.@kwdef mutable struct EmphESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
+Base.@kwdef mutable struct PriorTB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
-    trace::T = AccumulatingTraces() # Currently the trace is set to accumulating trace. However, this might want to change later to be more like ESARSA
+    trace::T = AccumulatingTraces()
     e::IdDict = IdDict()
-    followon::IdDict = IdDict()
+    Ρ::IdDict = IdDict()
     prev_discounts::IdDict = IdDict()
 end
 
-function get_demon_parameters(lu::EmphESARSA, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
+function get_demon_parameters(lu::PriorTB, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
     # C, next_discounts, _ = get(demons, obs, action, next_obs, next_action)
     C, next_discounts, _ = get(demons; state_t = obs, action_t = action, state_tp1 = next_obs, action_tp1 = next_action, reward = env_reward)
     target_pis = get_demon_pis(demons, learner.num_actions, state, obs)
@@ -18,7 +18,7 @@ function get_demon_parameters(lu::EmphESARSA, learner, demons, obs, state, actio
 end
 
 
-function update!(lu::EmphESARSA,
+function update!(lu::PriorTB,
                  learner::QLearner{M, LU},
                  demons,
                  obs,
@@ -29,7 +29,7 @@ function update!(lu::EmphESARSA,
                  next_action,
                  is_terminal,
                  behaviour_pi_func,
-                 env_reward) where {M<:AbstractMatrix, LU<:EmphESARSA}
+                 env_reward) where {M<:AbstractMatrix, LU<:PriorTB}
 
     weights = learner.model
     λ = lu.lambda
@@ -49,7 +49,7 @@ function update!(lu::EmphESARSA,
 
     discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(next_discounts)
     e = get!(()->zero(weights), lu.e, weights)::typeof(weights)
-    followon = get!(()->zeros(learner.num_actions), lu.followon, weights)::typeof(zeros(learner.num_actions))
+    Ρ = get!(()->ones(learner.num_demons), lu.Ρ, weights)::typeof(ones(learner.num_demons))
 
 
     #Broadcast the policy and pseudotermination of each demon across the actions
@@ -57,7 +57,6 @@ function update!(lu::EmphESARSA,
     state_action_row_ind = inds
 
     interest = get_interest(learner, obs)
-
     # getting IS ratio
     if (behaviour_pis[action] == 0)
         ρ = zeros(size(target_pis[:, action]))
@@ -65,12 +64,9 @@ function update!(lu::EmphESARSA,
         ρ = target_pis[:, action] / behaviour_pis[action]
     end
 
-    # accumulating followon
-    followon[:] .+= interest
-
-    # Get Emphasis vector - size is # demons
-    # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
-    emphasis = ρ .* (λ * interest + (1 - λ) * followon)
+    
+    # accumulating Ρ
+    Ρ[:] .*= ρ
 
     # Update eligibility trace
     update_trace!(lu.trace,
@@ -78,20 +74,20 @@ function update!(lu::EmphESARSA,
                   state,
                   λ,
                   repeat(discounts, inner = learner.num_actions),
-                  repeat(ρ, inner = learner.num_actions),
+                  repeat(target_pis[:,action], inner = learner.num_actions),
                   inds;
-                emphasis=emphasis)
+                  emphasis=Ρ)
 
-    # decaying followon
-    followon[:] .*= ρ .* next_discounts
+    pred = learner(next_state)
+    Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
 
+    # Target Pi is num_demons  x num_actions
+    backup_est_per_demon = vec(sum((Qs .* next_target_pis ), dims = 2))
+    target = C + next_discounts .* backup_est_per_demon
 
-    next_preds = learner(next_state)
-    pred = learner(state, action)
-
-    Qs = reshape(next_preds, (learner.num_actions, learner.num_demons))'
-    td_err = C .+ next_discounts .* sum(next_target_pis .* Qs, dims = 2) - pred
-    td_err_across_demons = repeat(vec(td_err), inner=learner.num_actions)
+     # TD error per demon is the td error on Q
+    td_err = target - (weights * state)[inds]
+    td_err_across_demons = repeat(td_err, inner=learner.num_actions)
 
     if lu.opt isa Auto
         next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
@@ -106,9 +102,12 @@ function update!(lu::EmphESARSA,
 
     # update discounts
     discounts .= next_discounts
+    if (is_terminal)
+        Ρ[:] .= ones(learner.num_demons)
+    end
 end
 
-function update!(lu::EmphESARSA,
+function update!(lu::PriorTB,
                  learner::Union{SRLearner,GPI},
                  demons,
                  obs,
@@ -157,7 +156,7 @@ function update!(lu::EmphESARSA,
     (reward_next_target_pis, SF_next_target_pis) = next_target_pis[1:learner.num_tasks,:], next_target_pis[learner.num_tasks+1:end, :]
 
     # Followon
-    followon = get!(()->zeros(learner.num_demons), lu.followon, weights)::typeof(zeros(learner.num_demons))
+    Ρ = get!(()->ones(learner.num_demons), lu.Ρ, weights)::typeof(ones(learner.num_demons))
 
     # Setting interest to constant ones for now for each demon
     interest = get_interest(learner, obs)
@@ -170,17 +169,15 @@ function update!(lu::EmphESARSA,
     end
     reward_ρ, SF_ρ = ρ[1:learner.num_tasks], ρ[learner.num_tasks+1:end]
 
-    # accumulating followon
-    followon[:] .+= interest
+    # accumulating Ρ
+    Ρ[:] .*= ρ
 
-    # Get Emphasis vector - size is # demons
-    # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
-    emphasis = ρ .* (λ * interest + (1 - λ) * followon)
-    reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
+    # Get prior correction vector - size is # demons
+    reward_Ρ, SF_Ρ = Ρ[1:learner.num_tasks], Ρ[learner.num_tasks+1:end]
 
     # Update Traces: See update_utils.jl
-    update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_ρ; emphasis=SF_emphasis)
-    update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_ρ; emphasis=reward_emphasis)
+    update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action]; emphasis=SF_Ρ)
+    update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action]; emphasis=reward_Ρ)
     # e_nz = e_nz ∪ active_state_action.nzind
     # e_w_nz = e_w_nz ∪ projected_state_action.nzind
     if λ == 0.0
@@ -190,10 +187,6 @@ function update!(lu::EmphESARSA,
         e_nz = e_nz ∪ active_state_action.nzind
         e_w_nz = e_w_nz ∪ projected_state_action.nzind
     end
-
-    # decaying followon
-    followon[:] .*= ρ .* next_discounts
-
 
     pred = ψ * next_active_state_action
     reward_feature_backup = zeros(length(SF_C))
@@ -247,10 +240,13 @@ function update!(lu::EmphESARSA,
         update!(lu.opt, w, - e_w .* pred_err)
     end
     discounts .= next_discounts
+    if (is_terminal)
+        Ρ[:] .= ones(learner.num_demons)
+    end
 end
 
 
-function zero_eligibility_traces!(lu::EmphESARSA)
+function zero_eligibility_traces!(lu::PriorTB)
     for (k, v) ∈ lu.e
         if eltype(v) <: Integer
             lu.e[k] = Int[]
@@ -262,75 +258,3 @@ function zero_eligibility_traces!(lu::EmphESARSA)
     end
 
 end
-
-
-# function update!(lu::EmphESARSA,
-#                  learner::LSTDLearner,
-#                  demons,
-#                  obs,
-#                  next_obs,
-#                  state,
-#                  action,
-#                  next_state,
-#                  next_action,
-#                  is_terminal,
-#                  behaviour_pi_func,
-#                  env_reward)
-
-#      C, γ_tp1, π_t, π_tp1 =
-#          get_demon_parameters(learner,
-#                               demons,
-#                               obs,
-#                               state,
-#                               action,
-#                               next_obs,
-#                               next_state,
-#                               next_action)
-
-#      na = learner.num_actions
-#      fs = learner.feature_size
-#      λ = lu.lambda
-#      t = learner.t
-#      μ_t = behaviour_pi_func(state, obs)[action]
-#      μ_tp1 = behaviour_pi_func(next_state, next_obs)
-
-#      γ_t = get!(()->zero(γ_tp1), lu.prev_discounts, learner)::typeof(γ_tp1)
-
-#      ϕ_t = state
-#      ϕ_tp1 = next_state
-
-#      x_t = get_active_action_state_vector(
-#          ϕ_t, action, learner.feature_size, learner.num_actions)
-#      x_tp1 = get_active_action_state_vector(
-#          ϕ_tp1, next_action, learner.feature_size, learner.num_actions)
-
-
-#     all_gvf_e = get!(()->zero.(learner.w_real), lu.e, learner.w_real)::typeof(learner.w_real)
-
-#      for gvf ∈ 1:learner.num_demons
-#          A_inv = learner.A_inv[gvf]
-#          e = all_gvf_e[gvf]
-#          b = learner.b[gvf]
-#          c = C[gvf]
-
-#          e .= γ_t[gvf]*λ*π_t[gvf] * e + x_t
-#          b .+= (c*e - b)/(t+1)
-
-#          u = sum(π_tp1[gvf, a] .* get_active_action_state_vector(ϕ_tp1, a, fs, na) for a ∈ 1:na)
-#          v = transpose(transpose(x_t - γ_tp1[gvf]*u) * A_inv)
-
-#          if t > 0
-#              scale = (t+1)/t
-#              vz = dot(v, e)
-#              Ainv_zvt = (A_inv * e) * transpose(v)
-#              A_inv .= scale * (A_inv - Ainv_zvt./(t + vz))
-#          else
-#              Aev = A_inv*(e*v')
-#              ve = dot(v, e)
-#              A_inv .-= Aev/(1 + ve)
-#          end
-#          learner.w_real[gvf] .= A_inv * b
-#      end
-#      γ_t .= γ_tp1
-#      learner.t += 1
-# end

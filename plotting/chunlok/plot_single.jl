@@ -4,7 +4,7 @@ using JLD2
 using FileIO
 
 p = plot()
-folder = "experiment_data/TabularTMazeExperiment/RP_0_0x77b3406accb4e6a5/"
+folder = "experiment_data/TabularTMazeExperiment/RP_0_0x54d5fafd5e3ebaac/"
 save_file = "plotting/chunlok/generated_plots/test_plot.svg"
 
 
@@ -19,7 +19,7 @@ settings = FileIO.load(settings_file)["parsed_args"]
 print(settings)
 # print(sett)
 
-error = results[:ttmaze_error]
+error = results[:ttmaze_uniform_error]
 # print(size(error))
 
 for i in 1:4

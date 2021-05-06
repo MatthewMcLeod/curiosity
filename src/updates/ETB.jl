@@ -69,7 +69,7 @@ function update!(lu::ETB,
 
     # Get Emphasis vector - size is # demons
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
-    emphasis = ρ * (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
+    emphasis = ρ .* (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
 
     # Update eligibility trace
     update_trace!(lu.trace,
@@ -78,7 +78,8 @@ function update!(lu::ETB,
                   λ,
                   repeat(discounts, inner = learner.num_actions),
                   repeat(target_pis[:,action], inner = learner.num_actions),
-                  inds)
+                  inds;
+                  emphasis=emphasis)
     
     # decaying followon
     followon[:] .*= ρ .* next_discounts
@@ -175,7 +176,7 @@ function update!(lu::ETB,
 
     # Get Emphasis vector - size is # demons
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
-    emphasis = ρ * (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
+    emphasis = ρ .* (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
     reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
 
     # Update Traces: See update_utils.jl
@@ -262,75 +263,3 @@ function zero_eligibility_traces!(lu::ETB)
     end
 
 end
-
-
-# function update!(lu::ETB,
-#                  learner::LSTDLearner,
-#                  demons,
-#                  obs,
-#                  next_obs,
-#                  state,
-#                  action,
-#                  next_state,
-#                  next_action,
-#                  is_terminal,
-#                  behaviour_pi_func,
-#                  env_reward)
-
-#      C, γ_tp1, π_t, π_tp1 =
-#          get_demon_parameters(learner,
-#                               demons,
-#                               obs,
-#                               state,
-#                               action,
-#                               next_obs,
-#                               next_state,
-#                               next_action)
-
-#      na = learner.num_actions
-#      fs = learner.feature_size
-#      λ = lu.lambda
-#      t = learner.t
-#      μ_t = behaviour_pi_func(state, obs)[action]
-#      μ_tp1 = behaviour_pi_func(next_state, next_obs)
-
-#      γ_t = get!(()->zero(γ_tp1), lu.prev_discounts, learner)::typeof(γ_tp1)
-
-#      ϕ_t = state
-#      ϕ_tp1 = next_state
-
-#      x_t = get_active_action_state_vector(
-#          ϕ_t, action, learner.feature_size, learner.num_actions)
-#      x_tp1 = get_active_action_state_vector(
-#          ϕ_tp1, next_action, learner.feature_size, learner.num_actions)
-
-
-#     all_gvf_e = get!(()->zero.(learner.w_real), lu.e, learner.w_real)::typeof(learner.w_real)
-
-#      for gvf ∈ 1:learner.num_demons
-#          A_inv = learner.A_inv[gvf]
-#          e = all_gvf_e[gvf]
-#          b = learner.b[gvf]
-#          c = C[gvf]
-
-#          e .= γ_t[gvf]*λ*π_t[gvf] * e + x_t
-#          b .+= (c*e - b)/(t+1)
-
-#          u = sum(π_tp1[gvf, a] .* get_active_action_state_vector(ϕ_tp1, a, fs, na) for a ∈ 1:na)
-#          v = transpose(transpose(x_t - γ_tp1[gvf]*u) * A_inv)
-
-#          if t > 0
-#              scale = (t+1)/t
-#              vz = dot(v, e)
-#              Ainv_zvt = (A_inv * e) * transpose(v)
-#              A_inv .= scale * (A_inv - Ainv_zvt./(t + vz))
-#          else
-#              Aev = A_inv*(e*v')
-#              ve = dot(v, e)
-#              A_inv .-= Aev/(1 + ve)
-#          end
-#          learner.w_real[gvf] .= A_inv * b
-#      end
-#      γ_t .= γ_tp1
-#      learner.t += 1
-# end

@@ -35,36 +35,40 @@ function get_lines(data)
     return xs, mean_line, std_err_line
 end
 
-sweep_params = ["demon_eta"]
+sweep_params = ["eta", "demon_alpha_init"]
 
 
 p = plot()
 
 
-ic = ItemCollection("experiment_data/EmphaticTestStartStateInterest")
+ic = ItemCollection("experiment_data/EmphaticTest")
 # ic = search(ic, Dict("demon_learner" => "SR"))
 ic = search(ic, Dict("demon_learner" => "SR"))
 # EmphaticTest
-print(diff(ic))
+# print(diff(ic))
 # asdfsdf
 
 
 function plot_line(ic, demon_update_algo)
     println(diff(ic))
     filtered_ic = search(ic, Dict("demon_update" => demon_update_algo))
+    println(diff(filtered_ic))
 
-    best_ic = get_best(filtered_ic, sweep_params, :ttmaze_uniform_error)
+    best_ic = get_best(filtered_ic, sweep_params, :ttmaze_direct_error)
     print_params(best_ic, sweep_params, [])
     
-    data = load_results(best_ic, :ttmaze_uniform_error)
+    data = load_results(best_ic, :ttmaze_direct_error)
+    println(size(data))
 
     xs, mean_line, std_err_line = get_lines(data)
     plot!(p, xs, mean_line, ribbons=std_err_line, label=demon_update_algo, ylabel="RMSE", xlabel="time step")
 end
 
-plot_line(ic, "TD")
-plot_line(ic, "ETD")
+plot_line(ic, "ESARSA")
+plot_line(ic, "EmphESARSA")
 plot_line(ic, "TB")
 plot_line(ic, "ETB")
+plot_line(ic, "PriorESARSA")
+plot_line(ic, "PriorTB")
 
 savefig("plotting/chunlok/generated_plots/test_plot_reproduce.svg")
