@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_GPI_Control_Part_1"
+save_dir = "OneDTMaze_Emphatic_Control"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
