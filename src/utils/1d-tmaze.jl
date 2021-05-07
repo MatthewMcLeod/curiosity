@@ -16,6 +16,8 @@ import ..Curiosity
 import ..GVFSRHordes
 import ..SRCreationUtils
 import ..FeatureCreator
+using ...StatsBase
+
 
 const TMCS = TMazeCumulantSchedules
 const ODTMC = OneDTmazeConst
@@ -37,6 +39,7 @@ end
 struct GoalPolicy <: GVFHordes.GVFParamFuncs.AbstractPolicy
     goal::Int
 end
+(π::GoalPolicy)(s) = sample(Weights([get(π, state_t=s, action_t=a) for a ∈ 1:4]))
 
 function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
     cur_x = state_t[1]
@@ -369,9 +372,11 @@ function get_true_values(env::Curiosity.OneDTMaze, eval_set)
     end
     return copy_eval_est
 end
-
-
-
-
+function get_true_values(env::Curiosity.OneDTMaze, eval_set, gvf_idx)
+    copy_eval_est = deepcopy(eval_set)
+    goal_cumulants = TMCS.get_cumulant_eval_values(env.cumulant_schedule)
+    copy_eval_est .*= goal_cumulants[gvf_idx]
+    return copy_eval_est
+end
 
 end
