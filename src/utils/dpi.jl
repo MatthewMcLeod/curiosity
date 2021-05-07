@@ -40,4 +40,12 @@ function (dpi::DPI)(state, action)
     s_p*a_p
 end
 
+struct HordeDPI
+    dpis::Vector{DPI}
+end
+
+function (hdpi::HordeDPI)(state, action)
+    [dpi(state,action) for dpi in hdpi.dpis]
+end
+
 
