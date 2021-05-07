@@ -16,13 +16,11 @@ end
 
 abstract type ErrorRecorder <: LoggerKeyData end
 
-# include("one_d_tmaze_error.jl")
 include("error.jl")
 include("goal_visitation.jl")
 include("episode_length.jl")
 include("mountain_car_error.jl")
-# include("tabular_tmaze_error.jl")
-# include("tabular_tmaze_uniform_error.jl")
+include("cumulants.jl")
 include("temp_print.jl")
 include("value_map.jl")
 include("autostep_stepsize.jl")
@@ -52,6 +50,10 @@ module LoggerKey
     const TTMAZE_DIRECT_ERROR = "TTMAZE_DIRECT_ERROR"
     const BEHAVIOUR_ACTION_VALUES = "BEHAVIOUR_ACTION_VALUES"
     const ONED_STATE_VISITATION = "ONED_STATE_VISITATION"
+    const CUMULANTS = "CUMULANTS"
+    const WC_PER_DEMON = "WC_PER_DEMON"
+    const ONEDTMAZEERROR_DPI = "ONEDTMAZEERROR_DPI"
+    const ONEDTMAZEERROR_UNIFORM = "ONEDTMAZEERROR_UNIFORM"
 end
 
 module LoggerInitKey
@@ -79,6 +81,10 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TTMAZE_DIRECT_ERROR => TTMazeDirectError,
     LoggerKey.BEHAVIOUR_ACTION_VALUES => BehaviourActionValues,
     LoggerKey.ONED_STATE_VISITATION => OneDStateVisitation,
+    LoggerKey.CUMULANTS => Cumulants,
+    LoggerKey.WC_PER_DEMON => WC_Demon_Logger,
+    LoggerKey.ONEDTMAZEERROR_DPI => OneDTMazeError_DPI,
+    LoggerKey.ONEDTMAZEERROR_UNIFORM => OneDTMazeError_Uniform
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
