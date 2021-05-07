@@ -29,14 +29,14 @@ struct DPI{H<:Histogram, P}
 end
 
 function DPI(states, policy; h_kwargs...)
-    state_hist = fit(Histogram, (getindex.(states, i) for i in 1:size(states[1])); h_kwargs...)
-    sh_norm = normalize(state_hist, mode=:pdf)
-    DPI(state_hist, policy)
+    state_hist = fit(Histogram, Tuple(getindex.(states, i) for i in 1:length(states[1])); h_kwargs...)
+    sh_norm = normalize(state_hist, mode=:probability)
+    DPI(sh_norm, policy)
 end
 
 function (dpi::DPI)(state, action)
     s_p = get_freq(dpi.state_pdf, state)
-    a_p = dpi.policy(state, action)
+    a_p = get(dpi.policy, state_t=state, action_t=action)
     s_p*a_p
 end
 
