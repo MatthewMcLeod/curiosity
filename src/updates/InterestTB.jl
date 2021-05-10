@@ -1,5 +1,3 @@
-include("../utils/dpi.jl")
-
 Base.@kwdef mutable struct InterestTB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
@@ -56,18 +54,7 @@ discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(n
 
     # println("hello, this is running!")
 
-    println(obs, action)
-    try
-        println(lu.hdpi(obs[1], action))
-    catch e
-        coord = valid_state_mask()[convert(Integer, obs[1])]
-        println(coord)
-        # if (coord[1] == 4 && coord[2] == 1)
-        #     # println("hello")
-        #     # println("ρ $(ρ)")
-        # end
-        throw(e)
-    end
+    # println(lu.hdpi(obs, action))
 
 
     update_trace!(lu.trace,
@@ -76,7 +63,8 @@ discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(n
                   λ,
                   repeat(discounts, inner = learner.num_actions),
                   repeat(target_pis[:,action], inner = learner.num_actions),
-                  inds)
+                  inds;
+                  emphasis=lu.hdpi(obs, action))
 
 
     pred = learner(next_state)

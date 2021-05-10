@@ -5,40 +5,21 @@ using FileIO
 
 include("plot_utils.jl")
 
-p = plot()
-# folder = "TabularTMazeExperiment/RP_0_0x278a9a4b9fa34c2b/"
-folder = "TabularTMazeExperiment/RP_0_0xb6e5dbf217a7af96/"
-save_file = "plotting/chunlok/generated_plots/test_plot_visitation.svg"
+function plot_single_goal_visitation(results; step_size=10)
+    p = plot()
 
+    save_file = "plotting/chunlok/generated_plots/single_goal_visitation.svg"
 
-results_file = folder * "results.jld2"
-@load results_file results
-# println(results)
+    visits_arr = results[:visit_order]
+    episode_length_arr = results[:episode_length]
 
-settings_file = folder * "settings.jld2"
-println(settings_file)
-settings = FileIO.load(settings_file)["parsed_args"]
+    visit_perc = get_single_goal_percentage(visits_arr;step_size=step_size)
 
-print(settings)
-# print(sett)
+    for i in 1:4
+        plot!(p, 1:step_size:step_size*size(visit_perc)[2], visit_perc[i, :])
+    end
 
-error = results[:ttmaze_uniform_error]
-visits_arr = results[:visit_order]
-episode_length_arr = results[:episode_length]
-
-
-println(size(visits_arr))
-println(size(episode_length_arr))
-
-
-visit_perc = get_single_goal_percentage(visits_arr)
-
-println(size(visit_perc))
-
-for i in 1:4
-    println(size(visit_perc[i, :]))
-    plot!(p, 1:size(visit_perc)[2], visit_perc[i, :])
+    # print(error[3,10])
+    savefig(save_file)
+    println("Single goal visitation plot saved to $(save_file)")
 end
-
-# print(error[3,10])
-savefig(save_file)

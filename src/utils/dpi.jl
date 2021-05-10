@@ -5,7 +5,7 @@ using LinearAlgebra
 
 function get_freq(h, vals...)
     for (idx, val) ∈ enumerate(vals)
-        if val < h.edges[idx][1] || val > h.edges[1][end]
+        if val < h.edges[idx][1] || val >= h.edges[idx][end]
             return eltype(h.weights)(0)
         end
     end
@@ -15,7 +15,7 @@ end
 
 function get_freq(h, vals::AbstractVector)
     for (idx, val) ∈ enumerate(vals)
-        if val < h.edges[idx][1] || val > h.edges[1][end]
+        if val < h.edges[idx][1] || val >= h.edges[idx][end]
             return eltype(h.weights)(0)
         end
     end

@@ -46,10 +46,6 @@ function gen_dpi(num_states=100000, seed=1; exploring_starts=false, h_kwargs...)
             a = sample(policy, s, 1:4)
 
             for t ∈ 1:rand(1:15)
-                # println(state_filter_func(s))
-                if (state_filter_func(s) == 15.0)
-                    println("hello")
-                end
                 s, r, term = MinimalRLCore.step!(env, a)
                 a = sample(policy, s, 1:4)
                 push!(ss, state_filter_func(s))

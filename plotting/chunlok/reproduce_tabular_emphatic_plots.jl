@@ -6,8 +6,8 @@ using Statistics
 
 include("plot_utils.jl")
 
-num_steps = 4000
-log_interval = 10
+num_steps = 60000
+log_interval = 100
 
 
 function get_lines(data)
@@ -35,33 +35,37 @@ function get_lines(data)
     return xs, mean_line, std_err_line
 end
 
-sweep_params = ["eta", "demon_alpha_init"]
+sweep_params = ["eta", "alpha_init"]
 
 
 p = plot()
 
 
-ic = ItemCollection("experiment_data/EmphaticTest")
+ic = ItemCollection("M:/globus/OneDTMaze_Emphatic_Control_Real")
+# ic = ItemCollection("experiment_data/EmphaticTest")
 # ic = search(ic, Dict("demon_learner" => "SR"))
-ic = search(ic, Dict("demon_learner" => "SR"))
+
+demon_learner = "SR"
+ic = search(ic, Dict("demon_learner" => demon_learner))
 # EmphaticTest
-# print(diff(ic))
-# asdfsdf
+print(diff(ic))
 
+# sdfsdf
 
+metric = :oned_tmaze_start_error
 function plot_line(ic, demon_update_algo)
     println(diff(ic))
     filtered_ic = search(ic, Dict("demon_update" => demon_update_algo))
     println(diff(filtered_ic))
 
-    best_ic = get_best(filtered_ic, sweep_params, :ttmaze_direct_error)
+    best_ic = get_best(filtered_ic, sweep_params, metric)
     print_params(best_ic, sweep_params, [])
     
-    data = load_results(best_ic, :ttmaze_direct_error)
+    data = load_results(best_ic, metric)
     println(size(data))
 
     xs, mean_line, std_err_line = get_lines(data)
-    plot!(p, xs, mean_line, ribbons=std_err_line, label=demon_update_algo, ylabel="RMSE", xlabel="time step")
+    plot!(p, xs, mean_line, ribbons=std_err_line, label=demon_update_algo, ylabel="RMSE", xlabel="time step", ylim=(0,15), title=demon_learner)
 end
 
 plot_line(ic, "ESARSA")

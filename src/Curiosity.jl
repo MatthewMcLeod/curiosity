@@ -18,7 +18,7 @@ abstract type FeatureCreator end
 export ValueFeatureProjector, ActionValueFeatureProjector
 include("utils/learners.jl")
 include("utils/SRHorde.jl")
-
+include("utils/dpi.jl")
 
 export Auto
 include("optimizers/Auto.jl")
@@ -63,9 +63,6 @@ include("utils/experiment.jl")
 include("utils/agent.jl")
 include("utils/features.jl")
 include("utils/baseline_learners.jl")
-
-include("utils/dpi.jl")
-
 
 using GVFHordes
 export monte_carlo_returns
