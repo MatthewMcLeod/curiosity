@@ -169,7 +169,8 @@ function construct_agent(parsed)
 
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         # ODTMU.RoundRobinPolicy(), nothing, 0.0
-        throw("Round Robin not available")
+        TDGWU.RoundRobinPolicy, nothing, 0.0
+        # throw("Round Robin not available")
     else
         behaviour_num_tasks = 1
         num_SFs = 4
