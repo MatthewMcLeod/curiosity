@@ -178,6 +178,32 @@ function _init_learning_update(lu_type::Union{Type{TB}, Type{EmphESARSA}, Type{E
     end
 end
 
+function _init_learning_update(lu_type::Type{InterestTB},
+                                opt,
+                                parsed::Dict,
+                                prefix)
+    λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
+    interest_set_str = prefix == "" ? "interest_set" : join([prefix, "interest_set"], "_")
+    try
+        λ = parsed[λ_str]
+        interest_set = parsed[interest_set_str]
+
+        if (interest_set == "ttmaze")
+            if (parsed["exploring_starts"] == false)
+                @load "./src/data/dpi/ttmaze_exploring_starts_false.jld2" hdpi
+                interest_dpi = hdpi
+            end
+            obs_state_getter = (obs) -> obs[1]
+        else
+            # I think this throw is hidden. we need some new mechanism.
+            throw("invalid interest set")
+        end
+        lu_type(lambda=λ, opt=opt, hdpi=hdpi)
+    catch
+        throw("$(lu_type) needs: $(λ_str) (float), and $(interest_set_str) (string)")
+    end
+end
+
 function _init_learning_update(lu_type::Union{Type{ESARSA}, Type{SARSA}},
                                 opt,
                                 parsed::Dict,
