@@ -239,18 +239,6 @@ end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
-    num_steps = parsed["steps"]
-    Random.seed!(parsed["seed"])
-
-    cumulant_schedule = TDGWU.get_cumulant_schedule(parsed)
-
-    # exploring_starts = parsed["exploring_starts"]
-    env = OpenWorld(10, 10, cumulant_schedule=cumulant_schedule, start_type=:center)
-
-    agent = construct_agent(parsed)
-
-    goal_visitations = zeros(4)
-
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
         LoggerInitKey.INTERVAL => parsed["logger_interval"],
@@ -258,7 +246,20 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
+        
+        num_steps = parsed["steps"]
+        Random.seed!(parsed["seed"])
+        
+        cumulant_schedule = TDGWU.get_cumulant_schedule(parsed)
+        
+        # exploring_starts = parsed["exploring_starts"]
+        env = OpenWorld(10, 10, cumulant_schedule=cumulant_schedule, start_type=:center)
+        
+        agent = construct_agent(parsed)
+
+        goal_visitations = zeros(4)
         eps = 1
+        
         max_num_steps = num_steps
         steps = Int[]
 
