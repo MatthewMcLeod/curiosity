@@ -58,7 +58,7 @@ random_first_action = false
 [sweep_args]
 seed = "1:30"
 cumulant_schedule = ["DrifterDistractor"]
-eta = "5.0.^(-4:-1)"
+eta = "5.0.^(-3:-1)"
 behaviour_opt = ["Auto"]
 behaviour_learner = ["GPI"]
 behaviour_update = ["TB"]

@@ -4,7 +4,7 @@
 #SBATCH -o onedtmaze_control_esarsa_dpi.out # Standard output
 #SBATCH -e onedtmaze_control_esarsa_dpi.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3GB
-#SBATCH --time=02:00:00 #
+#SBATCH --time=01:30:00 #
 #SBATCH --ntasks=12
 #SBATCH --account=def-amw8
 

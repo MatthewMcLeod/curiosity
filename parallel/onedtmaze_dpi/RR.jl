@@ -4,8 +4,8 @@
 #SBATCH -o onedtmaze_rr_Auto.out # Standard output
 #SBATCH -e onedtmaze_rr_Auto.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3GB
-#SBATCH --time=05:00:00 #
-#SBATCH --ntasks=5
+#SBATCH --time=01:00:00 #
+#SBATCH --ntasks=8
 #SBATCH --account=def-amw8
 
 using Pkg

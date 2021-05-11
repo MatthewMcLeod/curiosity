@@ -4,8 +4,8 @@
 #SBATCH -o onedtmaze_GPI_dpi.out # Standard output
 #SBATCH -e onedtmaze_GPI_dpi.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3GB
-#SBATCH --time=04:00:00 #
-#SBATCH --ntasks=12
+#SBATCH --time=02:00:00 #
+#SBATCH --ntasks=36
 #SBATCH --account=def-amw8
 
 using Pkg
