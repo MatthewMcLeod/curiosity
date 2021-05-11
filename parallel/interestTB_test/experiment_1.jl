@@ -1,11 +1,11 @@
 #!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/julia/1.5.2/bin/julia
 #SBATCH --mail-user=chunlok@ualberta.ca
 #SBATCH --mail-type=ALL
-#SBATCH -o emphatic_control.out # Standard output
-#SBATCH -e emphatic_control.err # Standard error
+#SBATCH -o experiment_1.out # Standard output
+#SBATCH -e experiment_1.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
 #SBATCH --time=00:30:00 #
-#SBATCH --ntasks=32
+#SBATCH --ntasks=16
 #SBATCH --account=def-whitem
 
 using Pkg
