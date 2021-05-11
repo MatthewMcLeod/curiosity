@@ -19,6 +19,7 @@ StatsBase.sample(rng, p::GVFHordes.GVFParamFuncs.AbstractPolicy, s, actions) =
     sample(Weights([get(p;state_t = s, action_t = a) for a in actions]))
 
 function gen_dataset(num_start_states=500; action_noise = 0.0)
+    # Dataset from true uniform state distribution. This is not attainable with no action noise, so we deprecated it.
     parsed = OneDTmazeExperiment.default_args()
     parsed["cumulant_schedule"] = "Constant"
     parsed["cumulant"] = 1.0
@@ -70,18 +71,11 @@ function save_data(rets,obs,actions)
     @save "./src/data/OneDTMazeEvalSet.jld2" OneDTMazeEvalSet
 end
 
-function save_data_deterministic(rets,obs,actions)
-    OneDTMazeDeterministicEvalSet = Dict()
-    OneDTMazeDeterministicEvalSet["ests"] = rets
-    OneDTMazeDeterministicEvalSet["actions"] = actions
-    OneDTMazeDeterministicEvalSet["states"] = obs
-
-    @save "./src/data/OneDTMazeDeterministicEvalSet.jld2" OneDTMazeDeterministicEvalSet
-end
 
 function gen_dataset_uniform_from_start(num_start_states=500, seed=1; action_noise = 0.0,eval_set_size_per_gvf = 150)
+    # Generates dataset from based on uniform action weighting on the state distribution 
     # It is tricky to generate a uniform sampling without action noise as some states are not reachable. GVF policies cover the state space and randomizing action would make it uniform.
-    _,states,_= gen_dataset_special(num_start_states, seed; action_noise = action_noise,eval_set_size_per_gvf = eval_set_size_per_gvf)
+    _,states,_= gen_dataset_dpi(num_start_states, seed; action_noise = action_noise,eval_set_size_per_gvf = eval_set_size_per_gvf)
     all_states = vcat(states...)
     actions = rand(1:4,length(all_states))
     parsed = OneDTmazeExperiment.default_args()
@@ -109,8 +103,8 @@ function gen_dataset_uniform_from_start(num_start_states=500, seed=1; action_noi
     return horde_rets,all_states,actions
 end
 
-
-function gen_dataset_special(num_start_states=500, seed=1; action_noise = 0.0,eval_set_size_per_gvf = 150)
+function gen_dataset_dpi(num_start_states=500, seed=1; action_noise = 0.0,eval_set_size_per_gvf = 150)
+    # Generates dataset based on dpi for each GVF
     Random.seed!(seed)
     parsed = OneDTmazeExperiment.default_args()
     parsed["cumulant_schedule"] = "Constant"
@@ -148,14 +142,15 @@ function gen_dataset_special(num_start_states=500, seed=1; action_noise = 0.0,ev
                 if term
                     break
                 end
-                push!(ss, s[1:2])
                 a = policy(s)
+                push!(ss, s[1:2])
                 push!(as, a)
             end
         end
         #subsample all states in ss for evaluation subset
-        ss_eval = sample(ss,eval_set_size_per_gvf,replace=false)
-        as_eval = sample(as, eval_set_size_per_gvf, replace=false)
+        indices = sample(1:size(ss)[1], eval_set_size_per_gvf, replace=false)
+        ss_eval = ss[indices]
+        as_eval = as[indices]
 
         # @show start_states
         num_returns = 10
@@ -170,7 +165,7 @@ function gen_dataset_special(num_start_states=500, seed=1; action_noise = 0.0,ev
     return rets, start_states, actions
 end
 
-function save_data_special(rets,states,actions)
+function save_data_dpi(rets,states,actions)
     eval_set = Dict(
         "ests" => rets,
         "actions" => actions,

@@ -40,7 +40,7 @@ module LoggerKey
     const TEMP_PRINT = "TEMP_PRINT"
     const TTMAZE_ERROR = "TTMAZE_ERROR"
     const VALUE_MAP = "VALUE_MAP"
-    const ONEDTMAZEERROR = "ONEDTMAZEERROR"
+    const ONEDTMAZEERROR = "ONEDTMAZEERROR" # this old error metric gives true uniform distribution, but this is not reachable with no action noise
     const TWODGRIDWORLDERROR = "TWODGRIDWORLDERROR"
     const TWODGRIDWORLDERRORDPI = "TWODGRIDWORLDERRORDPI"
     const AUTOSTEP_STEPSIZE = "AutostepStepSize"
@@ -53,8 +53,8 @@ module LoggerKey
     const ONED_STATE_VISITATION = "ONED_STATE_VISITATION"
     const CUMULANTS = "CUMULANTS"
     const WC_PER_DEMON = "WC_PER_DEMON"
-    const ONEDTMAZEERROR_DPI = "ONEDTMAZEERROR_DPI"
-    const ONEDTMAZEERROR_UNIFORM = "ONEDTMAZEERROR_UNIFORM"
+    const ONEDTMAZEERROR_DPI = "ONEDTMAZEERROR_DPI" # error based on following d_pi for each GVF in the onedtmaze
+    const ONEDTMAZEERROR_UNIFORM = "ONEDTMAZEERROR_UNIFORM" # error with states following RR but using uniform aciton weightings
     const TTMAZE_STATE_VISITATION = "TTMAZE_STATE_VISITATION"
 end
 
