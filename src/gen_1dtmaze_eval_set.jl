@@ -148,14 +148,15 @@ function gen_dataset_special(num_start_states=500, seed=1; action_noise = 0.0,ev
                 if term
                     break
                 end
-                push!(ss, s[1:2])
                 a = policy(s)
+                push!(ss, s[1:2])
                 push!(as, a)
             end
         end
         #subsample all states in ss for evaluation subset
-        ss_eval = sample(ss,eval_set_size_per_gvf,replace=false)
-        as_eval = sample(as, eval_set_size_per_gvf, replace=false)
+        indices = sample(1:size(ss)[1], eval_set_size_per_gvf, replace=false)
+        ss_eval = ss[indices]
+        as_eval = as[indices]
 
         # @show start_states
         num_returns = 10

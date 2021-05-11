@@ -193,7 +193,11 @@ function _init_learning_update(lu_type::Type{InterestTB},
                 @load "./src/data/dpi/ttmaze_exploring_starts_false.jld2" hdpi
                 interest_dpi = hdpi
             end
-            obs_state_getter = (obs) -> obs[1]
+        elseif (interest_set == "oned_tmaze")
+            if (parsed["exploring_starts"] == "beg")
+                @load "./src/data/dpi/oned_tmaze_beg.jld2" hdpi
+                interest_dpi = hdpi
+            end
         else
             # I think this throw is hidden. we need some new mechanism.
             throw("invalid interest set")
