@@ -91,9 +91,11 @@ function proc_input(agent, obs)
 end
 
 function get_action(agent, state, obs)
-    action_probs = if agent.behaviour_learner isa OneDTMazeUtils.RoundRobinPolicy
+    action_probs = if agent.behaviour_learner isa OneDTMazeUtils.RoundRobinPolicy || agent.behaviour_learner isa TwoDGridWorldUtils.RoundRobinPolicy
         get_action_probs(agent.behaviour_learner, state, obs)
     elseif agent.behaviour_learner.update isa TabularRoundRobin
+        get_action_probs(agent.behaviour_learner.update, state, obs)
+
         get_action_probs(agent.behaviour_learner.update, state, obs)
     elseif agent.behaviour_learner isa BaselineUtils.FollowDemon || agent.behaviour_learner isa BaselineUtils.RandomDemons
         agent.behaviour_learner(obs)

@@ -1,0 +1,65 @@
+[config]
+save_dir = "TwoDGridWorld_RoundRobin"
+exp_file = "experiments/2d-gridworld.jl"
+exp_module_name = "TwoDGridWorldExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+steps = 100000
+
+logger_keys = ["TWODGRIDWORLDERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
+logger_interval = 100
+# Behaviour Items
+behaviour_learner = "RoundRobin"
+behaviour_reward_projector = "ideal_martha"
+exploration_strategy = "epsilon_greedy"
+behaviour_w_init = 4.0
+
+# Demon Attributes
+
+
+demon_discounts = 0.9
+demon_lambda = 0.9
+demon_policy_type = "greedy_to_cumulant"
+demon_trace = "AccumulatingTraces"
+
+# demon_learner = "SR"
+demon_rep = "ideal_martha"
+# demon_update = "TB"
+# demon_eta = 0.15
+# demon_opt = "Auto"
+
+# Environment Config
+constant_target= [-10.0,10.0]
+distractor = [1.0, 5.0]
+drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
+# env_step_penalty = -0.01
+
+
+# exploring_starts="beg"
+
+# Agent and Logger
+horde_type = "regular"
+intrinsic_reward = "weight_change"
+
+use_external_reward = true
+
+# num_tilings = 8
+# num_tiles = 2
+
+
+[sweep_args]
+seed = "1:10"
+cumulant_schedule = ["DrifterDistractor"]
+
+eta = "0.1 * 2.0.^(-8:0)"
+demon_alpha_init = [0.1, 0.5, 1.0] # Will be 1/tilings from sweep
+
+exploration_param = [0.1, 0.2, 0.3]
+demon_learner = ["Q", "SR"]
+demon_update = ["TB"]
+demon_opt = ["Auto", "Descent"]
+
+tiling_structure = [[8,8], [8,2], [1, 16]]
