@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_ESARSA_control"
+save_dir = "OneDTMaze_RR_dpi"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,9 +7,9 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 60000
+steps = 30000
 
-logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
+logger_keys = ["ONEDTMAZEERROR","ONEDTMAZEERROR_UNIFORM","ONEDTMAZEERROR_DPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
 logger_interval = 100
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
@@ -56,16 +56,16 @@ random_first_action = false
 
 
 [sweep_args]
-seed = "1:30"
+seed = "1:50"
 cumulant_schedule = ["DrifterDistractor"]
-eta = "2.0.^(-7:-2)"
+eta = "5.0.^(-4:0)"
 behaviour_opt = ["Auto"]
-behaviour_learner = ["Q"]
-behaviour_update = ["ESARSA"]
+behaviour_learner = ["RoundRobin"]
+behaviour_update = ["Q"]
 exploration_param = [0.1]
 demon_learner = ["Q", "SR"]
 demon_update = ["TB"]
-demon_opt = ["Descent"]
+demon_opt = ["Auto", "Descent"]
 
 # num_tilings = [4, 8]
 # num_tiles = [2]
