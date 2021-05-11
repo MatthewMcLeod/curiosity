@@ -3,11 +3,13 @@ using Reproduce
 using JLD2
 using FileIO
 
-function plot_single_reward(results)
+function plot_single_reward(results, logger_key)
+    previous_GKSwstype = get(ENV, "GKSwstype", "")
+    ENV["GKSwstype"] = "100"
+
     save_file = "plotting/chunlok/generated_plots/single_reward.svg"
 
     p = plot()
-    logger_key = :ttmaze_direct_error
 
     error = results[logger_key]
 
@@ -19,4 +21,6 @@ function plot_single_reward(results)
     # print(error[3,10])
     savefig(save_file)
     println("Single reward plot saved to $(save_file)")
+
+    ENV["GKSwstype"] = previous_GKSwstype 
 end
