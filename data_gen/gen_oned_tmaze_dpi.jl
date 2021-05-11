@@ -29,7 +29,7 @@ function gen_dpi(num_states=100000, seed=1; exploring_starts="beg", h_kwargs...)
 
     dpis = DPI[]
 
-    state_filter_func =  (state) -> state[1:2]
+    state_filter_func =  Curiosity.FeatureSubset(identity, 1:2)
     
     for gvf_i ∈ 1:4
         cumulant_schedule = ODTMU.get_cumulant_schedule(parsed)
@@ -42,7 +42,7 @@ function gen_dpi(num_states=100000, seed=1; exploring_starts="beg", h_kwargs...)
         while length(ss) < num_states
             s = MinimalRLCore.start!(env)
             push!(ss, state_filter_func(s))
-            
+
             a = policy(s)
             term = false
             while term == false
@@ -56,7 +56,7 @@ function gen_dpi(num_states=100000, seed=1; exploring_starts="beg", h_kwargs...)
             end
         end
 
-         push!(dpis, DPI(ss, policy; h_kwargs...))
+        push!(dpis, DPI(ss, policy; h_kwargs...))
     end
         
     return HordeDPI(dpis, state_filter_func)

@@ -52,11 +52,6 @@ discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(n
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    # println("hello, this is running!")
-
-    # println(lu.hdpi(obs, action))
-
-
     update_trace!(lu.trace,
                   e,
                   state,
