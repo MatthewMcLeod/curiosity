@@ -31,12 +31,14 @@ default_args() =
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
+        "behaviour_w_init" => 4.0,
         "exploration_param" => 0.2,
         "exploration_strategy" => "epsilon_greedy",
         "ϵ_range" => (0.4,0.1),
         "decay_period" => 5000,
         "warmup_steps" => 1000,
 
+        
         # Demon Attributes
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
@@ -169,7 +171,8 @@ function construct_agent(parsed)
 
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         # ODTMU.RoundRobinPolicy(), nothing, 0.0
-        throw("Round Robin not available")
+        TDGWU.RoundRobinPolicy(), nothing, 0.0
+        # throw("Round Robin not available")
     else
         behaviour_num_tasks = 1
         num_SFs = 4

@@ -393,4 +393,26 @@ function get_true_values(env::Curiosity.ContGridWorld, eval_set, gvf_idx)
     return copy_eval_est
 end
 
+
+Base.@kwdef mutable struct RoundRobinPolicy{GT} <: Learner
+    cur_goal::Int = 1
+    num_goals::Int = 4
+    goal_type::GT = NaiveGoalPolicy
+    update = nothing
+end
+
+Curiosity.update!(rrp::RoundRobinPolicy, args...) = if args[end-2]
+    rrp.cur_goal += 1
+    if rrp.cur_goal > rrp.num_goals
+        rrp.cur_goal = 1
+    end
+end
+
+Base.get(rrp::RoundRobinPolicy; state_t, action_t, kwargs...) =
+    get(rrp.goal_type(rrp.cur_goal); state_t = state_t, action_t = action_t)
+
+function get_action_probs(π::RoundRobinPolicy, features, state)
+    [get(π; state_t=state, action_t=a) for a ∈ 1:4]
+end
+
 end
