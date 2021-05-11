@@ -1,3 +1,5 @@
+using Statistics
+
 # # After implementing, I think I saw there is a Iterators.product that does this?
 function combine(dict_arr, key, vals)
     new_dict_arr = []
@@ -70,6 +72,7 @@ function load_results(ic, logger_key; return_type = "tensor")
                 push!(results,data[logger_key])
             catch e
                 println("Error for file $(file_path)")
+                println(e)
                 continue
             end
             
@@ -107,4 +110,15 @@ function get_single_goal_percentage(visits; step_size=10)
         goal_visits[:, index] += single_onehot(visits[episode], num_gvfs)
     end
     goal_visit_percentage = goal_visits / step_size
+end
+
+function smooth_lines(data, step)
+    # really simple smooth line function
+    means = []
+    for start in 1:step:size(data)[1]
+        chunk = data[start:min(start + step - 1, size(data)[1])]
+        chunk_mean = mean(chunk)
+        push!(means, chunk_mean)
+    end
+    return means
 end

@@ -29,4 +29,5 @@ include("updates/EmphESARSA.jl")
 include("updates/ETB.jl")
 include("updates/PriorESARSA.jl")
 include("updates/PriorTB.jl")
+include("updates/InterestTB.jl")
 

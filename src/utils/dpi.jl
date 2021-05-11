@@ -5,7 +5,7 @@ using LinearAlgebra
 
 function get_freq(h, vals...)
     for (idx, val) ∈ enumerate(vals)
-        if val < h.edges[idx][1] || val > h.edges[1][end]
+        if val < h.edges[idx][1] || val >= h.edges[idx][end]
             return eltype(h.weights)(0)
         end
     end
@@ -15,7 +15,7 @@ end
 
 function get_freq(h, vals::AbstractVector)
     for (idx, val) ∈ enumerate(vals)
-        if val < h.edges[idx][1] || val > h.edges[1][end]
+        if val < h.edges[idx][1] || val >= h.edges[idx][end]
             return eltype(h.weights)(0)
         end
     end
@@ -42,10 +42,11 @@ end
 
 struct HordeDPI
     dpis::Vector{DPI}
+    state_filter::Function
 end
 
 function (hdpi::HordeDPI)(state, action)
-    [dpi(state,action) for dpi in hdpi.dpis]
+    [dpi(hdpi.state_filter(state),action) for dpi in hdpi.dpis]
 end
 
 

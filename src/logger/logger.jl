@@ -29,6 +29,7 @@ include("tabular_tmaze_error_map.jl")
 include("intrinsic_reward.jl")
 include("behaviour_action_values.jl")
 include("one_d_state_visitation.jl")
+include("ttmaze_state_visitation.jl")
 
 # Module for scoping key names
 module LoggerKey
@@ -54,6 +55,7 @@ module LoggerKey
     const WC_PER_DEMON = "WC_PER_DEMON"
     const ONEDTMAZEERROR_DPI = "ONEDTMAZEERROR_DPI"
     const ONEDTMAZEERROR_UNIFORM = "ONEDTMAZEERROR_UNIFORM"
+    const TTMAZE_STATE_VISITATION = "TTMAZE_STATE_VISITATION"
 end
 
 module LoggerInitKey
@@ -84,7 +86,8 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.CUMULANTS => Cumulants,
     LoggerKey.WC_PER_DEMON => WC_Demon_Logger,
     LoggerKey.ONEDTMAZEERROR_DPI => OneDTMazeError_DPI,
-    LoggerKey.ONEDTMAZEERROR_UNIFORM => OneDTMazeError_Uniform
+    LoggerKey.ONEDTMAZEERROR_UNIFORM => OneDTMazeError_Uniform,
+    LoggerKey.TTMAZE_STATE_VISITATION => TTMazeStateVisitation
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
