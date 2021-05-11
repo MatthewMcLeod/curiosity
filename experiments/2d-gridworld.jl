@@ -239,6 +239,7 @@ end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
+    num_steps = parsed["steps"]
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
         LoggerInitKey.INTERVAL => parsed["logger_interval"],
@@ -247,7 +248,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
         
-        num_steps = parsed["steps"]
+
         Random.seed!(parsed["seed"])
         
         cumulant_schedule = TDGWU.get_cumulant_schedule(parsed)
