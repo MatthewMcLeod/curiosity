@@ -294,7 +294,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         if working == true
             println(goal_visitations)
         end
-        agent
+        env, agent
     end
 
 end
