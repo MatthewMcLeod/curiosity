@@ -35,6 +35,7 @@ demon_policy_type = "greedy_to_cumulant"
 # demon_opt = "Auto"
 demon_lambda = 0.9
 demon_trace = "AccumulatingTraces"
+demon_interest_set = "ttmaze"
 
 # Environment Config
 constant_target= [-10.0,10.0]
@@ -43,7 +44,7 @@ distractor = [1.0, 5.0]
 drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
 exploring_starts=false
 env_step_penalty= -0.01
-
+random_first_action = false
 
 # Agent and Logger
 horde_type = "regular"
