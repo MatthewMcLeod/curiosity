@@ -65,7 +65,7 @@ behaviour_learner = ["Q"]
 behaviour_update = ["ESARSA"]
 exploration_param = [0.1]
 demon_learner = ["Q", "SR"]
-demon_update = ["TB", "InterestTB"]
+demon_update = ["TB", "InterestTB", "ETB"]
 demon_opt = ["Auto"]
 
 # num_tilings = [4, 8]

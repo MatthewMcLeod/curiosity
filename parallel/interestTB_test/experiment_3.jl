@@ -1,9 +1,9 @@
-#!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/julia/1.5.2/bin/julia
+#!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/julia/1.6.0/bin/julia
 #SBATCH --mail-user=chunlok@ualberta.ca
 #SBATCH --mail-type=ALL
 #SBATCH -o experiment_3.out # Standard output
 #SBATCH -e experiment_3.err # Standard error
-#SBATCH --mem-per-experiment_3=4000M # Memory request of 3 GB
+#SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
 #SBATCH --time=00:30:00 #
 #SBATCH --ntasks=16
 #SBATCH --account=def-whitem
