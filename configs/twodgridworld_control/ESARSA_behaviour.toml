@@ -13,34 +13,27 @@ logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITAT
 logger_interval = 100
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
-behaviour_gamma = 0.90
+behaviour_gamma = 0.9
 behaviour_reward_projector = "ideal_martha"
 exploration_strategy = "epsilon_greedy"
 behaviour_lambda = 0.9
 behaviour_w_init = 4.0
+behaviour_trace = "ReplacingTraces"
 
 # Demon Attributes
 
-demon_alpha_init = 0.1 # Will be 1/tilings from sweep
+# demon_alpha_init = 0.1 # Will be 1/tilings from sweep
 demon_gamma = 0.95
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
 
-# demon_learner = "SR"
 demon_rep = "ideal_martha"
-# demon_update = "TB"
-# demon_eta = 0.15
-# demon_opt = "Auto"
 
 # Environment Config
 constant_target= [-10.0,10.0]
 distractor = [1.0, 5.0]
 drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
-# env_step_penalty = -0.01
-
-
-# exploring_starts="beg"
 
 # Agent and Logger
 horde_type = "regular"
@@ -51,22 +44,24 @@ use_external_reward = true
 # num_tilings = 8
 # num_tiles = 2
 
+behaviour_opt = "Auto"
+demon_opt = "Auto"
+behaviour_learner = "Q"
+behaviour_update = "ESARSA"
+
 
 [sweep_args]
 seed = "1:10"
+
 demon_alpha_init = [0.1, 0.5, 1.0] # Will be 1/tilings from sweep
 cumulant_schedule = ["DrifterDistractor"]
 eta = "0.1 * 2.0.^(-8:0)"
-behaviour_opt = ["Auto"]
-behaviour_learner = ["Q"]
-behaviour_update = ["ESARSA"]
+
 exploration_param = [0.1, 0.3]
 demon_learner = ["Q", "SR"]
 demon_update = ["TB"]
-demon_opt = ["Auto", "Descent"]
 
-# num_tilings = [4, 8]
-# num_tiles = [2]
+
 tiling_structure = [[8,8], [8,2], [1, 16]]
-start_dist = ["center"]
-behaviour_trace = ["ReplacingTraces"]
+start_dist = ["center", "uniform"]
+
