@@ -119,12 +119,12 @@ OpenWorld(width, height, max_action_noise=0.1, drift_noise=0.001; cumulant_sched
     goal_locs[end, 1] = 2
     goal_locs[end, end] = 4
 
-    start = if start_type == :none
+    start = if start_type == :uniform
         nothing
     elseif start_type == :center
         OpenWorldContParams.center_start_func
     else
-        throw("error")
+        throw("Only starting dist availble is center (center area) or uniform (uniform random)")
     end
     
     ContGridWorld(base_walls,
