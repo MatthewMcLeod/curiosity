@@ -11,6 +11,7 @@ steps = 100000
 
 logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
+
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
 behaviour_gamma = 0.9
@@ -22,13 +23,12 @@ behaviour_trace = "ReplacingTraces"
 
 # Demon Attributes
 
-# demon_alpha_init = 0.1 # Will be 1/tilings from sweep
 demon_gamma = 0.95
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
-
 demon_rep = "ideal_martha"
+
 
 # Environment Config
 constant_target= [-10.0,10.0]
@@ -38,12 +38,7 @@ drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
 # Agent and Logger
 horde_type = "regular"
 intrinsic_reward = "weight_change"
-
 use_external_reward = true
-
-# num_tilings = 8
-# num_tiles = 2
-
 behaviour_opt = "Auto"
 demon_opt = "Auto"
 behaviour_learner = "Q"
