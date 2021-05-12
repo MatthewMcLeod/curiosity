@@ -1,5 +1,5 @@
 [config]
-save_dir = "test_InterestTBExperiment2GPI"
+save_dir = "test_Experiment2_GPI"
 exp_file = "experiments/tabular_tmaze.jl"
 exp_module_name = "TabularTMazeExperiment"
 exp_func_name = "main_experiment"

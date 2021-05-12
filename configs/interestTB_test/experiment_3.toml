@@ -30,6 +30,7 @@ demon_discounts = 0.9
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
+demon_interest_set = "oned_tmaze"
 
 # demon_learner = "SR"
 # demon_rep = "ideal_martha"
