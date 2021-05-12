@@ -19,7 +19,7 @@ const SRCU = Curiosity.SRCreationUtils
 default_args() =
     Dict(
         "logger_interval" => 100,
-        "start_dist" => "center"
+        "start_dist" => "center",
 
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
