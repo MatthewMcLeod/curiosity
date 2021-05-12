@@ -9,7 +9,7 @@ function get_freq(h, vals...)
             return eltype(h.weights)(0)
         end
     end
-    proj = [searchsortedfirst(h.edges[i], val) for (i, val) ∈ enumerate(vals)]
+    proj = [searchsortedlast(h.edges[i], val) for (i, val) ∈ enumerate(vals)]
     h.weights[proj...]
 end
 
@@ -19,7 +19,7 @@ function get_freq(h, vals::AbstractVector)
             return eltype(h.weights)(0)
         end
     end
-    proj = [searchsortedfirst(h.edges[i], val) for (i, val) ∈ enumerate(vals)]
+    proj = [searchsortedlast(h.edges[i], val) for (i, val) ∈ enumerate(vals)]
     h.weights[proj...]
 end
 
@@ -40,9 +40,9 @@ function (dpi::DPI)(state, action)
     s_p*a_p
 end
 
-struct HordeDPI
+struct HordeDPI{F}
     dpis::Vector{DPI}
-    state_filter::Function
+    state_filter::F
 end
 
 function (hdpi::HordeDPI)(state, action)

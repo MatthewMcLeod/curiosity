@@ -29,7 +29,7 @@ function gen_dpi(num_states=100000, seed=1; exploring_starts=false, h_kwargs...)
 
     dpis = DPI[]
 
-    state_filter_func =  (state) -> state[1]
+    state_filter_func =  Curiosity.FeatureSubset(identity, 1)
     
     for gvf_i ∈ 1:4
         cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
