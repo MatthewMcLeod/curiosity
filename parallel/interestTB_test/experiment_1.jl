@@ -4,8 +4,8 @@
 #SBATCH -o experiment_1.out # Standard output
 #SBATCH -e experiment_1.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=00:30:00 #
-#SBATCH --ntasks=16
+#SBATCH --time=01:30:00 #
+#SBATCH --ntasks=8
 #SBATCH --account=def-whitem
 
 using Pkg

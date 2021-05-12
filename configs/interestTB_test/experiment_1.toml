@@ -1,5 +1,5 @@
 [config]
-save_dir = "test_Experiment1"
+save_dir = "Experiment1"
 exp_file = "experiments/tabular_tmaze.jl"
 exp_module_name = "TabularTMazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,8 +7,8 @@ arg_iter_type = "iter"
 
 [static_args]
 
-# steps = 2000
-steps = 200
+steps = 2000
+# steps = 200
 logger_keys = ["TTMAZE_ERROR", "TTMAZE_UNIFORM_ERROR", "TTMAZE_OLD_ERROR", "TTMAZE_DIRECT_ERROR"]
 
 # Behaviour Items
@@ -59,7 +59,7 @@ demon_alpha_init = [0.1, 1.0, 5.0, 10.0]
 demon_eta = [0.03, 0.1, 0.3, 1.0]
 demon_opt = ["Auto"]
 demon_learner = ["SR", "Q"]
-demon_update = ["TB", "InterestTB", "ETB"]
+demon_update = ["EmphESARSA", "InterestTB", "ETB"]
 exploration_param = [0.0]
 
 # demon_opt = ["Auto"]
