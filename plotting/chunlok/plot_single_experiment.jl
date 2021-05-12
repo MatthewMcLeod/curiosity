@@ -4,7 +4,8 @@ include("plot_single_state_visitation_heatmap_ttmaze.jl")
 include("plot_single_goal_visitation.jl")
 
 
-folder = "TabularTMazeExperiment/RP_0_0x6924158e57fd4f5b/"
+folder = "TabularTMazeExperiment/RP_0_0x5a7a1bf77b5c22a4/"
+# folder = "OneDTMazeExperiment/RP_0_0x47b5fa637a311ce0/"
 
 log_interval = 100
 num_steps = 30000
