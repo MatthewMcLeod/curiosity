@@ -57,7 +57,7 @@ cumulant_schedule = ["DrifterDistractor"]
 eta = "0.1 * 2.0.^(-8:0)"
 demon_alpha_init = [0.1, 0.5, 1.0] # Will be 1/tilings from sweep
 
-demon_learner = ["Q"]
+demon_learner = ["Q", "SR"]
 demon_update = ["TB"]
 demon_opt = ["Auto"]
 
