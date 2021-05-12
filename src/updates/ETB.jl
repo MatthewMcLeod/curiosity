@@ -3,6 +3,7 @@
 Base.@kwdef mutable struct ETB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
+    hdpi::HordeDPI
     trace::T = AccumulatingTraces()
     e::IdDict = IdDict()
     followon::IdDict = IdDict()
@@ -56,7 +57,12 @@ function update!(lu::ETB,
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    interest = get_interest(learner, obs)
+    # interest = get_interest(learner, lu, obs, action)
+
+    # using dpi for interest instead
+    # println(typeof(lu.hdpi))
+    interest = lu.hdpi(obs, action)
+
     # getting IS ratio
     if (behaviour_pis[action] == 0)
         ρ = zeros(size(target_pis[:, action]))
@@ -161,7 +167,19 @@ function update!(lu::ETB,
     followon = get!(()->zeros(learner.num_demons), lu.followon, weights)::typeof(zeros(learner.num_demons))
 
     # Setting interest to constant ones for now for each demon
-    interest = get_interest(learner, obs)
+    # interest = get_interest(learner, lu, obs, action)
+
+    demon_interest = lu.hdpi(obs, action)
+    num_repeat = convert(Integer, (learner.num_demons - learner.num_tasks) / learner.num_tasks)
+    if (rem(learner.num_demons - learner.num_tasks, learner.num_tasks) != 0)
+        println("The number to repeat for SF demons aren't even with the number of tasks for SR. Something might be wrong :(")
+    end
+
+    SF_interest = repeat(demon_interest, inner=num_repeat)
+    reward_interest = demon_interest
+
+    interest = vcat(reward_interest, SF_interest)
+
     # getting IS ratio
     behaviour_pis = behaviour_pi_func(state, obs)
     if (behaviour_pis[action] == 0)
@@ -178,6 +196,7 @@ function update!(lu::ETB,
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
     emphasis = ρ .* (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
     reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
+
 
     # Update Traces: See update_utils.jl
     update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action]; emphasis=SF_emphasis)

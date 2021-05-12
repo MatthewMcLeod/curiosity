@@ -72,7 +72,7 @@ function get_demon_parameters(lu::LearningUpdate, learner, demons, obs, state, a
     C, next_discounts, target_pis, next_target_pis
 end
 
-function get_interest(learner, obs)
+function get_interest(learner, lu, obs, action)
     # An easy way to swap around the interest function easily.
     # This might want to be included into the agent config at some point,
     # but currently we can just leave it as is.

@@ -29,25 +29,25 @@ function gen_dpi(num_states=100000, seed=1; exploring_starts=false, h_kwargs...)
 
     dpis = DPI[]
 
-    state_filter_func =  Curiosity.FeatureSubset(identity, 1)
+    state_filter_func =  Curiosity.FeatureSubset(identity, 1:1)
     
     for gvf_i ∈ 1:4
         cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
         exploring_starts = parsed["exploring_starts"]
         env = TabularTMaze(exploring_starts, cumulant_schedule)
 
-        ss = Float64[]
+        ss = Vector{Float64}[]
         as = Int[]
-        policy = GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(gvf_i;kwargs...))
+        policy = TTMU.GoalPolicy(gvf_i)
         
         while length(ss) < num_states
             s = MinimalRLCore.start!(env)
             push!(ss, state_filter_func(s))
-            a = sample(policy, s, 1:4)
+            a = policy(s)
 
             for t ∈ 1:rand(1:15)
                 s, r, term = MinimalRLCore.step!(env, a)
-                a = sample(policy, s, 1:4)
+                a = policy(s)
                 push!(ss, state_filter_func(s))
                 if term
                     break

@@ -1,4 +1,4 @@
-#!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/julia/1.5.2/bin/julia
+#!/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/julia/1.6.0/bin/julia
 #SBATCH --mail-user=chunlok@ualberta.ca
 #SBATCH --mail-type=ALL
 #SBATCH -o experiment_1.out # Standard output

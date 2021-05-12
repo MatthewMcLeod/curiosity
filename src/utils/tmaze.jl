@@ -5,6 +5,7 @@ using GVFHordes
 import ..TMazeCumulantSchedules
 import ..GVFSRHordes
 using Distributions
+using ...StatsBase
 const TTMCS = TMazeCumulantSchedules
 
 const NUM_DEMONS = 4
@@ -176,6 +177,18 @@ function demon_target_policy(gvf_i; kwargs...)
         0.0
     end
     return action_prob
+end
+
+struct GoalPolicy <: GVFHordes.GVFParamFuncs.AbstractPolicy
+    goal::Int
+end
+(π::GoalPolicy)(s) = begin
+    sample(Weights([demon_target_policy(π.goal, state_t=s, action_t=a) for a ∈ 1:4]))
+end
+
+function Base.get(π::GoalPolicy; state_t, action_t, kwargs...)
+    s = state_t[1]
+    demon_target_policy(π.goal; state_t=s, action_t)
 end
 
 function get_true_values(env::Curiosity.TabularTMaze, eval_set)
