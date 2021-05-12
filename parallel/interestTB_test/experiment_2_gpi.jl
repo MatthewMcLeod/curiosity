@@ -4,8 +4,8 @@
 #SBATCH -o experiment_2_gpi.out # Standard output
 #SBATCH -e experiment_2_gpi.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=00:30:00 #
-#SBATCH --ntasks=32
+#SBATCH --time=08:30:00 #
+#SBATCH --ntasks=64
 #SBATCH --account=def-whitem
 
 using Pkg

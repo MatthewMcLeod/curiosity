@@ -4,8 +4,8 @@
 #SBATCH -o emphatic_control.out # Standard output
 #SBATCH -e emphatic_control.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=00:30:00 #
-#SBATCH --ntasks=16
+#SBATCH --time=09:30:00 #
+#SBATCH --ntasks=164
 #SBATCH --account=def-whitem
 
 using Pkg
