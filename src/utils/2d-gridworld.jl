@@ -204,7 +204,7 @@ function create_demons(parsed, demon_projected_fc = nothing)
     demons = if parsed["demon_learner"] != "SR"
         GVFHordes.Horde(
             [GVFHordes.GVF(GVFHordes.GVFParamFuncs.FeatureCumulant(i+2),
-                           GoalTermination(0.9),
+                           GoalTermination(parsed["demon_gamma"]),
                            NaiveGoalPolicy(i)) for i in 1:4])
     elseif parsed["demon_learner"] == "SR"
         @assert demon_projected_fc != nothing
@@ -214,7 +214,7 @@ function create_demons(parsed, demon_projected_fc = nothing)
                      NaiveGoalPolicy(i)) for i in 1:4])
 
         SF_policies = [NaiveGoalPolicy(i) for i in 1:4]
-        SF_discounts = [GoalTermination(0.9) for i in 1:4]
+        SF_discounts = [GoalTermination(parsed["demon_gamma"]) for i in 1:4]
         num_SFs = length(SF_policies)
         SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
         GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)

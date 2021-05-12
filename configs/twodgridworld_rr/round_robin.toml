@@ -20,7 +20,7 @@ behaviour_w_init = 4.0
 # Demon Attributes
 
 
-demon_discounts = 0.9
+demon_discount = 0.95
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
