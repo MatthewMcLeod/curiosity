@@ -37,9 +37,9 @@ demon_beta_m = 0.9
 demon_beta_v = 0.99
 
 # Environment Config
-constant_target= 1.0
+constant_target= [-10.0,10.0]
 cumulant_schedule = "DrifterDistractor"
-distractor = [1.0, 1.0]
+distractor = [1.0, 5.0]
 drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
 exploring_starts=false
 
