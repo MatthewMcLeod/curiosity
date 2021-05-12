@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 60000
+steps = 100000
 
 logger_keys = ["TWODGRIDWORLDERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
@@ -16,14 +16,13 @@ behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
 behaviour_gamma = 0.90
 behaviour_reward_projector = "ideal_martha"
 exploration_strategy = "epsilon_greedy"
-# behaviour_trace = "AccumulatingTraces"
-behaviour_lambda = 0.95
+behaviour_lambda = 0.9
 behaviour_w_init = 4.0
 
 # Demon Attributes
 
 demon_alpha_init = 0.1 # Will be 1/tilings from sweep
-demon_discounts = 0.9
+demon_gamma = 0.95
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
@@ -55,18 +54,19 @@ use_external_reward = true
 
 [sweep_args]
 seed = "1:10"
+demon_alpha_init = [0.1, 0.5, 1.0] # Will be 1/tilings from sweep
 cumulant_schedule = ["DrifterDistractor"]
 eta = "0.1 * 2.0.^(-8:0)"
 behaviour_opt = ["Auto"]
 behaviour_learner = ["Q"]
 behaviour_update = ["ESARSA"]
-exploration_param = [0.1, 0.2, 0.3]
-demon_learner = ["SR"]
+exploration_param = [0.1, 0.3]
+demon_learner = ["Q", "SR"]
 demon_update = ["TB"]
 demon_opt = ["Auto", "Descent"]
 
 # num_tilings = [4, 8]
 # num_tiles = [2]
 tiling_structure = [[8,8], [8,2], [1, 16]]
-exploring_starts= ["beg"]
+start_dist = ["center"]
 behaviour_trace = ["ReplacingTraces"]

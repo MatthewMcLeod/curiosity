@@ -254,9 +254,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         
         cumulant_schedule = TDGWU.get_cumulant_schedule(parsed)
         
-        # exploring_starts = parsed["exploring_starts"]
         start_dist = Symbol(parsed["start_dist"])
-        @show start_dist
         env = OpenWorld(10, 10, cumulant_schedule=cumulant_schedule, start_type=start_dist)
         
         agent = construct_agent(parsed)
