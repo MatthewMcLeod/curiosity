@@ -131,7 +131,6 @@ function update!(lu::InterestTB,
     active_state_action = get_active_action_state_vector(state, action, length(state), learner.num_actions)
 
     projected_state = learner.feature_projector(obs, action, next_obs)
-    projected_state_action = get_active_action_state_vector(projected_state, action, size(learner.feature_projector), learner.num_actions)
 
     (reward_C, SF_C) = C[1:learner.num_tasks] , C[learner.num_tasks + 1:end]
     (reward_discounts, SF_discounts) = discounts[1:learner.num_tasks], discounts[learner.num_tasks+1:end]
@@ -141,15 +140,15 @@ function update!(lu::InterestTB,
 
     # Update Traces: See update_utils.jl
     update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
-    update_trace!(lu.trace, e_w, projected_state_action, λ, reward_discounts, reward_target_pis[:, action])
+    update_trace!(lu.trace, e_w, projected_state, λ, reward_discounts, reward_target_pis[:, action])
     # e_nz = e_nz ∪ active_state_action.nzind
     # e_w_nz = e_w_nz ∪ projected_state_action.nzind
     if λ == 0.0
         e_nz = active_state_action.nzind
-        e_w_nz = projected_state_action.nzind
+        e_w_nz = projected_state.nzind
     else
         e_nz = e_nz ∪ active_state_action.nzind
-        e_w_nz = e_w_nz ∪ projected_state_action.nzind
+        e_w_nz = e_w_nz ∪ projected_state.nzind
     end
 
 
@@ -163,7 +162,7 @@ function update!(lu::InterestTB,
     target = SF_C + SF_next_discounts .* reward_feature_backup
     td_err = target - ψ * active_state_action
 
-    pred_err = reward_C - w * projected_state_action
+    pred_err = reward_C - w * projected_state
 
     # This should always be true as this is immediate next step prediction which is equivalent to having discounts of 0 for all states
     @assert sum(reward_discounts) == 0
@@ -183,9 +182,9 @@ function update!(lu::InterestTB,
 
         # reward state discount is always  0 so no need for next_state_action.
         # state_discount_r = -reward_next_discounts * projected_next_state_action'
-        state_discount_r = projected_state_action'
+        state_discount_r = projected_state'
         abs_ϕ_w = if λ == 0.0
-            abs.(repeat(projected_state_action, outer=(1, length(pred_err)))')
+            abs.(repeat(projected_state, outer=(1, length(pred_err)))')
         else
             abs.(e_w)
         end
@@ -195,7 +194,7 @@ function update!(lu::InterestTB,
         α = lu.opt.eta
         if λ == 0.0
             ψ[:, active_state_action.nzind] .+= (α  * td_err) * active_state_action.nzval'
-            w .= w .+ α * pred_err * projected_state_action'
+            w .= w .+ α * pred_err * projected_state'
         else
             ψ[:, e_nz] .+= (α  * td_err) .* e_ψ[:, e_nz]
             w[:, e_w_nz] .+= (α  * pred_err) .* e_w[:, e_w_nz]

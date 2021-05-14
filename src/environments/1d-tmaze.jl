@@ -15,6 +15,7 @@ const ACTIONS = [UP, RIGHT, DOWN, LEFT]
 
 const EPSILON = 0.05
 const ACTION_STEP = 0.08
+const MOVE_NOISE = 0.00
 
 end
 
@@ -30,7 +31,7 @@ Base.@kwdef struct OneDTMaze <: MinimalRLCore.AbstractEnvironment
     cumulant_schedule::CumulantSchedule = TMazeCumulantSchedules.Constant(1.0)
     starts::String = "beg"
     env_reward::Float64 = -0.01
-    move_noise::Float64 = 0.0
+    move_noise::Float64 = OneDTmazeConst.MOVE_NOISE
 
 end
 

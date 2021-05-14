@@ -33,6 +33,7 @@ docs/site/
 /OneDTMazeExperiment
 /plotting/chunlok/generated_plots
 local_data/
+/plotting/*.jl.ipynb
 
 /experiment_data
 notebooks/*.pdf

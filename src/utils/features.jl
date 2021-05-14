@@ -10,6 +10,8 @@ Base.length(fc::FeatureSubset) = Base.size(fc.fc)
 (fc::FeatureSubset)(s; kwargs...) =
     fc.fc(s[fc.subset]; kwargs...)
 
+(fc::FeatureSubset)(s,a,s_tp1) = fc.fc(s[fc.subset],a,s_tp1[fc.subset])
+
 struct Sparsify{FC}
     fc::FC
 end

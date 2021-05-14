@@ -1,24 +1,6 @@
 module SRCreationUtils
     using GVFHordes
     import ..GVFSRHordes
-# function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_actions, state_constructor)
-#     return GVFSRHordes.SFHorde([GVF(MountainCarStateActionCumulant(s,a,state_constructor),
-#                     gvf_pseudoterm,
-#                     gvf_policy) for s in 1:num_features for a in 1:num_actions])
-# end
-#
-# function make_SF_horde(discount, num_features, num_actions, state_constructor)
-#     steps_to_wall_horde = make_SF_for_policy(EnergyPumpPolicy(true),
-#                 GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0),
-#                 num_features, num_actions, state_constructor)
-#
-#     steps_to_goal_horde = make_SF_for_policy(EnergyPumpPolicy(true),
-#                 GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0),
-#                 num_features, num_actions, state_constructor)
-#
-#     SF_horde = GVFSRHordes.merge(steps_to_wall_horde,steps_to_goal_horde)
-#     return SF_horde
-# end
 
 struct TileCodeStateActionCumulant <: GVFParamFuncs.AbstractCumulant
     state_num::Int
@@ -30,6 +12,18 @@ function Base.get(cumulant::TileCodeStateActionCumulant; kwargs...)
     state = kwargs[:constructed_state_t]
     action = kwargs[:action_t]
     if state[cumulant.state_num] == 1 && action == cumulant.action
+        return 1
+    else
+        return 0
+    end
+end
+
+struct TileCodeStateCumulant <: GVFParamFuncs.AbstractCumulant
+    state_num::Int
+end
+function Base.get(cumulant::TileCodeStateCumulant; kwargs...)
+    state = kwargs[:constructed_state_t]
+    if state[cumulant.state_num] == 1
         return 1
     else
         return 0
@@ -57,5 +51,22 @@ function create_SF_horde(policies, discounts, projected_feature_constructor, act
     return SF_horde
 end
 
+function create_SF_for_policy_V2(policy,discount,reward_feature_constructor)
+    num_features = size(reward_feature_constructor)
+    SF = GVFSRHordes.SFHorde([GVF(
+                        TileCodeStateCumulant(s),
+                        discount,
+                        policy) for s in 1:num_features])
+    return SF
+
+end
+
+function create_SF_horde_V2(policies,discounts,projected_feature_constructor,action_set)
+    SF_horde = create_SF_for_policy_V2(policies[1], discounts[1], projected_feature_constructor)
+    for i in 2:length(policies)
+        SF_horde = GVFSRHordes.merge(SF_horde, create_SF_for_policy_V2(policies[i], discounts[i], projected_feature_constructor))
+    end
+    return SF_horde
+end
 
 end
