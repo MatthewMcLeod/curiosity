@@ -216,7 +216,7 @@ function create_demons(parsed, demon_projected_fc = nothing)
         SF_policies = [NaiveGoalPolicy(i) for i in 1:4]
         SF_discounts = [GoalTermination(0.9) for i in 1:4]
         num_SFs = length(SF_policies)
-        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
         GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
     else
         throw(ArgumentError("Cannot create demons"))
@@ -270,14 +270,30 @@ end
 
 function project_features(fc::IdealDemonFeatures, state)
     new_state = sparsevec(convert(Array{Int,1}, [check_goal(i, state) for i in 1:4]))
-    # if sum(new_state) != 0
-    #     @show state, new_state
-    # end
     return new_state
 end
 
 (FP::IdealDemonFeatures)(state) = project_features(FP, state)
 Base.size(FP::IdealDemonFeatures) = 4
+
+####
+# Ideal State Action Feature Creator
+####
+struct IdealStateActionDemonFeatures <: FeatureCreator
+    num_actions::Int
+end
+
+function project_features(fc::IdealStateActionDemonFeatures, s_t, a_t, s_tp1)
+    goal_ind = findfirst([check_goal(i, s_tp1) for i in 1:4])
+    reward_feature = zeros(Int(fc.num_actions*4))
+    if !(goal_ind isa Nothing)
+        reward_feature[Int((goal_ind-1)*fc.num_actions + a_t)] = 1
+    end
+    return sparsevec(reward_feature)
+end
+
+(FP::IdealStateActionDemonFeatures)(s_t,a_t,s_tp1) = project_features(FP, s_t, a_t, s_tp1)
+Base.size(FP::IdealStateActionDemonFeatures) = 4 * FP.num_actions
 
 struct MarthaIdealDemonFeatures <: FeatureCreator
 end

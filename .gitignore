@@ -31,6 +31,7 @@ docs/site/
 /plotting/plots/
 /data
 /OneDTMazeExperiment
+/TwoDGridWorldExperiment
 /plotting/chunlok/generated_plots
 local_data/
 /plotting/*.jl.ipynb
