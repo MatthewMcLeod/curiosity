@@ -111,7 +111,7 @@ end
 
 end
 
-OpenWorld(width, height, max_action_noise=0.1, drift_noise=0.001; cumulant_schedule=nothing, normalized=true, start_type=:none) = begin
+OpenWorld(width, height, max_action_noise=0.1, drift_noise=0.001; per_step_rew=0.0, cumulant_schedule=nothing, normalized=true, start_type=:none) = begin
     base_walls = zeros(Int, width, height)
     goal_locs = zeros(Int, width, height)
     goal_locs[1, 1] = 1
@@ -133,5 +133,6 @@ OpenWorld(width, height, max_action_noise=0.1, drift_noise=0.001; cumulant_sched
                   start,
                   max_action_noise,
                   drift_noise,
-                  normalized)
+                  normalized,
+                  per_step_rew)
 end

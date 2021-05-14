@@ -1,5 +1,5 @@
 [config]
-save_dir = "test_Experiment4_GPI"
+save_dir = "Experiment4_GPI_neg"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,8 +7,8 @@ arg_iter_type = "iter"
 
 [static_args]
 
-# steps = 60000
-steps = 200
+steps = 60000
+# steps = 200
 
 logger_keys = ["ONEDTMAZEERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES", "ONEDTMAZEERROR_DPI"]
 logger_interval = 100
@@ -40,7 +40,7 @@ demon_rep = "ideal_martha"
 constant_target= [-10.0,10.0]
 distractor = [1.0, 5.0]
 drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
-# env_step_penalty = -0.01
+env_step_penalty = -0.01
 
 
 # exploring_starts="beg"
@@ -66,7 +66,7 @@ behaviour_learner = ["GPI"]
 behaviour_update = ["TB"]
 exploration_param = [0.1]
 demon_learner = ["Q", "SR"]
-demon_update = ["TB", "InterestTB", "ETB"]
+demon_update = ["EmphESARSA", "InterestTB", "ETB"]
 demon_opt = ["Auto"]
 
 # num_tilings = [4, 8]
