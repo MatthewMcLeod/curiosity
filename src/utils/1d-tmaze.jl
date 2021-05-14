@@ -198,8 +198,8 @@ Base.size(FP::IdealStateActionDemonFeatures) = 16
 struct IdealDemonFeatures <: FeatureCreator
 end
 
-function project_features(fc::IdealDemonFeatures, state)
-    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state) for i in 1:4]))
+function project_features(fc::IdealDemonFeatures, state,action,state_tp1)
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state_tp1) for i in 1:4]))
     return new_state
 end
 
@@ -207,6 +207,7 @@ end
 Base.size(FP::IdealDemonFeatures) = 4
 
 struct MarthaIdealDemonFeatures <: FeatureCreator
+    num_actions::Int
 end
 
 function project_features(fc::MarthaIdealDemonFeatures, state)
@@ -283,7 +284,7 @@ function project_features(fc::FeatureCreator, obs, a_t, obs_tp1)
     state_ind = (segment-1)*fc.num_partitions + partition_offset
     state_action_ind = state_ind * fc.num_actions + a_t
 
-    state_action[state_action_ind]
+    state_action[state_action_ind] = 1
     return sparsevec(state_action)
 end
 (FP::TMazeEncoding)(state, action, state_tp1) = project_features(FP, state, action, state_tp1)

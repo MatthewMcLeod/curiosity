@@ -8,7 +8,8 @@ using JLD2
 # data_home = "../Experiment2_d_pi"
 # data_home = "../data/OneDTMaze_RR_dpi"
 # data_home = "../data/OneDTMaze_Control_dpi"
-data_home = "../OneDTMaze_RR_dpi"
+# data_home = "../OneDTMaze_RR_dpi"
+data_home = "../OneDTMaze_Control_dpi_new_method_for_reward_features"
 
 include("./plot_utils.jl")
 GPU = GeneralPlotUtils

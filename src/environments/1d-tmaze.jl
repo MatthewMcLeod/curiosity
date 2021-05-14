@@ -15,7 +15,7 @@ const ACTIONS = [UP, RIGHT, DOWN, LEFT]
 
 const EPSILON = 0.05
 const ACTION_STEP = 0.08
-const MOVE_NOISE = 0.00
+const MOVE_NOISE = 0.01
 
 end
 

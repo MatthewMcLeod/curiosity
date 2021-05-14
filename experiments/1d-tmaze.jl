@@ -50,13 +50,11 @@ default_args() =
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.99,
         "demon_beta_v" => 0.99,
-        "demon_reward_feature_type"=>"action_state",
-
         #shared
         # "num_tiles" => 2,
         # "num_tilings" =>8,
         "tiling_structure" => [2,8],
-        "demon_rep" => "ideal_state_action",
+        "demon_rep" => "ideal",
         # "demon_rep" => "tilecoding",
         "demon_num_tiles" => 8,
         "demon_num_tilings" => 1,
@@ -150,12 +148,12 @@ function construct_agent(parsed)
                 Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
             1:2), false)
     elseif parsed["demon_rep"] == "ideal"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2), true)
+        Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2)
     elseif parsed["demon_rep"] == "ideal_state_action"
         t = ODTMU.IdealStateActionDemonFeatures(4)
         Curiosity.FeatureSubset(t, 1:2)
     elseif parsed["demon_rep"] == "ideal_martha"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.MarthaIdealDemonFeatures(), 1:2), false)
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.MarthaIdealDemonFeatures(4), 1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
