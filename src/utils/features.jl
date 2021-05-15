@@ -46,20 +46,23 @@ end
 
 Base.size(VFP::ValueFeatureProjector) = VFP.pf_length
 
-mutable struct ActionValueFeatureProjector <: FeatureCreator
-    func::Function
-    pf_length::Int
+mutable struct ActionValueFeatureProjector{T} <: FeatureCreator
+    func::T
+    num_actions::Int
 end
 
-function project_features(FP::ActionValueFeatureProjector,state)
-    return FP.func(state)
+function project_features(FP::ActionValueFeatureProjector,state,action,state_tp1)
+    state_action = spzeros(size(FP.func) * FP.num_actions)
+    state = FP.func(state,action,state_tp1)
+    state_length = size(FP.func)
+    state_action[(action-1)*state_length + 1: action*state_length] = state
+    return state_action
 end
 
-(FP::ActionValueFeatureProjector)(state) = project_features(FP, state)
-# (FP::ActionValueFeatureProjector)(state, action) = project_features(FP, state, action)
+(FP::ActionValueFeatureProjector)(state,action,next_state) = project_features(FP, state, action, next_state)
 
-Base.length(AVFP::ActionValueFeatureProjector) = AVFP.pf_length
-Base.size(AVFP::ActionValueFeatureProjector) = AVFP.pf_length
+Base.length(AVFP::ActionValueFeatureProjector) = size(AVFP.func) * AVFP.num_actions
+Base.size(AVFP::ActionValueFeatureProjector) = size(AVFP.func) * AVFP.num_actions
 
 
 struct FeatureProjector{FC} <: FeatureCreator

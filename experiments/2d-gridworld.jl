@@ -55,7 +55,7 @@ default_args() =
         #shared
         "num_tiles" => 4,
         "num_tilings" => 8,
-        "demon_rep" => "ideal_state_action",
+        "demon_rep" => "ideal",
         "demon_num_tiles" => 6,
         "demon_num_tilings" => 1,
 
@@ -125,16 +125,25 @@ function construct_agent(parsed)
     demon_projected_fc = if "demon_rep" ∉ keys(parsed)
         nothing
     elseif parsed["demon_rep"] == "tilecoding"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-                Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
-            1:2), false)
+        Curiosity.ActionValueFeatureProjector(
+        Curiosity.FeatureProjector(
+            Curiosity.FeatureSubset(
+                Curiosity.SparseTileCoder(
+                parsed["demon_num_tilings"],
+                parsed["demon_num_tiles"], 2),
+            1:2),
+        false),
+        action_space)
+
     elseif parsed["demon_rep"] == "ideal_state_action"
-        Curiosity.FeatureSubset(TDGWU.IdealStateActionDemonFeatures(action_space), 1:2)
+        Curiosity.FeatureSubset(Curiosity.ActionValueFeatureProjector(TDGWU.IdealDemonFeatures(), action_space), 1:2)
     elseif parsed["demon_rep"] == "ideal"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(TDGWU.IdealDemonFeatures(), 1:2), true)
+        Curiosity.FeatureSubset(TDGWU.IdealDemonFeatures(), 1:2)
     elseif parsed["demon_rep"] == "ideal_martha"
         # ODTMU.IdealDemonFeatures()
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(TDGWU.MarthaIdealDemonFeatures(), 1:2), false)
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+            Curiosity.ActionValueFeatureProjector(TDGWU.MarthaIdealDemonFeatures(),action_space),
+        1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
@@ -153,13 +162,15 @@ function construct_agent(parsed)
     behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)
         nothing
     elseif parsed["behaviour_reward_projector"] == "tilecoding"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+        Curiosity.ActionValueFeatureProjector(Curiosity.FeatureProjector(Curiosity.FeatureSubset(
             Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
-            1:2), false)
+            1:2), false),action_space)
     elseif parsed["behaviour_reward_projector"] == "base"
         Curiosity.FeatureProjector(fc, false)
     elseif parsed["behaviour_reward_projector"] == "identity"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(identity, 1:2), false)
+    elseif parsed["behaviour_reward_projector"] == "ideal_state_action"
+        Curiosity.FeatureSubset(TDGWU.IdealStateActionDemonFeatures(action_space), 1:2)
     elseif parsed["behaviour_reward_projector"] == "ideal"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
             TDGWU.IdealDemonFeatures(), 1:2), true)

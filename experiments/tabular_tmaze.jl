@@ -119,7 +119,6 @@ function construct_agent(parsed)
         return s
     end
 
-    # behaviour_feature_projector = Curiosity.FeatureProjector(ActionValueFeatureProjector(state_constructor_func, feature_size), false)
     behaviour_feature_projector = Curiosity.FeatureSubset(TTMU.StateActionFeatures(feature_size,action_space),1:1)
     demon_feature_projector = behaviour_feature_projector
 

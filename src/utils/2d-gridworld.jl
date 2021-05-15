@@ -268,12 +268,12 @@ end
 struct IdealDemonFeatures <: FeatureCreator
 end
 
-function project_features(fc::IdealDemonFeatures, state)
-    new_state = sparsevec(convert(Array{Int,1}, [check_goal(i, state) for i in 1:4]))
+function project_features(fc::IdealDemonFeatures, state, action, next_state)
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(i, next_state) for i in 1:4]))
     return new_state
 end
 
-(FP::IdealDemonFeatures)(state) = project_features(FP, state)
+(FP::IdealDemonFeatures)(s_t,a_t,s_tp1) = project_features(FP, s_t, a_t, s_tp1)
 Base.size(FP::IdealDemonFeatures) = 4
 
 ####
