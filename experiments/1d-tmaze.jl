@@ -22,7 +22,7 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
+        "behaviour_learner" => "RoundRobin",
         "behaviour_update" => "TB",
         "behaviour_reward_projector" => "maze",
         "behaviour_rp_tilings" => 1,
@@ -39,11 +39,11 @@ default_args() =
         "behaviour_w_init" => 4,
 
         # Demon Attributes
-        "demon_alpha_init" => 0.1,
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
-        "demon_update" => "TB",
+        "demon_learner" => "Q",
+        "demon_update" => "ETB",
+        "demon_interest_set" => "oned_tmaze",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
         "demon_lambda" => 0.9,

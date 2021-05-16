@@ -33,12 +33,11 @@ default_args() =
         "behaviour_w_init" => 10.0,
 
         # Demon Attributes
-        "demon_alpha_init" => 0.1,
+        "demon_alpha_init" => 0.5,
         # "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
         "demon_learner" => "SR",
-        "demon_update" => "TB",
-        # "interest_set"
+        "demon_update" => "ETB",
         "demon_interest_set" => "ttmaze",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -70,7 +69,7 @@ default_args() =
                             LoggerKey.TTMAZE_ERROR_MAP],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 15000,
+        "steps" => 2000,
         "use_external_reward" => true,
         "logger_interval" => 100,
         "random_first_action" => false,

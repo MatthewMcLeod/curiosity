@@ -58,10 +58,13 @@ mutable struct ContGridWorld{RF, SF} <: AbstractEnvironment
     edge_locs::Array{Array{Int64, 1}, 1}
     collision_check::Array{Bool, 1}
     new_state::Array{Float64, 1}
+
+    per_step_reward::Float64
+    
     ContGridWorld(walls, goals,
                   cumulant_schedule::RF,# rew_funcs::Dict{Int, F},
                   start_func::SF, max_action_noise,
-                  drift_noise, normalized) where {RF, SF} =
+                  drift_noise, normalized, per_step_rew=0.0) where {RF, SF} =
                       new{RF, SF}([0.0, 0.0], walls, goals,
                                   cumulant_schedule,
                                   start_func,
@@ -69,17 +72,20 @@ mutable struct ContGridWorld{RF, SF} <: AbstractEnvironment
                                   normalized, false,
                                   [[0,0] for i in 1:4],
                                   fill(false, 4),
-                                  zeros(2))
+                                  zeros(2),
+                                  per_step_rew)
 end
 
 ContGridWorld(walls, goals,
               # rew_funcs,
               max_action_noise,
-              drift_noise, normalized) =
+              drift_noise, normalized, per_step_rew = 0.0) =
                   ContGridWorld(walls, goals,
                                 nothing,
                                 max_action_noise,
-                                drift_noise, normalized)
+                                drift_noise,
+                                normalized,
+                                per_step_rew = 0.0)
 
 MinimalRLCore.is_terminal(env::ContGridWorld) = begin
     goal_id = which_goal(env)
@@ -102,12 +108,12 @@ MinimalRLCore.get_reward(env::ContGridWorld) = begin
         if goal_id ∈ keys(env.cumulant_schedule)
             get_reward(env.cumulant_schedule[goal_id])
         else
-            0.0
+            env.per_step_reward
         end
     elseif env.cumulant_schedule isa CumulantSchedule
-        0.0
+        env.per_step_reward
     elseif env.cumulant_schedule isa nothing
-        0.0
+        env.per_step_reward
     end
 end
 

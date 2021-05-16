@@ -165,7 +165,7 @@ function _init_learning_update(lu_type::Union{Type{TabularRoundRobin}}, args...)
     lu_type()
 end
 
-function _init_learning_update(lu_type::Union{Type{TB}, Type{EmphESARSA}, Type{ETB}, Type{PriorESARSA}, Type{PriorTB}},
+function _init_learning_update(lu_type::Union{Type{TB}, Type{PriorESARSA}, Type{PriorTB}},
                                opt,
                                parsed::Dict,
                                prefix)
@@ -178,33 +178,43 @@ function _init_learning_update(lu_type::Union{Type{TB}, Type{EmphESARSA}, Type{E
     end
 end
 
-function _init_learning_update(lu_type::Type{InterestTB},
+function _init_learning_update(lu_type::Union{Type{InterestTB}, Type{ETB}, Type{EmphESARSA}},
                                 opt,
                                 parsed::Dict,
                                 prefix)
     λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
     interest_set_str = prefix == "" ? "interest_set" : join([prefix, "interest_set"], "_")
     try
-        λ = parsed[λ_str]
+
+    catch
+        throw("$(lu_type) needs: $(λ_str) (float)")
+    end
+    
+    try
+        lambda = parsed[λ_str]
         interest_set = parsed[interest_set_str]
 
-        if (interest_set == "ttmaze")
-            if (parsed["exploring_starts"] == false)
-                @load "./src/data/dpi/ttmaze_exploring_starts_false.jld2" hdpi
-                interest_dpi = hdpi
+        function get_hdpi(interest_set)
+            if (interest_set == "ttmaze")
+                if (parsed["exploring_starts"] == false)
+                    @load "./src/data/dpi/ttmaze_exploring_starts_false.jld2" hdpi
+                    return hdpi
+                end
+            elseif (interest_set == "oned_tmaze")
+                if (parsed["exploring_starts"] == "beg")
+                    @load "./src/data/dpi/oned_tmaze_beg.jld2" hdpi
+                    return hdpi
+                end
             end
-        elseif (interest_set == "oned_tmaze")
-            if (parsed["exploring_starts"] == "beg")
-                @load "./src/data/dpi/oned_tmaze_beg.jld2" hdpi
-                interest_dpi = hdpi
-            end
-        else
-            # I think this throw is hidden. we need some new mechanism.
-            throw("invalid interest set")
+            throw("no valid hdpi for string $(interest_set)")
         end
-        lu_type(lambda=λ, opt=opt, hdpi=hdpi)
-    catch
-        throw("$(lu_type) needs: $(λ_str) (float), and $(interest_set_str) (string)")
+
+        hdpi = get_hdpi(interest_set)
+        lu_type(lambda=lambda, opt=opt, hdpi=hdpi)
+
+    catch e
+        throw(e)
+        # throw("$(lu_type) needs: $(interest_set_str) (string)")
     end
 end
 

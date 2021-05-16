@@ -52,11 +52,6 @@ discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(n
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    # println("hello, this is running!")
-
-    # println(lu.hdpi(obs, action))
-
-
     update_trace!(lu.trace,
                   e,
                   state,
@@ -138,9 +133,21 @@ function update!(lu::InterestTB,
     (reward_target_pis, SF_target_pis) = target_pis[1:learner.num_tasks,:], target_pis[learner.num_tasks+1:end,:]
     (reward_next_target_pis, SF_next_target_pis) = next_target_pis[1:learner.num_tasks,:], next_target_pis[learner.num_tasks+1:end, :]
 
+    # This update might be broken if used for GPI/control since it'd only have one reward in that case. However, that should be okay
+    # since InterestTB would only be used for the demon regardless.
+    interests = lu.hdpi(obs, action)
+    num_repeat = convert(Integer, (learner.num_demons - learner.num_tasks) / learner.num_tasks)
+    if (rem(learner.num_demons - learner.num_tasks, learner.num_tasks) != 0)
+        println("The number to repeat for SF demons aren't even with the number of tasks for SR. Something might be wrong :(")
+    end
+
+    SF_interests = repeat(interests, inner=num_repeat)
+    reward_interests = interests
+
     # Update Traces: See update_utils.jl
     update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
     update_trace!(lu.trace, e_w, projected_state, λ, reward_discounts, reward_target_pis[:, action])
+
     # e_nz = e_nz ∪ active_state_action.nzind
     # e_w_nz = e_w_nz ∪ projected_state_action.nzind
     if λ == 0.0

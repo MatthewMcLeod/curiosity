@@ -46,7 +46,7 @@ function experiment_wrapper(exp_func::Function, parsed, logger_init_info, workin
     ret = exp_func(parsed, logger)
     
     if working
-        ret
+        ret, logger
     else
         logger_save(logger)
     end

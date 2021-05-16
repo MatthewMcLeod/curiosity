@@ -3,6 +3,7 @@
 Base.@kwdef mutable struct EmphESARSA{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
+    hdpi::HordeDPI
     trace::T = AccumulatingTraces() # Currently the trace is set to accumulating trace. However, this might want to change later to be more like ESARSA
     e::IdDict = IdDict()
     followon::IdDict = IdDict()
@@ -56,7 +57,8 @@ function update!(lu::EmphESARSA,
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    interest = get_interest(learner, obs)
+    # interest = get_interest(learner, obs)
+    interest = lu.hdpi(obs, action)
 
     # getting IS ratio
     if (behaviour_pis[action] == 0)
@@ -159,7 +161,19 @@ function update!(lu::EmphESARSA,
     followon = get!(()->zeros(learner.num_demons), lu.followon, weights)::typeof(zeros(learner.num_demons))
 
     # Setting interest to constant ones for now for each demon
-    interest = get_interest(learner, obs)
+    # interest = get_interest(learner, obs)
+
+    demon_interest = lu.hdpi(obs, action)
+    num_repeat = convert(Integer, (learner.num_demons - learner.num_tasks) / learner.num_tasks)
+    if (rem(learner.num_demons - learner.num_tasks, learner.num_tasks) != 0)
+        println("The number to repeat for SF demons aren't even with the number of tasks for SR. Something might be wrong :(")
+    end
+
+    SF_interest = repeat(demon_interest, inner=num_repeat)
+    reward_interest = demon_interest
+
+    interest = vcat(reward_interest, SF_interest)
+
     # getting IS ratio
     behaviour_pis = behaviour_pi_func(state, obs)
     if (behaviour_pis[action] == 0)

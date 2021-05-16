@@ -9,7 +9,7 @@ arg_iter_type = "iter"
 
 steps = 100000
 
-logger_keys = ["TWODGRIDWORLDERROR", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
+logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
 logger_interval = 100
 # Behaviour Items
 behaviour_learner = "RoundRobin"
@@ -19,8 +19,7 @@ behaviour_w_init = 4.0
 
 # Demon Attributes
 
-
-demon_discounts = 0.9
+demon_gamma = 0.95
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
@@ -43,7 +42,7 @@ drifter = [1.0, 0.1] # drifter is the sqrt(0.01)
 # Agent and Logger
 horde_type = "regular"
 intrinsic_reward = "weight_change"
-
+exploration_param = 0.0
 use_external_reward = true
 
 # num_tilings = 8
@@ -57,9 +56,10 @@ cumulant_schedule = ["DrifterDistractor"]
 eta = "0.1 * 2.0.^(-8:0)"
 demon_alpha_init = [0.1, 0.5, 1.0] # Will be 1/tilings from sweep
 
-exploration_param = [0.1, 0.2, 0.3]
-demon_learner = ["Q", "SR"]
+demon_learner = ["Q"]
 demon_update = ["TB"]
-demon_opt = ["Auto", "Descent"]
+demon_opt = ["Auto"]
+
+start_dist = ["center", "uniform"]
 
 tiling_structure = [[8,8], [8,2], [1, 16]]

@@ -18,6 +18,8 @@ abstract type FeatureCreator end
 # export ValueFeatureProjector, ActionValueFeatureProjector
 include("utils/learners.jl")
 include("utils/SRHorde.jl")
+
+# Code utils
 include("utils/dpi.jl")
 
 export Auto
