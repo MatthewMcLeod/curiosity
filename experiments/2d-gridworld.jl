@@ -24,7 +24,7 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.0,
-        "behaviour_learner" => "Q",
+        "behaviour_learner" => "RoundRobin",
         "behaviour_update" => "ESARSA",
         "behaviour_reward_projector" => "tilecoding",
         "behaviour_rp_tilings" => 2,
@@ -39,13 +39,13 @@ default_args() =
         "decay_period" => 5000,
         "warmup_steps" => 1000,
 
-        
+
         # Demon Attributes
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
-        "demon_update" => "ESARSA",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
         "demon_lambda" => 0.9,
@@ -56,7 +56,7 @@ default_args() =
         #shared
         "num_tiles" => 4,
         "num_tilings" => 8,
-        "demon_rep" => "tilecoding",
+        "demon_rep" => "ideal",
         "demon_num_tiles" => 6,
         "demon_num_tilings" => 1,
 
@@ -74,7 +74,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TwoDGridWorldExperiment",
         "seed" => 1,
-        "steps" => 100000,
+        "steps" => 10000,
         "use_external_reward" => true,
 
         "logger_keys" => [LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.TWODGRIDWORLDERROR, LoggerKey.TWODGRIDWORLDERRORDPI]
@@ -99,14 +99,14 @@ function construct_agent(parsed)
         parsed["behaviour_w_init"] = parsed["behaviour_w_init"] / parsed["num_tilings"]
     end
 
-    
+
     if "eta" in keys(parsed)
         prefixes = ["behaviour","demon"]
         for prefix in prefixes
             parsed[join([prefix, "eta"], "_")] = parsed["eta"]
         end
     end
-    
+
     if parsed["demon_opt"] == "Auto"
         parsed["demon_alpha_init"] =
             parsed["demon_alpha_init"] / parsed["num_tilings"]
@@ -126,15 +126,25 @@ function construct_agent(parsed)
     demon_projected_fc = if "demon_rep" ∉ keys(parsed)
         nothing
     elseif parsed["demon_rep"] == "tilecoding"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-                Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
-            1:2), false)
+        Curiosity.ActionValueFeatureProjector(
+        Curiosity.FeatureProjector(
+            Curiosity.FeatureSubset(
+                Curiosity.SparseTileCoder(
+                parsed["demon_num_tilings"],
+                parsed["demon_num_tiles"], 2),
+            1:2),
+        false),
+        action_space)
+
+    elseif parsed["demon_rep"] == "ideal_state_action"
+        Curiosity.FeatureSubset(Curiosity.ActionValueFeatureProjector(TDGWU.IdealDemonFeatures(), action_space), 1:2)
     elseif parsed["demon_rep"] == "ideal"
-        # ODTMU.IdealDemonFeatures()
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(TDGWU.IdealDemonFeatures(), 1:2), true)
+        Curiosity.FeatureSubset(TDGWU.IdealDemonFeatures(), 1:2)
     elseif parsed["demon_rep"] == "ideal_martha"
         # ODTMU.IdealDemonFeatures()
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(TDGWU.MarthaIdealDemonFeatures(), 1:2), false)
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+            Curiosity.ActionValueFeatureProjector(TDGWU.MarthaIdealDemonFeatures(),action_space),
+        1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
@@ -153,13 +163,15 @@ function construct_agent(parsed)
     behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)
         nothing
     elseif parsed["behaviour_reward_projector"] == "tilecoding"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+        Curiosity.ActionValueFeatureProjector(Curiosity.FeatureProjector(Curiosity.FeatureSubset(
             Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
-            1:2), false)
+            1:2), false),action_space)
     elseif parsed["behaviour_reward_projector"] == "base"
         Curiosity.FeatureProjector(fc, false)
     elseif parsed["behaviour_reward_projector"] == "identity"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(identity, 1:2), false)
+    elseif parsed["behaviour_reward_projector"] == "ideal_state_action"
+        Curiosity.FeatureSubset(TDGWU.IdealStateActionDemonFeatures(action_space), 1:2)
     elseif parsed["behaviour_reward_projector"] == "ideal"
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
             TDGWU.IdealDemonFeatures(), 1:2), true)
