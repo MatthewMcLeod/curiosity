@@ -149,7 +149,13 @@ function create_demons(parsed, demon_projected_fc = nothing)
         SF_policies = [GoalPolicy(i) for i in 1:4]
         SF_discounts = [GoalTermination(0.9) for i in 1:4]
         num_SFs = length(SF_policies)
-        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        # SF_horde = if parsed["demon_reward_feature_type"] == "state"
+        #     SRCU.create_state_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        # else
+        # SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+
+        # end
         GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
     else
         throw(ArgumentError("Cannot create demons"))
@@ -170,18 +176,30 @@ function make_behaviour_gvf(learner, γ, state_constructor, expl_strat) #discoun
 end
 
 
+# ####
+struct IdealStateActionDemonFeatures <: FeatureCreator
+    num_actions::Int
+end
+function project_features(fc::IdealStateActionDemonFeatures, s_t, a_t, s_tp1)
+    # new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, s_tp1) for i in 1:4]))
+    goal_ind = findfirst([check_goal(OneDTMaze, i, s_tp1) for i in 1:4])
+    reward_feature = zeros(Int(fc.num_actions*4))
+    if !(goal_ind isa Nothing)
+        reward_feature[Int((goal_ind-1)*fc.num_actions + a_t)] = 1
+    end
+    return sparsevec(reward_feature)
+end
+(FP::IdealStateActionDemonFeatures)(s_t,a_t,s_tp1) = project_features(FP, s_t,a_t,s_tp1)
 
+Base.size(FP::IdealStateActionDemonFeatures) = 16
 ####
 # Ideal Feature Creator
 ####
 struct IdealDemonFeatures <: FeatureCreator
 end
 
-function project_features(fc::IdealDemonFeatures, state)
-    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state) for i in 1:4]))
-    # if sum(new_state) != 0
-    #     @show state, new_state
-    # end
+function project_features(fc::IdealDemonFeatures, state,action,state_tp1)
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(OneDTMaze, i, state_tp1) for i in 1:4]))
     return new_state
 end
 
@@ -189,6 +207,7 @@ end
 Base.size(FP::IdealDemonFeatures) = 4
 
 struct MarthaIdealDemonFeatures <: FeatureCreator
+    num_actions::Int
 end
 
 function project_features(fc::MarthaIdealDemonFeatures, state)
@@ -206,12 +225,13 @@ Base.size(FP::MarthaIdealDemonFeatures) = 4
 struct TMazeEncoding <: FeatureCreator
     num_segments::Int
     num_partitions::Int
+    num_actions::Int
     function TMazeEncoding()
-        new(7,3)
+        new(7,3,4)
     end
 end
-Base.size(FP::TMazeEncoding) = FP.num_segments * FP.num_partitions
-function project_features(fc::FeatureCreator, obs)
+Base.size(FP::TMazeEncoding) = FP.num_segments * FP.num_partitions * FP.num_actions
+function project_features(fc::FeatureCreator, obs, a_t, obs_tp1)
     segment = Inf
     partition = Inf
     x,y = obs
@@ -255,16 +275,19 @@ function project_features(fc::FeatureCreator, obs)
         @warn "Not A Valid State (x,y)"
     end
 
-    state = zeros(fc.num_segments * fc.num_partitions)
+    state_action = zeros(fc.num_segments * fc.num_partitions * fc.num_actions)
     # Need maximum since if agent is right on boundary, ceil (0.0) is 0.
     partition_offset = maximum([Int(ceil(partition * fc.num_partitions)),1])
     if partition_offset == 0
         @show x,y,segment
     end
-    state[(segment-1)*fc.num_partitions + partition_offset] = 1
-    return sparsevec(state)
+    state_ind = (segment-1)*fc.num_partitions + partition_offset
+    state_action_ind = state_ind * fc.num_actions + a_t
+
+    state_action[state_action_ind] = 1
+    return sparsevec(state_action)
 end
-(FP::TMazeEncoding)(state) = project_features(FP, state)
+(FP::TMazeEncoding)(state, action, state_tp1) = project_features(FP, state, action, state_tp1)
 
 
 ####

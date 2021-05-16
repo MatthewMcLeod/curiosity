@@ -11,6 +11,8 @@ using ProgressMeter
 
 const TTMU = Curiosity.TabularTMazeUtils
 const BU = Curiosity.BaselineUtils
+const SRCU = Curiosity.SRCreationUtils
+
 
 default_args() =
     Dict(
@@ -60,9 +62,9 @@ default_args() =
         "intrinsic_reward" => "weight_change",
         "logger_keys" => [LoggerKey.TTMAZE_ERROR, LoggerKey.TTMAZE_UNIFORM_ERROR,
                             LoggerKey.TTMAZE_OLD_ERROR, LoggerKey.GOAL_VISITATION,
-                            LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, 
-                            LoggerKey.TTMAZE_DIRECT_ERROR, 
-                            LoggerKey.TTMAZE_STATE_VISITATION, 
+                            LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD,
+                            LoggerKey.TTMAZE_DIRECT_ERROR,
+                            LoggerKey.TTMAZE_STATE_VISITATION,
                             LoggerKey.WC_PER_DEMON,
                             LoggerKey.TTMAZE_ERROR_MAP],
         "save_dir" => "TabularTMazeExperiment",
@@ -116,7 +118,7 @@ function construct_agent(parsed)
         return s
     end
 
-    behaviour_feature_projector = Curiosity.FeatureProjector(ActionValueFeatureProjector(state_constructor_func, feature_size), false)
+    behaviour_feature_projector = Curiosity.FeatureSubset(TTMU.StateActionFeatures(feature_size,action_space),1:1)
     demon_feature_projector = behaviour_feature_projector
 
 
@@ -234,7 +236,9 @@ function get_horde(parsed, feature_size, action_space, projected_feature_constru
 
     if parsed["demon_learner"] == "SR"
         num_SFs = 4
-        SF_horde = TTMU.make_SF_horde(discount, length(projected_feature_constructor), action_space, projected_feature_constructor)
+        SF_discounts = [GVFParamFuncs.StateTerminationDiscount(discount, TTMU.pseudoterm) for i in 1:4]
+        SF_policies = [GVFParamFuncs.FunctionalPolicy((;kwargs...) ->TTMU.demon_target_policy(i;kwargs...)) for i in 1:4]
+        SF_horde = SRCU.create_SF_horde_V2(SF_policies,SF_discounts,projected_feature_constructor,1:4)
 
         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, projected_feature_constructor)
     end

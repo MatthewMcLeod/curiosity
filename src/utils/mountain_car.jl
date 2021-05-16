@@ -8,6 +8,29 @@ const discount = 0.99
 import ..MountainCarConst
 import ..GVFSRHordes
 
+
+function create_demons(parsed, fc)
+    action_space = 3
+    demons = if parsed["demon_learner"] != "SR"
+        GVFHordes.Horde(
+            [steps_to_wall_gvf(),steps_to_goal_gvf()])
+    elseif parsed["demon_learner"] == "SR"
+        @assert demon_projected_fc != nothing
+        pred_horde =  GVFHordes.Horde(
+                [steps_to_wall_gvf(),steps_to_goal_gvf()])
+
+        SF_policies = [g.policy for g in pred_horde.gvfs]
+        SF_discounts = [g.discount for g in pred_horde.gvfs]
+        num_SFs = length(SF_policies)
+        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+
+        GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
+    else
+        throw(ArgumentError("Cannot create demons"))
+    end
+    return demons
+end
+
 struct MountainCarStateActionCumulant <: GVFParamFuncs.AbstractCumulant
     state_num::Int
     action::Int
@@ -24,14 +47,15 @@ function Base.get(cumulant::MountainCarStateActionCumulant; kwargs...)
     end
 end
 
-function make_behaviour_gvf(discount, state_constructor_func, learner, exploration_strategy)
+# function make_behaviour_gvf(discount, state_constructor_func, learner, exploration_strategy)
+function make_behaviour_gvf(behaviour_learner, γ, fc, exploration_strategy)
     function b_π(state_constructor, learner, exploration_strategy; kwargs...)
-        s = state_constructor_func(kwargs[:state_t])
+        s = state_constructor(kwargs[:state_t])
         preds = learner(s)
         return exploration_strategy(preds)[kwargs[:action_t]]
     end
-    GVF_policy = GVFParamFuncs.FunctionalPolicy((;kwargs...) -> b_π(state_constructor_func, learner, exploration_strategy; kwargs...))
-    BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm), GVF_policy)
+    GVF_policy = GVFParamFuncs.FunctionalPolicy((;kwargs...) -> b_π(fc, behaviour_learner, exploration_strategy; kwargs...))
+    BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(γ, steps_to_goal_pseudoterm), GVF_policy)
 end
 
 function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_actions, state_constructor)

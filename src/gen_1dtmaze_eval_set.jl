@@ -37,13 +37,19 @@ function gen_dataset(num_start_states=500; action_noise = 0.0)
     env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"], parsed["env_step_penalty"], action_noise)
 
     start_states = []
-    @show env.starts
-    for i in 1:num_start_states
+    while length(start_states) < num_start_states
+        # println("ASDF")
         MinimalRLCore.reset!(env)
-        # s = MinimalRLCore.get_state(env)
+        s = MinimalRLCore.get_state(env)
         # Should use get state but state also contains cumulant observations.
         # This makes it tricky to use out of the box for resetting the env back to
+        # @show methods(ODTMU.check_goal)
         s = deepcopy(env.pos)
+
+        if any([ODTMU.check_goal(env,goal_ind,s) for goal_ind in 1:4])
+            println("Rejecting $(env.pos) for being in goal state")
+            continue
+        end
         push!(start_states,s)
     end
 
@@ -73,7 +79,7 @@ end
 
 
 function gen_dataset_uniform_from_start(num_start_states=500, seed=1; action_noise = 0.0,eval_set_size_per_gvf = 150)
-    # Generates dataset from based on uniform action weighting on the state distribution 
+    # Generates dataset from based on uniform action weighting on the state distribution
     # It is tricky to generate a uniform sampling without action noise as some states are not reachable. GVF policies cover the state space and randomizing action would make it uniform.
     _,states,_= gen_dataset_dpi(num_start_states, seed; action_noise = action_noise,eval_set_size_per_gvf = eval_set_size_per_gvf)
     all_states = vcat(states...)
@@ -153,7 +159,7 @@ function gen_dataset_dpi(num_start_states=500, seed=1; action_noise = 0.0,eval_s
         as_eval = as[indices]
 
         # @show start_states
-        num_returns = 10
+        num_returns = 1000
         γ_thresh=1e-6
 
         gvf_rets = Curiosity.monte_carlo_returns_agg(env, GVF_of_interest, ss_eval, as_eval, num_returns, γ_thresh; agg=mean)
