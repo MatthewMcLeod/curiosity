@@ -1,0 +1,51 @@
+[config]
+save_dir = "MC_Experiments"
+exp_file = "experiments/mountain_car.jl"
+exp_module_name = "MountainCarExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+steps = 50000
+
+#Tile coding params used by Rich textbook for mountain car
+num_tilings = 3
+num_tiles = 8
+behaviour_num_tilings = 8
+behaviour_num_tiles = 2
+demon_num_tilings = 8
+demon_num_tiles = 4
+
+
+behaviour_update = "ESARSA"
+behaviour_learner = "Q"
+behaviour_eta = 0.5
+behaviour_opt = "Descent"
+# behaviour_rew = env
+behaviour_gamma = 0.99
+behaviour_lambda = 0.95
+behaviour_w_init = 0.0
+
+intrinsic_reward ="no_reward"
+behaviour_trace = "ReplacingTraces"
+use_external_reward = true
+exploration_strategy = "epsilon_greedy"
+# exploration_param = 0.2
+random_first_action = false
+
+lambda = 0.0
+demon_eta = 0.1
+demon_alpha_init = 0.1
+demon_learner = "Q"
+demon_update = "TB"
+demon_opt = "Descent"
+demon_lambda = 0.9
+exploring_starts=true
+save_dir = "MountainCarExperiment"
+logger_keys = ["EPISODE_LENGTH", "MC_ERROR"]
+
+
+[sweep_args]
+seed = "1:30"
+exploration_param = [0.1, 0.2]
+eta = "2.0.^(-3:1)"
