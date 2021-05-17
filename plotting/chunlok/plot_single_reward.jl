@@ -3,7 +3,7 @@ using Reproduce
 using JLD2
 using FileIO
 
-function plot_single_reward(results, logger_key)
+function plot_single_reward(results, log_interval, logger_key)
     previous_GKSwstype = get(ENV, "GKSwstype", "")
     ENV["GKSwstype"] = "100"
 
@@ -15,7 +15,7 @@ function plot_single_reward(results, logger_key)
 
     for i in 1:4
         # println(size(error[i, :]))
-        plot!(p, 1:size(error)[2], error[i, :])
+        plot!(p, 1:log_interval:size(error)[2] * log_interval, error[i, :])
     end
 
     # print(error[3,10])
