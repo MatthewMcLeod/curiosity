@@ -30,6 +30,8 @@ include("intrinsic_reward.jl")
 include("behaviour_action_values.jl")
 include("one_d_state_visitation.jl")
 include("ttmaze_state_visitation.jl")
+include("emphasis.jl")
+include("ISRatio.jl")
 
 # Module for scoping key names
 module LoggerKey
@@ -43,7 +45,7 @@ module LoggerKey
     const ONEDTMAZEERROR = "ONEDTMAZEERROR" # this old error metric gives true uniform distribution, but this is not reachable with no action noise
     const TWODGRIDWORLDERROR = "TWODGRIDWORLDERROR"
     const TWODGRIDWORLDERRORDPI = "TWODGRIDWORLDERRORDPI"
-    const AUTOSTEP_STEPSIZE = "AutostepStepSize"
+    const AUTOSTEP_STEPSIZE = "AUTOSTEP_STEPSIZE"
     const TTMAZE_UNIFORM_ERROR = "TTMAZE_UNIFORM_ERROR"
     const TTMAZE_OLD_ERROR = "TTMAZE_OLD_ERROR"
     const TTMAZE_ERROR_MAP = "TTMAZE_ERROR_MAP"
@@ -56,6 +58,8 @@ module LoggerKey
     const ONEDTMAZEERROR_DPI = "ONEDTMAZEERROR_DPI" # error based on following d_pi for each GVF in the onedtmaze
     const ONEDTMAZEERROR_UNIFORM = "ONEDTMAZEERROR_UNIFORM" # error with states following RR but using uniform aciton weightings
     const TTMAZE_STATE_VISITATION = "TTMAZE_STATE_VISITATION"
+    const EMPHASIS = "EMPHASIS"
+    const IS_RATIO = "IS_RATIO"
 end
 
 module LoggerInitKey
@@ -87,7 +91,9 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.WC_PER_DEMON => WC_Demon_Logger,
     LoggerKey.ONEDTMAZEERROR_DPI => OneDTMazeError_DPI,
     LoggerKey.ONEDTMAZEERROR_UNIFORM => OneDTMazeError_Uniform,
-    LoggerKey.TTMAZE_STATE_VISITATION => TTMazeStateVisitation
+    LoggerKey.TTMAZE_STATE_VISITATION => TTMazeStateVisitation,
+    LoggerKey.EMPHASIS => Emphasis,
+    LoggerKey.IS_RATIO => ISRatio,
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started
