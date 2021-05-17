@@ -203,7 +203,7 @@ function project_features(fc::IdealDemonFeatures, state,action,state_tp1)
     return new_state
 end
 
-(FP::IdealDemonFeatures)(state) = project_features(FP, state)
+(FP::IdealDemonFeatures)(state, action, next_state) = project_features(FP, state, action, next_state)
 Base.size(FP::IdealDemonFeatures) = 4
 
 struct MarthaIdealDemonFeatures <: FeatureCreator
