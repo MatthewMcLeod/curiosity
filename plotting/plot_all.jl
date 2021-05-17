@@ -9,10 +9,11 @@ using JLD2
 # data_home = "../data/OneDTMaze_RR_dpi"
 # data_home = "../data/OneDTMaze_Control_dpi"
 # data_home = "../OneDTMaze_RR_dpi"
-data_home = "../OneDTMaze_Control_dpi_new_method_for_reward_features"
+data_home = "../data/OneDTMaze_Control_dpi"
 
 include("./plot_utils.jl")
 GPU = GeneralPlotUtils
+LU = LabelUtils
 
 experiment_folders = [data_home]
 # folder_name = "oned_rr_dpi"
@@ -46,19 +47,26 @@ for (i,algo_ic) in enumerate(algo_ics)
 
 end
 @show length.(best_per_algo_ics), "better be equal to num seeds"
+
+# color = LU.get_colour(algo_ics[1])
+# style = LU.get_linestyle(algo_ics[1])
+
+plot_params = [LU.get_params(algo_ics[i]) for i in 1:length(algo_ics)]
+# plot(rand(10); plot_params...)
+#
 num_runs = length.(best_per_algo_ics)[1]
 @show num_runs
 
 data = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[1],10) for ic in best_per_algo_ics]
 std = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[2],10) for ic in best_per_algo_ics]
-
-[GPU.print_params(algo, algo_divisor_keys, sweep_params) for algo in best_per_algo_ics]
-label_keys = cat(algo_divisor_keys,sweep_params, dims = 1)
-labels = [GPU.get_label(algo, label_keys) for algo in best_per_algo_ics]
-labels = cat(labels..., dims=2)
-string(data_key)
-
-####
+#
+# [GPU.print_params(algo, algo_divisor_keys, sweep_params) for algo in best_per_algo_ics]
+# label_keys = cat(algo_divisor_keys,sweep_params, dims = 1)
+# labels = [GPU.get_label(algo, label_keys) for algo in best_per_algo_ics]
+# labels = cat(labels..., dims=2)
+# string(data_key)
+#
+# ####
 # Generate Average demon RMSE
 ylabel = "RMSE"
 # title = "SR Demons & Step Size Adaptation vs More Naive Approaches"
@@ -66,11 +74,11 @@ title = "RMSE"
 step_increment=50
 num_samples = length(data[1])
 xticks=collect(1:step_increment:num_samples*step_increment)
-plot(xticks, data, ylabel=ylabel, palette=:tab10, label= labels, grid=true, ribbon = std/sqrt(num_runs), legend=:topright, title=title)
+plot(xticks, data, ylabel=ylabel, grid=true, ribbon = std/sqrt(num_runs), legend=:topright, title=title; plot_params)
 savefig("./plots/$(folder_name)/RMSE_$(string(data_key)).png")
-
-####
-# Generate graph for RMSE per demon
+#
+# ####
+# # Generate graph for RMSE per demon
 
 data_per_gvf = [GPU.get_stats(GPU.load_results(ic,data_key), per_gvf = true)[1] for ic in best_per_algo_ics]
 std_per_gvf = [GPU.get_stats(GPU.load_results(ic,data_key), per_gvf = true)[2] for ic in best_per_algo_ics]
