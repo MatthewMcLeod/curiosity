@@ -4,6 +4,7 @@ Base.@kwdef mutable struct EmphESARSA{O, T<:AbstractTraceUpdate} <: LearningUpda
     lambda::Float64
     opt::O
     hdpi::HordeDPI
+    clip_threshold::Float64
     trace::T = AccumulatingTraces() # Currently the trace is set to accumulating trace. However, this might want to change later to be more like ESARSA
     e::IdDict = IdDict()
     followon::IdDict = IdDict()
@@ -73,6 +74,7 @@ function update!(lu::EmphESARSA,
     # Get Emphasis vector - size is # demons
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
     emphasis = ρ .* (λ * interest + (1 - λ) * followon)
+    clamp!(emphasis, 0, lu.clip_threshold)
 
     # Update eligibility trace
     update_trace!(lu.trace,
@@ -189,6 +191,7 @@ function update!(lu::EmphESARSA,
     # Get Emphasis vector - size is # demons
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
     emphasis = ρ .* (λ * interest + (1 - λ) * followon)
+    clamp!(emphasis, 0, lu.clip_threshold)
     reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
 
     # Update Traces: See update_utils.jl

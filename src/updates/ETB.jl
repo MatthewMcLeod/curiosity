@@ -4,10 +4,13 @@ Base.@kwdef mutable struct ETB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
     hdpi::HordeDPI
+    clip_threshold::Float64
     trace::T = AccumulatingTraces()
     e::IdDict = IdDict()
     followon::IdDict = IdDict()
     prev_discounts::IdDict = IdDict()
+    emphasis_logging::Any = zeros(4) #I'm lazy and this is used for tracking hard to recalculate values
+    rho_logging::Any = zeros(4) #I'm lazy and this is used for tracking hard to recalculate values
 end
 
 function get_demon_parameters(lu::ETB, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
@@ -76,6 +79,12 @@ function update!(lu::ETB,
     # Get Emphasis vector - size is # demons
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
     emphasis = ρ .* (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
+
+    # I'm lazy, here we're just logging the emphasis and rho as variables.
+    lu.emphasis_logging = emphasis
+    lu.rho_logging = ρ
+
+    clamp!(emphasis, 0, lu.clip_threshold)
 
     # Update eligibility trace
     update_trace!(lu.trace,
@@ -194,6 +203,7 @@ function update!(lu::ETB,
     # Get Emphasis vector - size is # demons
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
     emphasis = ρ .* (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
+    clamp!(emphasis, 0, lu.clip_threshold)
     reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
 
 

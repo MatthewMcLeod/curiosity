@@ -56,7 +56,7 @@ function update!(lu::PriorTB,
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
-    interest = get_interest(learner, obs)
+    interest = get_interest(learner, lu, obs, action)
     # getting IS ratio
     if (behaviour_pis[action] == 0)
         ρ = zeros(size(target_pis[:, action]))

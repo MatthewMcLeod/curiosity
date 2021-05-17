@@ -178,43 +178,50 @@ function _init_learning_update(lu_type::Union{Type{TB}, Type{PriorESARSA}, Type{
     end
 end
 
-function _init_learning_update(lu_type::Union{Type{InterestTB}, Type{ETB}, Type{EmphESARSA}},
+function _init_learning_update(lu_type::Union{Type{InterestTB}},
                                 opt,
                                 parsed::Dict,
                                 prefix)
     λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
     interest_set_str = prefix == "" ? "interest_set" : join([prefix, "interest_set"], "_")
-    try
 
-    catch
-        throw("$(lu_type) needs: $(λ_str) (float)")
-    end
-    
     try
         lambda = parsed[λ_str]
         interest_set = parsed[interest_set_str]
 
-        function get_hdpi(interest_set)
-            if (interest_set == "ttmaze")
-                if (parsed["exploring_starts"] == false)
-                    @load "./src/data/dpi/ttmaze_exploring_starts_false.jld2" hdpi
-                    return hdpi
-                end
-            elseif (interest_set == "oned_tmaze")
-                if (parsed["exploring_starts"] == "beg")
-                    @load "./src/data/dpi/oned_tmaze_beg.jld2" hdpi
-                    return hdpi
-                end
-            end
-            throw("no valid hdpi for string $(interest_set)")
-        end
-
-        hdpi = get_hdpi(interest_set)
+        hdpi = get_hdpi(parsed, interest_set)
         lu_type(lambda=lambda, opt=opt, hdpi=hdpi)
 
     catch e
         throw(e)
         # throw("$(lu_type) needs: $(interest_set_str) (string)")
+    end
+end
+
+function _init_learning_update(lu_type::Union{Type{ETB},Type{EmphESARSA}},
+                                opt,
+                                parsed::Dict,
+                                prefix)
+    λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
+    interest_set_str = prefix == "" ? "interest_set" : join([prefix, "interest_set"], "_")
+
+    try
+        lambda = parsed[λ_str]
+        interest_set = parsed[interest_set_str]
+        if haskey(parsed, "emphasis_clip_threshold")
+            clip_threshold = parsed["emphasis_clip_threshold"]
+        else
+            clip_threshold = Inf64
+            println("Setting clip threshold to inf")
+        end
+
+
+        hdpi = get_hdpi(parsed, interest_set)
+        lu_type(lambda=lambda, opt=opt, hdpi=hdpi, clip_threshold=clip_threshold)
+
+    catch e
+        throw(e)
+    # throw("$(lu_type) needs: $(interest_set_str) (string)")
     end
 end
 
@@ -269,3 +276,19 @@ end
 (l::NoLearner)(ϕ,a) = zeros(l.num_demons)
 (l::NoLearner)(ϕ) = [zeros(l.num_demons) for a in l.action_set]
 function zero_eligibility_traces!(l::NoLearner) nothing end
+
+
+function get_hdpi(parsed, interest_set)
+    if (interest_set == "ttmaze")
+        if (parsed["exploring_starts"] == false)
+            @load "./src/data/dpi/ttmaze_exploring_starts_false.jld2" hdpi
+            return hdpi
+        end
+    elseif (interest_set == "oned_tmaze")
+        if (parsed["exploring_starts"] == "beg")
+            @load "./src/data/dpi/oned_tmaze_beg.jld2" hdpi
+            return hdpi
+        end
+    end
+    throw("no valid hdpi for string $(interest_set)")
+end
