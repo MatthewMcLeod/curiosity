@@ -28,5 +28,6 @@ function lg_episode_end!(self::ISRatio, cur_step_in_episode, cur_step_total)
 end
 
 function save_log(self::ISRatio, save_dict::Dict)
-    save_dict[:is_ratio] = cat(self.isRatio..., dims=2)
+    # Throwing away the first info.
+    save_dict[:is_ratio] = cat(self.isRatio[2:end]..., dims=2)
 end

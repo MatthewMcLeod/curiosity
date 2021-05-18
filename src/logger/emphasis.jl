@@ -28,5 +28,5 @@ function lg_episode_end!(self::Emphasis, cur_step_in_episode, cur_step_total)
 end
 
 function save_log(self::Emphasis, save_dict::Dict)
-    save_dict[:emphasis] = cat(self.emphasis..., dims=2)
+    save_dict[:emphasis] = cat(self.emphasis[2:end]..., dims=2)
 end

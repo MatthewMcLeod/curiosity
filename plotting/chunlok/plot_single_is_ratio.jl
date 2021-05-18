@@ -3,7 +3,7 @@ using Reproduce
 using JLD2
 using FileIO
 
-function plot_single_emphasis(results, log_interval)
+function plot_single_is_ratio(results, log_interval)
     previous_GKSwstype = get(ENV, "GKSwstype", "")
     ENV["GKSwstype"] = "100"
 
