@@ -150,31 +150,27 @@ function construct_agent(parsed)
 
     exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
-    behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)
-        nothing
-    elseif parsed["behaviour_reward_projector"] == "tilecoding"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
-            1:2), false)
-    elseif parsed["behaviour_reward_projector"] == "base"
-        Curiosity.FeatureProjector(fc, false)
-    elseif parsed["behaviour_reward_projector"] == "identity"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(identity, 1:2), false)
-    elseif parsed["behaviour_reward_projector"] == "ideal"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            TDGWU.IdealDemonFeatures(), 1:2), true)
-    elseif parsed["behaviour_reward_projector"] == "ideal_martha"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            TDGWU.MarthaIdealDemonFeatures(), 1:2), true)
-    else
-        throw(ArgumentError("Not a valid demon projection rep for SR"))
-    end
-
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         # ODTMU.RoundRobinPolicy(), nothing, 0.0
         TDGWU.RoundRobinPolicy(), nothing, 0.0
         # throw("Round Robin not available")
     else
+
+        brp_str = "behaviour_reward_projector" ∈ keys(parsed) ? parsed["behviour_reward_projector"] : "nothing"
+        
+        behaviour_reward_projector = if brp_str == "nothing"
+            nothing
+        elseif brp_str == "tilecoding"
+            Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+                Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
+                1:2), false)
+        elseif brp_str == "base"
+            Curiosity.FeatureProjector(fc, false)
+        else
+            throw(ArgumentError("Not a valid demon projection rep for GPI"))
+        end
+
+        
         behaviour_num_tasks = 1
         num_SFs = 4
         num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]

@@ -270,9 +270,6 @@ end
 
 function project_features(fc::IdealDemonFeatures, state)
     new_state = sparsevec(convert(Array{Int,1}, [check_goal(i, state) for i in 1:4]))
-    # if sum(new_state) != 0
-    #     @show state, new_state
-    # end
     return new_state
 end
 
