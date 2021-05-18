@@ -14,18 +14,16 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 30000,
+        "steps" => 50000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
-        "numtilings" => 4,
-        "numtiles" => 20,
-        "numtilings" => 3,
-        "numtiles" => 8,
-        "behaviourtilings" => 3,
-        "behaviourtiles" => 7,
-        "demontilings" => 8,
-        "demontiles" => 4,
+        "num_tilings" => 3,
+        "num_tiles" => 8,
+        "behaviour_num_tilings" => 8,
+        "behaviour_num_tiles" => 2,
+        "demon_num_tilings" => 8,
+        "demon_num_tiles" => 4,
 
 
         "behaviour_update" => "ESARSA",
@@ -34,13 +32,15 @@ default_args() =
         "behaviour_opt" => "Descent",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
-        "behaviour_lambda" => 0.9,
+        "behaviour_lambda" => 0.95,
+        "behaviour_w_init" => 0.0,
 
         "intrinsic_reward" =>"no_reward",
         "behaviour_trace" => "ReplacingTraces",
         "use_external_reward" => true,
         "exploration_strategy" => "epsilon_greedy",
         "exploration_param" => 0.2,
+        "random_first_action" => false,
 
         "lambda" => 0.0,
         "demon_eta" => 0.1/8,
@@ -60,6 +60,23 @@ function construct_agent(parsed)
     observation_size = 2
     action_space = 3
 
+    if "eta" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
+    end
+    if parsed["demon_opt"] == "Descent"
+        if "demon_eta" in keys(parsed)
+            parsed["demon_eta"] = parsed["demon_eta"] / parsed["num_tilings"]
+        end
+    end
+    if parsed["behaviour_opt"] == "Descent"
+        if "behaviour_eta" in keys(parsed)
+            parsed["behaviour_eta"] = parsed["behaviour_eta"] / parsed["num_tilings"]
+        end
+    end
+
     behaviour_learner = parsed["behaviour_learner"]
     behaviour_lu = parsed["behaviour_update"]
 
@@ -68,88 +85,82 @@ function construct_agent(parsed)
     intrinsic_reward_type = parsed["intrinsic_reward"]
     use_external_reward = parsed["use_external_reward"]
 
-    #Create state constructor
-    state_constructor_tc =
-        TileCoder(parsed["numtilings"], parsed["numtiles"], observation_size)
 
-    demon_tc =
-        TileCoder(parsed["demontilings"], parsed["demontiles"], observation_size)
-    behaviour_tc =
-        TileCoder(parsed["behaviourtilings"], parsed["behaviourtiles"], observation_size)
+    fc = Curiosity.FeatureSubset(
+        Curiosity.SparseTileCoder(parsed["num_tilings"], parsed["num_tiles"], 2),
+        1:2)
 
-    feature_size = size(state_constructor_tc)
-    demon_feature_size = size(demon_tc)
-    behaviour_feature_size = size(behaviour_tc)
-
-    function state_constructor(obs, tc)
-        s = spzeros(Int, size(tc))
-        s[tc(obs)] .= 1
-        return s
-    end
-
-    base_state_constructor_func = (obs) -> state_constructor(obs,
-                               state_constructor_tc)
-    demon_state_constructor_func = (obs) -> state_constructor(obs, demon_tc)
-    behaviour_state_constructor_func = (obs) -> state_constructor(obs, behaviour_tc)
-
-    demon_feature_projector = ActionValueFeatureProjector(demon_state_constructor_func, size(demon_tc))
-    behaviour_feature_projector = ActionValueFeatureProjector(behaviour_state_constructor_func, size(behaviour_tc))
+    demon_reward_features = Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+                    Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
+                1:2), false)
 
 
-    # demons = get_horde(parsed,
-    #                    feature_size,
-    #                    action_space,
-    #                    (obs) -> state_constructor(obs,
-    #                                               feature_size,
-    #                                               state_constructor_tc))
-      demons = get_horde(parsed,
-                         feature_size,
-                         action_space,
-                         demon_feature_projector)
+    behaviour_reward_features =  Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+                    Curiosity.SparseTileCoder(parsed["behaviour_num_tilings"], parsed["behaviour_num_tiles"], 2),
+                1:2), false)
+
+    feature_size = size(fc)
+    demon_feature_size = size(demon_reward_features)
+    behaviour_feature_size = size(behaviour_reward_features)
+
+    demons = MCU.create_demons(parsed,
+                         demon_reward_features)
 
     demon_learner = Curiosity.get_linear_learner(parsed,
                                                  feature_size,
                                                  action_space,
                                                  demons,
                                                  "demon",
-                                                 demon_feature_projector)
+                                                 demon_reward_features)
 
-     behaviour_num_tasks = 1
-     num_SFs = 2
-     num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
-         num_SFs * length(behaviour_feature_projector) * action_space + 1
-     elseif parsed["behaviour_learner"] ∈ ["Q"]
-         1
+    exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
+
+    behaviour_num_tasks = 1
+    num_SFs = 4
+    num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
+        # num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
+        num_SFs * size(behaviour_reward_projector) + behaviour_num_tasks
+
+    elseif parsed["behaviour_learner"] ∈ ["Q"]
+        behaviour_num_tasks
+    elseif parsed["behaviour_learner"] == "RoundRobin"
+        0
     else
-        throw(ArgumentError("Hacky thing not working"))
-     end
-
-     behaviour_learner = Curiosity.get_linear_learner(parsed,
-                                                      feature_size,
-                                                      action_space,
-                                                      num_demons,
-                                                      behaviour_num_tasks,
-                                                      "behaviour",
-                                                      behaviour_feature_projector)
-
-
-    exploration_strategy = if parsed["exploration_strategy"] == "epsilon_greedy"
-        EpsilonGreedy(parsed["exploration_param"])
-    else
-        throw(ArgumentError("Not a Valid Exploration Strategy"))
+        throw(ArgumentError("Hacky thing not working, yay!"))
     end
+    behaviour_learner = Curiosity.get_linear_learner(parsed,
+                                                     size(fc),
+                                                     action_space,
+                                                     num_demons,
+                                                     behaviour_num_tasks,
+                                                     "behaviour",
+                                                     behaviour_reward_features)
 
-    behaviour_gvf = MCU.make_behaviour_gvf(behaviour_gamma, base_state_constructor_func, behaviour_learner, exploration_strategy)
+
+
     behaviour_demons = if behaviour_learner isa GPI
-        SF_horde = MCU.make_SF_horde(behaviour_gamma, length(behaviour_feature_projector), action_space, behaviour_feature_projector)
-
-        pred_horde = Horde([behaviour_gvf])
-
-        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_feature_projector)
+        @assert !(behaviour_reward_projector isa Nothing)
+        bh_gvf = MCU.make_behaviour_gvf(behaviour_learner,
+                                          0.0,
+                                          fc,
+                                          exploration_strategy)
+        pred_horde = GVFHordes.Horde([bh_gvf])
+        SF_policies = [MCU.steps_to_wall_gvf().policy, MCU.steps_to_goal_gvf().policy]
+        SF_discounts = [MCU.steps_to_wall_gvf().discount, MCU.steps_to_goal_gvf().discount]
+        num_SFs = length(SF_policies)
+        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, behaviour_reward_features, 1:action_space)
+        Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_features)
     elseif behaviour_learner isa QLearner
-        Horde([behaviour_gvf])
+        bh_gvf = MCU.make_behaviour_gvf(behaviour_learner,
+                                          parsed["behaviour_gamma"],
+                                          fc,
+                                          exploration_strategy)
+        GVFHordes.Horde([bh_gvf])
+    else
+        throw(ArgumentError("goes with which horde? " ))
     end
 
+    random_first_action = parsed["random_first_action"]
     Agent(demons,
           feature_size,
           behaviour_learner,
@@ -159,24 +170,10 @@ function construct_agent(parsed)
           observation_size,
           action_space,
           intrinsic_reward_type,
-          base_state_constructor_func,
+          fc,
           use_external_reward,
-          exploration_strategy)
-end
-
-function get_GPI_horde(parsed, feature_size, action_space, state_constructor)
-    discount = parsed["behaviour_gamma"]
-    SF_horde = MCU.make_SF_horde(feature_size, action_space, state_constructor)
-    num_SFs = 2
-    #NOTE: Tasks is learning the reward feature vector
-    #Dummy prediction GVF
-    DummyGVF = GVF(GVFParamFuncs.FeatureCumulant(1), GVFParamFuncs.ConstantDiscount(0.0), GVFParamFuncs.NullPolicy())
-    pred_horde = Horde([DummyGVF])
-
-    return Curiosity.GVFSRHordes.SRHorde(pred_horde,
-        SF_horde,
-        num_SFs,
-        state_constructor)
+          exploration_strategy,
+          random_first_action)
 end
 
 function get_horde(parsed, feature_size, action_space, state_constructor)
@@ -214,7 +211,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         while sum(steps) < max_num_steps
             is_terminal = false
 
-            max_episode_steps = min(max_num_steps - sum(steps), 1000)
+            max_episode_steps = min(max_num_steps - sum(steps), 2000)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)

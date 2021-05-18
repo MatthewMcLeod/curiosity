@@ -2,8 +2,12 @@
 module TabularTMazeUtils
 using Curiosity
 using GVFHordes
+using SparseArrays
 import ..TMazeCumulantSchedules
 import ..GVFSRHordes
+import ..FeatureCreator
+import ..SRCreationUtils
+
 using Distributions
 using ...StatsBase
 const TTMCS = TMazeCumulantSchedules
@@ -94,6 +98,23 @@ function Base.get(cumulant::TTMazeStateActionCumulant; kwargs...)
     end
 end
 
+## Create Reward feature Projector
+struct StateActionFeatures <: FeatureCreator
+    num_states::Int
+    num_actions::Int
+end
+
+function project_features(fc::StateActionFeatures, state, action, state_tp1)
+    new_s = spzeros(fc.num_actions * fc.num_states)
+    ind = (state[1] -1)* fc.num_actions + action
+    new_s[convert(Int,ind)] = 1
+    return new_s
+end
+
+(FP::StateActionFeatures)(state,action,state_tp1) = project_features(FP, state,action,state_tp1)
+Base.size(FP::StateActionFeatures) = FP.num_states * FP.num_actions
+
+
 function make_behaviour_gvf(discount, state_constructor_func, learner, exploration_strategy)
     function b_π(state_constructor_func, learner, exploration_strategy; kwargs...)
         s = state_constructor_func(kwargs[:state_t])
@@ -103,28 +124,6 @@ function make_behaviour_gvf(discount, state_constructor_func, learner, explorati
     GVF_policy = GVFParamFuncs.FunctionalPolicy((;kwargs...) -> b_π(state_constructor_func, learner, exploration_strategy; kwargs...))
     BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm), GVF_policy)
 end
-
-function make_SR_for_policy(policy,discount,pseudoterm, num_features, num_actions, feature_projector)
-    # If the feature projection is to a value function, or a state action function
-
-    num_projected_features = length(feature_projector)
-    return GVFSRHordes.SFHorde([GVF(TTMazeStateActionCumulant(s,a),
-                GVFParamFuncs.StateTerminationDiscount(discount, pseudoterm),
-                GVFParamFuncs.FunctionalPolicy(policy)) for s in 1:num_projected_features for a in 1:num_actions])
-end
-
-function make_SF_horde(discount, num_features, num_actions, feature_projector)
-    # horde = make_SR_for_policy((obs,a) -> demon_target_policy(1,obs,a),discount,pseudoterm, num_features, num_actions)
-    horde = make_SR_for_policy((;kwargs...) -> demon_target_policy(1;kwargs...),discount,pseudoterm, num_features, num_actions, feature_projector)
-    for policy_i in 2:4
-        # GVFParamFuncs.FunctionalPolicy((;kwargs...) -> TTMU.demon_target_policy(i; kwargs...))
-        new_horde = make_SR_for_policy((;kwargs...) -> demon_target_policy(policy_i; kwargs...), discount,pseudoterm, num_features, num_actions, feature_projector)
-        horde = GVFSRHordes.merge(horde,new_horde)
-    end
-    return horde
-end
-
-# function demon_target_policy(gvf_i, observation, action)
 function demon_target_policy(gvf_i; kwargs...)
 
     # state = convert(Int,observation[1])

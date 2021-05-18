@@ -41,8 +41,8 @@ default_args() =
         # Demon Attributes
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
-        "demon_update" => "ETB",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
         "demon_interest_set" => "oned_tmaze",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -50,21 +50,21 @@ default_args() =
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.99,
         "demon_beta_v" => 0.99,
-
         #shared
         # "num_tiles" => 2,
         # "num_tilings" =>8,
         "tiling_structure" => [2,8],
-        "demon_rep" => "ideal_martha",
+        "demon_rep" => "ideal",
         # "demon_rep" => "tilecoding",
         "demon_num_tiles" => 8,
         "demon_num_tilings" => 1,
-        "eta" => 0.1,
-        "alpha_init" => 0.5,
+        "eta" => 0.05,
+        "alpha_init" => 0.1,
 
         # Environment Config
         "constant_target"=> [-10.0,10.0],
         "cumulant_schedule" => "DrifterDistractor",
+        "cumulant" => 1,
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"beg",
@@ -77,10 +77,10 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 40000,
+        "steps" => 30000,
         "use_external_reward" => true,
         "random_first_action" => false,
-        "logger_keys" => [LoggerKey.ONEDTMAZEERROR, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD, LoggerKey.ONEDTMAZEERROR_DPI]
+        "logger_keys" => [LoggerKey.ONEDTMAZEERROR,LoggerKey.ONEDTMAZEERROR_DPI,LoggerKey.ONEDTMAZEERROR_UNIFORM, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
     )
 
 
@@ -148,12 +148,12 @@ function construct_agent(parsed)
                 Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
             1:2), false)
     elseif parsed["demon_rep"] == "ideal"
-        # ODTMU.IdealDemonFeatures()
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2), true)
+        Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2)
+    elseif parsed["demon_rep"] == "ideal_state_action"
+        t = ODTMU.IdealStateActionDemonFeatures(4)
+        Curiosity.FeatureSubset(t, 1:2)
     elseif parsed["demon_rep"] == "ideal_martha"
-        # ODTMU.IdealDemonFeatures()
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.MarthaIdealDemonFeatures(), 1:2), false)
-
+        Curiosity.FeatureProjector(Curiosity.FeatureSubset(ODTMU.MarthaIdealDemonFeatures(4), 1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
@@ -187,8 +187,7 @@ function construct_agent(parsed)
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
             ODTMU.MarthaIdealDemonFeatures(), 1:2), false)
     elseif parsed["behaviour_reward_projector"] == "maze"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            ODTMU.TMazeEncoding(),1:2),false)
+        Curiosity.FeatureSubset(ODTMU.TMazeEncoding(),1:2)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
     end
@@ -199,7 +198,9 @@ function construct_agent(parsed)
         behaviour_num_tasks = 1
         num_SFs = 4
         num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
-            num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
+            # num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
+            num_SFs * size(behaviour_reward_projector) + behaviour_num_tasks
+
         elseif parsed["behaviour_learner"] ∈ ["Q"]
             behaviour_num_tasks
         elseif parsed["behaviour_learner"] == "RoundRobin"
@@ -227,7 +228,7 @@ function construct_agent(parsed)
             SF_policies = [ODTMU.GoalPolicy(i) for i in 1:4]
             SF_discounts = [ODTMU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
             num_SFs = length(SF_policies)
-            SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
+            SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
             Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_projector)
         elseif behaviour_learner isa QLearner
             bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,

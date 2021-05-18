@@ -14,7 +14,7 @@ function combine(dict_arr, key, vals)
 end
 
 function split_algo(algo_ic, swept_params)
-    println(swept_params)
+    # println(swept_params)
     dicts = [Dict()]
     for k in swept_params
         list_of_params = diff(algo_ic)[k]
@@ -79,7 +79,6 @@ function load_results(ic, logger_key; return_type = "tensor")
         end
     end
 
-    # println(resul)
     if (size(results)[1] == 0)
         println("empty collection")
         return [2^31]

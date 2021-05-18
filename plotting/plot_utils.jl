@@ -150,3 +150,83 @@ function smooth(data, k)
 end
 
 end
+
+module LabelUtils
+using Reproduce
+using FileIO
+using Statistics
+using ProgressMeter
+using JLD2
+using Plots
+
+const val_matches = [
+    ["GPI","TB","Q","TB"],
+    ["Q","ESARSA", "Q", "TB"],
+    ["GPI", "TB", "SR", "TB"],
+    ["Q", "ESARSA", "SR", "TB"],
+    ]
+
+const algo_keys = ["behaviour_learner", "behaviour_update", "demon_learner", "demon_update"]
+const color_scheme = [
+    colorant"#44AA99",
+    colorant"#332288",
+    colorant"#DDCC77",
+    colorant"#999933",
+    colorant"#CC6677",
+    colorant"#AA4499",
+    colorant"#DDDDDD",
+	colorant"#117733",
+	colorant"#882255",
+	colorant"#88CCEE",
+    ]
+
+function _is_match(ic, keys, vals)
+    tst = ([ic[1].parsed_args[keys[i]] == vals[i] for i in 1:length(keys)])
+    return all(tst)
+end
+function _get_ic_ind(ic)
+    ic_diff_keys = keys(diff(ic))
+    for k in algo_keys
+        if k in ic_diff_keys
+            throw(ArgumentError("Multiple types of  $(k) in item collection. Unspecified what colour palette to use"))
+        end
+    end
+
+    for ind in 1:length(val_matches)
+        if _is_match(ic, algo_keys, val_matches[ind])
+            return ind
+        end
+    end
+    @warn "No match found"
+end
+
+function get_colour(ic)
+    # Unique Colour given on a per {behaviour learner, behaviour update, demon learner, demon update} basis.
+    ind = _get_ic_ind(ic)
+    return Dict(:color => color_scheme[ind])
+end
+
+function get_linestyle(ic)
+    if ic[1].parsed_args["demon_opt"] == "Descent"
+        return Dict(:linestyle => :dot)
+    else
+        return Dict(:linestyle => :solid)
+    end
+end
+
+function get_label(ic)
+    for ind in 1:length(val_matches)
+        if _is_match(ic, algo_keys, val_matches[ind])
+            return Dict(:label => join(val_matches[ind], " "))
+        end
+    end
+end
+
+function get_params(ic)
+    color = get_colour(ic)
+    ls = get_linestyle(ic)
+    label = get_label(ic)
+    return merge(color,ls,label)
+end
+
+end

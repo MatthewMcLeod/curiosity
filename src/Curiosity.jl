@@ -15,7 +15,7 @@ import Flux.Optimise: update!
 
 # Abstract type of FeatureProjector used in the learner utils
 abstract type FeatureCreator end
-export ValueFeatureProjector, ActionValueFeatureProjector
+# export ValueFeatureProjector, ActionValueFeatureProjector
 include("utils/learners.jl")
 include("utils/SRHorde.jl")
 

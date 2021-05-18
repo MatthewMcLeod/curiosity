@@ -6,7 +6,7 @@ import MinimalRLCore
 module MountainCarConst
 const vel_limit = (-0.07, 0.07)
 const pos_limit = (-1.2, 0.5)
-const pos_initial_range = (-0.6, 0.4)
+const pos_initial_range = (-0.2, 0.2)
 const vel_initial_range = (-0.04,0.04)
 
 const Reverse=1
@@ -66,7 +66,7 @@ function MinimalRLCore.environment_step!(env::MountainCar, action, rng::Abstract
     @boundscheck valid_action(env, action)
     env.vel =
         clamp(env.vel + (action - 2)*0.001 - 0.0025*cos(3*env.pos),
-              MountainCarConst.vel_limit...)XSPN
+              MountainCarConst.vel_limit...)
     env.pos = clamp(env.pos + env.vel,
                     MountainCarConst.pos_limit...)
 end

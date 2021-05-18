@@ -216,7 +216,7 @@ function create_demons(parsed, demon_projected_fc = nothing)
         SF_policies = [NaiveGoalPolicy(i) for i in 1:4]
         SF_discounts = [GoalTermination(parsed["demon_gamma"]) for i in 1:4]
         num_SFs = length(SF_policies)
-        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
         GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
     else
         throw(ArgumentError("Cannot create demons"))
@@ -268,13 +268,32 @@ end
 struct IdealDemonFeatures <: FeatureCreator
 end
 
-function project_features(fc::IdealDemonFeatures, state)
-    new_state = sparsevec(convert(Array{Int,1}, [check_goal(i, state) for i in 1:4]))
+function project_features(fc::IdealDemonFeatures, state, action, next_state)
+    new_state = sparsevec(convert(Array{Int,1}, [check_goal(i, next_state) for i in 1:4]))
     return new_state
 end
 
-(FP::IdealDemonFeatures)(state) = project_features(FP, state)
+(FP::IdealDemonFeatures)(s_t,a_t,s_tp1) = project_features(FP, s_t, a_t, s_tp1)
 Base.size(FP::IdealDemonFeatures) = 4
+
+####
+# Ideal State Action Feature Creator
+####
+struct IdealStateActionDemonFeatures <: FeatureCreator
+    num_actions::Int
+end
+
+function project_features(fc::IdealStateActionDemonFeatures, s_t, a_t, s_tp1)
+    goal_ind = findfirst([check_goal(i, s_tp1) for i in 1:4])
+    reward_feature = zeros(Int(fc.num_actions*4))
+    if !(goal_ind isa Nothing)
+        reward_feature[Int((goal_ind-1)*fc.num_actions + a_t)] = 1
+    end
+    return sparsevec(reward_feature)
+end
+
+(FP::IdealStateActionDemonFeatures)(s_t,a_t,s_tp1) = project_features(FP, s_t, a_t, s_tp1)
+Base.size(FP::IdealStateActionDemonFeatures) = 4 * FP.num_actions
 
 struct MarthaIdealDemonFeatures <: FeatureCreator
 end
@@ -288,52 +307,6 @@ end
 Base.size(FP::MarthaIdealDemonFeatures) = 4
 
 
-# Base.@kwdef struct RoundRobinPolicy <: Learner
-#     update = Nothing
-# end
-
-# Curiosity.update!(learner::RoundRobinPolicy, args...) = nothing
-
-# Base.get(π::RoundRobinPolicy; state_t, action_t, kwargs...) =
-#     get_action_probs(π, state_t, nothing)[action_t]
-
-# function Curiosity.get_action_probs(π::RoundRobinPolicy, features, state)
-#     cur_x = state[2]
-#     cur_y = state[1]
-#     # ret = zeros(4)
-
-#     # if cur_x == 0.5
-#     #     if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON) # Middle Junction
-#     #         ret[ODTMC.LEFT] = 0.5
-#     #         ret[ODTMC.RIGHT] = 0.5
-#     #     else # Middle Hallway
-#     #         ret[ODTMC.UP] = 1.0
-#     #     end
-#     # elseif cur_y == 0.8 && range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON) # Left Junction
-#     #     ret[ODTMC.UP] = 0.5
-#     #     ret[ODTMC.DOWN] = 0.5
-#     # elseif cur_y == 0.8 && range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
-#     #     ret[ODTMC.UP] = 0.5
-#     #     ret[ODTMC.DOWN] = 0.5
-#     # elseif cur_x == 0.0
-#     #     if cur_y > 0.8
-#     #         ret[ODTMC.UP] = 1.0
-#     #     else
-#     #         ret[ODTMC.DOWN] = 1.0
-#     #     end
-#     # elseif cur_x == 1.0
-#     #     if cur_y > 0.8
-#     #         ret[ODTMC.UP] = 1.0
-#     #     else
-#     #         ret[ODTMC.DOWN] = 1.0
-#     #     end
-#     # elseif cur_x < 0.5
-#     #     ret[ODTMC.LEFT] = 1.0
-#     # else
-#     #     ret[ODTMC.RIGHT] = 1.0
-#     # end
-#     # ret
-# end
 DrifterDistractor(parsed) = begin
     c_dist = Uniform(parsed["constant_target"][1],parsed["constant_target"][2])
     c1,c2 = rand(c_dist,2)
