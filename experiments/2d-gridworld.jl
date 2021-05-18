@@ -107,6 +107,13 @@ function construct_agent(parsed)
         end
     end
 
+    if "alpha_init" in keys(parsed)
+        prefixes = ["behaviour", "demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "alpha_init"], "_")] = parsed["alpha_init"]
+        end
+    end
+
     if parsed["demon_opt"] == "Auto"
         parsed["demon_alpha_init"] =
             parsed["demon_alpha_init"] / parsed["num_tilings"]
@@ -143,7 +150,7 @@ function construct_agent(parsed)
     elseif parsed["demon_rep"] == "ideal_martha"
         # ODTMU.IdealDemonFeatures()
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            Curiosity.ActionValueFeatureProjector(TDGWU.MarthaIdealDemonFeatures(),action_space),
+            Curiosity.ActionValueFeatureProjector(TDGWU.MarthaIdealDemonFeatures(), action_space),
         1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
@@ -206,6 +213,11 @@ function construct_agent(parsed)
                         1:2), false), action_space)
         elseif brp_str == "base"
             Curiosity.ActionValueFeatureProjector(Curiosity.FeatureProjector(fc, false), action_space)
+        elseif brp_str == "state_agg"
+            Curiosity.ActionValueFeatureProjector(
+                Curiosity.FeatureProjector(
+                    TDGWU.StateAggregation(), false),
+                action_space)
         else
             throw(ArgumentError("Not a valid demon projection rep for GPI"))
         end
