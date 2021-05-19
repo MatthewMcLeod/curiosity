@@ -4,9 +4,9 @@
 #SBATCH -o experiment_2_clip_gpi_tb.out # Standard output
 #SBATCH -e experiment_2_clip_gpi_tb.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=07:00:00 #
+#SBATCH --time=01:30:00 #
 #SBATCH --ntasks=32
-#SBATCH --account=def-whitem
+#SBATCH --account=rrg-whitem
 
 using Pkg
 Pkg.activate(".")
