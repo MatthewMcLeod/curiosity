@@ -21,7 +21,7 @@ function lg_step!(self::AutostepStepSize, env, agent, s, a, s_next, r, is_termin
 
         for k in keys(opt.α)
             α = opt.α[k]
-            push!(self.step_sizes, α)
+            push!(self.step_sizes, copy(α))
          end
     end
 end
@@ -30,5 +30,5 @@ function lg_episode_end!(self::AutostepStepSize, cur_step_in_episode, cur_step_t
 end
 
 function save_log(self::AutostepStepSize, save_dict::Dict)
-    save_dict[:autostep_stepsize] = cat(self.step_sizes..., dims=3)
+    save_dict[:autostep_stepsize] = cat(self.step_sizes[2:end]..., dims=3)
 end

@@ -22,7 +22,7 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "RoundRobin",
+        "behaviour_learner" => "GPI",
         "behaviour_update" => "TB",
         "behaviour_reward_projector" => "maze",
         "behaviour_rp_tilings" => 1,
@@ -41,8 +41,8 @@ default_args() =
         # Demon Attributes
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
-        "demon_update" => "ETB",
+        "demon_learner" => "SR",
+        "demon_update" => "TB",
         "demon_interest_set" => "oned_tmaze",
         "demon_policy_type" => "greedy_to_cumulant",
         "demon_opt" => "Auto",
@@ -77,7 +77,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 60000,
+        "steps" => 10000,
         "use_external_reward" => true,
         "random_first_action" => false,
         "logger_keys" => [LoggerKey.ONEDTMAZEERROR,LoggerKey.ONEDTMAZEERROR_DPI,LoggerKey.ONEDTMAZEERROR_UNIFORM, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
@@ -228,7 +228,7 @@ function construct_agent(parsed)
             SF_policies = [ODTMU.GoalPolicy(i) for i in 1:4]
             SF_discounts = [ODTMU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
             num_SFs = length(SF_policies)
-            SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
+            SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
             Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_projector)
         elseif behaviour_learner isa QLearner
             bh_gvf = ODTMU.make_behaviour_gvf(behaviour_learner,
