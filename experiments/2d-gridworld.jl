@@ -24,8 +24,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.0,
-        "behaviour_learner" => "RoundRobin",
-        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_reward_projector" => "tilecoding",
         "behaviour_rp_tilings" => 2,
         "behaviour_rp_tiles" => 2,
@@ -44,6 +44,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
+        "demon_gamma" => 0.9,
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
@@ -77,8 +78,9 @@ default_args() =
         "steps" => 10000,
         "use_external_reward" => true,
 
-        "logger_keys" => [LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.TWODGRIDWORLDERROR, LoggerKey.TWODGRIDWORLDERRORDPI]
+        "logger_keys" => ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
     )
+
 
 
 function construct_agent(parsed)
@@ -104,6 +106,13 @@ function construct_agent(parsed)
         prefixes = ["behaviour","demon"]
         for prefix in prefixes
             parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
+    end
+
+    if "alpha_init" in keys(parsed)
+        prefixes = ["behaviour", "demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "alpha_init"], "_")] = parsed["alpha_init"]
         end
     end
 
@@ -143,7 +152,7 @@ function construct_agent(parsed)
     elseif parsed["demon_rep"] == "ideal_martha"
         # ODTMU.IdealDemonFeatures()
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            Curiosity.ActionValueFeatureProjector(TDGWU.MarthaIdealDemonFeatures(),action_space),
+            Curiosity.ActionValueFeatureProjector(TDGWU.MarthaIdealDemonFeatures(), action_space),
         1:2), false)
     else
         throw(ArgumentError("Not a valid demon projection rep for SR"))
@@ -160,37 +169,66 @@ function construct_agent(parsed)
 
     exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
-    behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)
-        nothing
-    elseif parsed["behaviour_reward_projector"] == "tilecoding"
-        Curiosity.ActionValueFeatureProjector(Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
-            1:2), false),action_space)
-    elseif parsed["behaviour_reward_projector"] == "base"
-        Curiosity.FeatureProjector(fc, false)
-    elseif parsed["behaviour_reward_projector"] == "identity"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(identity, 1:2), false)
-    elseif parsed["behaviour_reward_projector"] == "ideal_state_action"
-        Curiosity.FeatureSubset(TDGWU.IdealStateActionDemonFeatures(action_space), 1:2)
-    elseif parsed["behaviour_reward_projector"] == "ideal"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            TDGWU.IdealDemonFeatures(), 1:2), true)
-    elseif parsed["behaviour_reward_projector"] == "ideal_martha"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-            TDGWU.MarthaIdealDemonFeatures(), 1:2), true)
-    else
-        throw(ArgumentError("Not a valid demon projection rep for SR"))
-    end
+# <<<<<<< HEAD
+# =======
+#     behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)
+#         nothing
+#     elseif parsed["behaviour_reward_projector"] == "tilecoding"
+#         Curiosity.ActionValueFeatureProjector(Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+#             Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
+#             1:2), false),action_space)
+#     elseif parsed["behaviour_reward_projector"] == "base"
+#         Curiosity.FeatureProjector(fc, false)
+#     elseif parsed["behaviour_reward_projector"] == "identity"
+#         Curiosity.FeatureProjector(Curiosity.FeatureSubset(identity, 1:2), false)
+#     elseif parsed["behaviour_reward_projector"] == "ideal_state_action"
+#         Curiosity.FeatureSubset(TDGWU.IdealStateActionDemonFeatures(action_space), 1:2)
+#     elseif parsed["behaviour_reward_projector"] == "ideal"
+#         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+#             TDGWU.IdealDemonFeatures(), 1:2), true)
+#     elseif parsed["behaviour_reward_projector"] == "ideal_martha"
+#         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+#             TDGWU.MarthaIdealDemonFeatures(), 1:2), true)
+#     else
+#         throw(ArgumentError("Not a valid demon projection rep for SR"))
+#     end
 
+# >>>>>>> 3cf6c1fc34933118c5d04c1ca5106d9c05e6591e
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         # ODTMU.RoundRobinPolicy(), nothing, 0.0
         TDGWU.RoundRobinPolicy(), nothing, 0.0
         # throw("Round Robin not available")
     else
+
+        brp_str = "behaviour_reward_projector" ∈ keys(parsed) ? parsed["behaviour_reward_projector"] : "nothing"
+
+        behaviour_reward_projector = if brp_str == "nothing"
+            nothing
+        elseif brp_str == "tilecoding"
+            Curiosity.ActionValueFeatureProjector(
+                Curiosity.FeatureProjector(
+                    Curiosity.FeatureSubset(
+                        Curiosity.SparseTileCoder(
+                            parsed["behaviour_rp_tilings"],
+                            parsed["behaviour_rp_tiles"],
+                            2),
+                        1:2), false), action_space)
+        elseif brp_str == "base"
+            Curiosity.ActionValueFeatureProjector(Curiosity.FeatureProjector(fc, false), action_space)
+        elseif brp_str == "state_agg"
+            Curiosity.ActionValueFeatureProjector(
+                Curiosity.FeatureProjector(
+                    TDGWU.StateAggregation(), false),
+                action_space)
+        else
+            throw(ArgumentError("Not a valid demon projection rep for GPI"))
+        end
+
+
         behaviour_num_tasks = 1
         num_SFs = 4
         num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
-            num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
+            num_SFs * size(behaviour_reward_projector) + behaviour_num_tasks
         elseif parsed["behaviour_learner"] ∈ ["Q"]
             behaviour_num_tasks
         elseif parsed["behaviour_learner"] == "RoundRobin"
@@ -215,7 +253,8 @@ function construct_agent(parsed)
                                               fc,
                                               exploration_strategy)
             pred_horde = GVFHordes.Horde([bh_gvf])
-            SF_policies = [TDGWU.GoalPolicy(i) for i in 1:4]
+
+            SF_policies = [TDGWU.NaiveGoalPolicy(i) for i in 1:4]
             SF_discounts = [TDGWU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
             num_SFs = length(SF_policies)
             SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
@@ -260,24 +299,24 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
-        
+
 
         Random.seed!(parsed["seed"])
-        
+
         cumulant_schedule = TDGWU.get_cumulant_schedule(parsed)
-        
+
         start_dist = Symbol(parsed["start_dist"])
         per_step_rew = get(parsed, "env_step_penalty", 0.0)
         env = OpenWorld(10, 10,
                         per_step_rew=per_step_rew,
                         cumulant_schedule=cumulant_schedule,
                         start_type=start_dist)
-        
+
         agent = construct_agent(parsed)
 
         goal_visitations = zeros(4)
         eps = 1
-        
+
         max_num_steps = num_steps
         steps = Int[]
 
