@@ -201,11 +201,7 @@ function construct_agent(parsed)
     else
 
         brp_str = "behaviour_reward_projector" ∈ keys(parsed) ? parsed["behaviour_reward_projector"] : "nothing"
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 42b74ac9bc0349d4b05a80a6e16897ac7283e63f
         behaviour_reward_projector = if brp_str == "nothing"
             nothing
         elseif brp_str == "tilecoding"
