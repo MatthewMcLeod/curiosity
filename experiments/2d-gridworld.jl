@@ -220,6 +220,11 @@ function construct_agent(parsed)
                 Curiosity.FeatureProjector(
                     TDGWU.StateAggregation(), false),
                 action_space)
+        elseif brp_str == "small_state_agg"
+            Curiosity.ActionValueFeatureProjector(
+                Curiosity.FeatureProjector(
+                    TDGWU.SmallStateAggregation(), false),
+                action_space)
         else
             throw(ArgumentError("Not a valid demon projection rep for GPI"))
         end

@@ -308,7 +308,7 @@ Base.size(FP::MarthaIdealDemonFeatures) = 4
 
 struct StateAggregation <: FeatureCreator end
 
-function project_features(fc::StateAggregation, state)
+function project_features(::StateAggregation, state)
     new_state = spzeros(Int, 100)
     idx = Int(floor(state[1] * 10) * 10 + floor(state[2] * 10) + 1)
     new_state[idx] = 1
@@ -317,6 +317,37 @@ end
 
 (FP::StateAggregation)(state) = project_features(FP, state)
 Base.size(FP::StateAggregation) = 100
+
+struct SmallStateAggregation <: FeatureCreator end
+
+function project_features(::SmallStateAggregation, state)
+    new_state = spzeros(Int, 9)
+
+    y = state[1]
+    x = state[2]
+    idx_y = if y < 1//3
+        1
+    elseif y < 2//3
+        2
+    else
+        3
+    end
+
+    idx_x = if x < 1//3
+        1
+    elseif x < 2//3
+        2
+    else
+        3
+    end
+
+    idx = (idx_x - 1) * 3 + idx_y
+    new_state[idx] = 1
+    new_state
+end
+
+(fp::SmallStateAggregation)(state) = project_features(fp, state)
+Base.size(::SmallStateAggregation) = 9
 
 
 DrifterDistractor(parsed) = begin
