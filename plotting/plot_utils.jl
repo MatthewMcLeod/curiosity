@@ -159,12 +159,31 @@ using ProgressMeter
 using JLD2
 using Plots
 
-const val_matches = [
-    ["GPI","TB","Q","TB"],
-    ["Q","ESARSA", "Q", "TB"],
-    ["GPI", "TB", "SR", "TB"],
-    ["Q", "ESARSA", "SR", "TB"],
-    ]
+const val_matches = Dict(["GPI","TB","Q","TB"] => 1,
+    ["Q","ESARSA", "Q", "TB"] => 2,
+    ["GPI", "TB", "SR", "TB"] => 3,
+    ["Q", "ESARSA", "SR", "TB"] => 4,
+    ["Q", "TabularRoundRobin", "SR", "TB"] => 5,
+    ["Q", "TabularRoundRobin", "Q", "TB"] => 6,
+    ["RoundRobin", "TB", "SR", "TB"] => 5,
+    ["RoundRobin", "TB", "Q", "TB"] => 6,
+    ["Q", "TabularRoundRobin","LSTD","TB"] => 7,
+    ["Q", "TabularRoundRobin", "Q", "ESARSA"] => 8,
+    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => 9,
+    )
+
+const algo_labels = Dict(["GPI","TB","Q","TB"] => "GPI with TB Demons",
+    ["Q","ESARSA", "Q", "TB"] => "ESARSA with TB Demons",
+    ["GPI", "TB", "SR", "TB"] => "GPI with SF Demons",
+    ["Q", "ESARSA", "SR", "TB"] => "ESARSA with SF Demons",
+    ["Q", "TabularRoundRobin", "SR", "TB"] => "SF Demons",
+    ["Q", "TabularRoundRobin", "Q", "TB"] => "TB Demons",
+    ["RoundRobin", "TB", "SR", "TB"] => "SF Demons",
+    ["RoundRobin", "TB", "Q", "TB"] => "TB Demons",
+    ["Q", "TabularRoundRobin","LSTD","TB"] => "LSTD Demons",
+    ["Q", "TabularRoundRobin", "Q", "ESARSA"] => "Off-Policy ESARSA Demons",
+    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => "SF Demons using Off-Policy ESARSA",
+    )
 
 const algo_keys = ["behaviour_learner", "behaviour_update", "demon_learner", "demon_update"]
 const color_scheme = [
@@ -184,20 +203,27 @@ function _is_match(ic, keys, vals)
     tst = ([ic[1].parsed_args[keys[i]] == vals[i] for i in 1:length(keys)])
     return all(tst)
 end
+function _print_algo_keys(ic;algo_keys = algo_keys)
+    println()
+    [println(ic[1].parsed_args[k]) for k in algo_keys]
+end
 function _get_ic_ind(ic)
     ic_diff_keys = keys(diff(ic))
     for k in algo_keys
         if k in ic_diff_keys
+            @show diff(ic)
             throw(ArgumentError("Multiple types of  $(k) in item collection. Unspecified what colour palette to use"))
         end
     end
 
-    for ind in 1:length(val_matches)
-        if _is_match(ic, algo_keys, val_matches[ind])
-            return ind
+    for algo_vals in keys(val_matches)
+        if _is_match(ic, algo_keys, algo_vals)
+            return val_matches[algo_vals]
         end
     end
-    @warn "No match found"
+
+    _print_algo_keys(ic)
+    @warn string("No match found for: ", diff(ic))
 end
 
 function get_colour(ic)
@@ -215,9 +241,9 @@ function get_linestyle(ic)
 end
 
 function get_label(ic)
-    for ind in 1:length(val_matches)
-        if _is_match(ic, algo_keys, val_matches[ind])
-            return Dict(:label => join(val_matches[ind], " "))
+    for algo_vals in keys(algo_labels)
+        if _is_match(ic, algo_keys, algo_vals)
+            return Dict(:label => algo_labels[algo_vals])
         end
     end
 end

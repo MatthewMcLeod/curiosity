@@ -24,8 +24,8 @@ default_args() =
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.0,
-        "behaviour_learner" => "RoundRobin",
-        "behaviour_update" => "ESARSA",
+        "behaviour_learner" => "GPI",
+        "behaviour_update" => "TB",
         "behaviour_reward_projector" => "tilecoding",
         "behaviour_rp_tilings" => 2,
         "behaviour_rp_tiles" => 2,
@@ -44,6 +44,7 @@ default_args() =
         "demon_alpha_init" => 0.1,
         "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
+        "demon_gamma" => 0.9,
         "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_policy_type" => "greedy_to_cumulant",
@@ -77,8 +78,9 @@ default_args() =
         "steps" => 10000,
         "use_external_reward" => true,
 
-        "logger_keys" => [LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.TWODGRIDWORLDERROR, LoggerKey.TWODGRIDWORLDERRORDPI]
+        "logger_keys" => ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
     )
+
 
 
 function construct_agent(parsed)
@@ -199,7 +201,11 @@ function construct_agent(parsed)
     else
 
         brp_str = "behaviour_reward_projector" ∈ keys(parsed) ? parsed["behaviour_reward_projector"] : "nothing"
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 42b74ac9bc0349d4b05a80a6e16897ac7283e63f
         behaviour_reward_projector = if brp_str == "nothing"
             nothing
         elseif brp_str == "tilecoding"
@@ -222,7 +228,7 @@ function construct_agent(parsed)
             throw(ArgumentError("Not a valid demon projection rep for GPI"))
         end
 
-        
+
         behaviour_num_tasks = 1
         num_SFs = 4
         num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
@@ -251,6 +257,7 @@ function construct_agent(parsed)
                                               fc,
                                               exploration_strategy)
             pred_horde = GVFHordes.Horde([bh_gvf])
+
             SF_policies = [TDGWU.NaiveGoalPolicy(i) for i in 1:4]
             SF_discounts = [TDGWU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
             num_SFs = length(SF_policies)
@@ -296,24 +303,24 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
     )
 
     Curiosity.experiment_wrapper(parsed, logger_init_dict, working) do parsed, logger
-        
+
 
         Random.seed!(parsed["seed"])
-        
+
         cumulant_schedule = TDGWU.get_cumulant_schedule(parsed)
-        
+
         start_dist = Symbol(parsed["start_dist"])
         per_step_rew = get(parsed, "env_step_penalty", 0.0)
         env = OpenWorld(10, 10,
                         per_step_rew=per_step_rew,
                         cumulant_schedule=cumulant_schedule,
                         start_type=start_dist)
-        
+
         agent = construct_agent(parsed)
 
         goal_visitations = zeros(4)
         eps = 1
-        
+
         max_num_steps = num_steps
         steps = Int[]
 

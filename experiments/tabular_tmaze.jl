@@ -19,8 +19,8 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.50,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "TabularRoundRobin",
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.9,
@@ -36,7 +36,7 @@ default_args() =
         "demon_alpha_init" => 0.5,
         # "demon_eta" => 0.25,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "LSTD",
         "demon_update" => "TB",
         "demon_interest_set" => "ttmaze",
         "demon_policy_type" => "greedy_to_cumulant",
@@ -65,11 +65,11 @@ default_args() =
                             LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD,
                             LoggerKey.TTMAZE_DIRECT_ERROR,
                             LoggerKey.TTMAZE_STATE_VISITATION,
-                            LoggerKey.WC_PER_DEMON,
+                            # LoggerKey.WC_PER_DEMON,
                             LoggerKey.TTMAZE_ERROR_MAP],
         "save_dir" => "TabularTMazeExperiment",
         "seed" => 1,
-        "steps" => 30000,
+        "steps" => 2000,
         "use_external_reward" => true,
         "logger_interval" => 100,
         "random_first_action" => false,
@@ -180,7 +180,7 @@ function construct_agent(parsed)
     behaviour_demons = if behaviour_learner isa GPI
         SF_discounts = [GVFParamFuncs.StateTerminationDiscount(behaviour_discount, TTMU.pseudoterm) for i in 1:4]
         SF_policies = [GVFParamFuncs.FunctionalPolicy((;kwargs...) ->TTMU.demon_target_policy(i;kwargs...)) for i in 1:4]
-        SF_horde = SRCU.create_SF_horde_V2(SF_policies,SF_discounts,behaviour_feature_projector,1:4)
+        SF_horde = SRCU.create_SF_horde(SF_policies,SF_discounts,behaviour_feature_projector,1:4)
 
         pred_horde = Horde([behaviour_gvf])
 
@@ -240,7 +240,7 @@ function get_horde(parsed, feature_size, action_space, projected_feature_constru
         num_SFs = 4
         SF_discounts = [GVFParamFuncs.StateTerminationDiscount(discount, TTMU.pseudoterm) for i in 1:4]
         SF_policies = [GVFParamFuncs.FunctionalPolicy((;kwargs...) ->TTMU.demon_target_policy(i;kwargs...)) for i in 1:4]
-        SF_horde = SRCU.create_SF_horde_V2(SF_policies,SF_discounts,projected_feature_constructor,1:4)
+        SF_horde = SRCU.create_SF_horde(SF_policies,SF_discounts,projected_feature_constructor,1:4)
 
         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, projected_feature_constructor)
     end
@@ -261,6 +261,12 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         prefixes = ["behaviour","demon"]
         for prefix in prefixes
             parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
+    end
+    if "alpha_init" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "alpha_init"], "_")] = parsed["alpha_init"]
         end
     end
 

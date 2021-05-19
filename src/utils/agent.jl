@@ -118,6 +118,7 @@ function get_linear_learner(parsed::Dict,
             feature_projector,
             w_init)
     elseif learner_str ∈ ["LSTD", "LSTDLearner"]
+        eta_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
         LSTDLearner(lu,
                     parsed[eta_str],
                     feature_size,
