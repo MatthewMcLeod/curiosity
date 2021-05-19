@@ -291,6 +291,8 @@ end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
+    GC.gc()
+    
     num_steps = parsed["steps"]
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
