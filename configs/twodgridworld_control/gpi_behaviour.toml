@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_ESARSA_Control_gpi"
+save_dir = "TwoDGridWorld_GPI"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
