@@ -22,7 +22,7 @@ function create_demons(parsed, fc)
         SF_policies = [g.policy for g in pred_horde.gvfs]
         SF_discounts = [g.discount for g in pred_horde.gvfs]
         num_SFs = length(SF_policies)
-        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
 
         GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
     else

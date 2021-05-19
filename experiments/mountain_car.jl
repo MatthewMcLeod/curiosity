@@ -148,7 +148,7 @@ function construct_agent(parsed)
         SF_policies = [MCU.steps_to_wall_gvf().policy, MCU.steps_to_goal_gvf().policy]
         SF_discounts = [MCU.steps_to_wall_gvf().discount, MCU.steps_to_goal_gvf().discount]
         num_SFs = length(SF_policies)
-        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, behaviour_reward_features, 1:action_space)
+        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_features, 1:action_space)
         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_features)
     elseif behaviour_learner isa QLearner
         bh_gvf = MCU.make_behaviour_gvf(behaviour_learner,

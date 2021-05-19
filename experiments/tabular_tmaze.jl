@@ -180,7 +180,7 @@ function construct_agent(parsed)
     behaviour_demons = if behaviour_learner isa GPI
         SF_discounts = [GVFParamFuncs.StateTerminationDiscount(behaviour_discount, TTMU.pseudoterm) for i in 1:4]
         SF_policies = [GVFParamFuncs.FunctionalPolicy((;kwargs...) ->TTMU.demon_target_policy(i;kwargs...)) for i in 1:4]
-        SF_horde = SRCU.create_SF_horde_V2(SF_policies,SF_discounts,behaviour_feature_projector,1:4)
+        SF_horde = SRCU.create_SF_horde(SF_policies,SF_discounts,behaviour_feature_projector,1:4)
 
         pred_horde = Horde([behaviour_gvf])
 
@@ -240,7 +240,7 @@ function get_horde(parsed, feature_size, action_space, projected_feature_constru
         num_SFs = 4
         SF_discounts = [GVFParamFuncs.StateTerminationDiscount(discount, TTMU.pseudoterm) for i in 1:4]
         SF_policies = [GVFParamFuncs.FunctionalPolicy((;kwargs...) ->TTMU.demon_target_policy(i;kwargs...)) for i in 1:4]
-        SF_horde = SRCU.create_SF_horde_V2(SF_policies,SF_discounts,projected_feature_constructor,1:4)
+        SF_horde = SRCU.create_SF_horde(SF_policies,SF_discounts,projected_feature_constructor,1:4)
 
         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, projected_feature_constructor)
     end

@@ -200,8 +200,8 @@ function construct_agent(parsed)
         # throw("Round Robin not available")
     else
 
-        brp_str = "behaviour_reward_projector" ∈ keys(parsed) ? parsed["behviour_reward_projector"] : "nothing"
-        
+        brp_str = "behaviour_reward_projector" ∈ keys(parsed) ? parsed["behaviour_reward_projector"] : "nothing"
+
         behaviour_reward_projector = if brp_str == "nothing"
             nothing
         elseif brp_str == "tilecoding"
@@ -224,7 +224,7 @@ function construct_agent(parsed)
             throw(ArgumentError("Not a valid demon projection rep for GPI"))
         end
 
-        
+
         behaviour_num_tasks = 1
         num_SFs = 4
         num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]

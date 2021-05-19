@@ -216,7 +216,7 @@ function create_demons(parsed, demon_projected_fc = nothing)
         SF_policies = [NaiveGoalPolicy(i) for i in 1:4]
         SF_discounts = [GoalTermination(parsed["demon_gamma"]) for i in 1:4]
         num_SFs = length(SF_policies)
-        SF_horde = SRCU.create_SF_horde_V2(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
+        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
         GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
     else
         throw(ArgumentError("Cannot create demons"))
@@ -312,6 +312,7 @@ function project_features(fc::StateAggregation, state)
     new_state = spzeros(Int, 100)
     idx = Int(floor(state[1] * 10) * 10 + floor(state[2] * 10) + 1)
     new_state[idx] = 1
+    @show size(new_state)
     new_state
 end
 
