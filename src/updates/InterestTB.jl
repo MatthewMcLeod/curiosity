@@ -145,8 +145,8 @@ function update!(lu::InterestTB,
     reward_interests = interests
 
     # Update Traces: See update_utils.jl
-    update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
-    update_trace!(lu.trace, e_w, projected_state, λ, reward_discounts, reward_target_pis[:, action])
+    update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action]; emphasis=SR_interests)
+    update_trace!(lu.trace, e_w, projected_state, λ, reward_discounts, reward_target_pis[:, action]; emphasis=reward_interests)
 
     # e_nz = e_nz ∪ active_state_action.nzind
     # e_w_nz = e_w_nz ∪ projected_state_action.nzind
