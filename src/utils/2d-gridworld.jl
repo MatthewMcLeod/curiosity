@@ -306,53 +306,19 @@ end
 (FP::MarthaIdealDemonFeatures)(state) = project_features(FP, state)
 Base.size(FP::MarthaIdealDemonFeatures) = 4
 
+struct StateAggregation <: FeatureCreator end
 
-# Base.@kwdef struct RoundRobinPolicy <: Learner
-#     update = Nothing
-# end
+function project_features(fc::StateAggregation, state)
+    new_state = spzeros(Int, 100)
+    idx = Int(floor(state[1] * 10) * 10 + floor(state[2] * 10) + 1)
+    new_state[idx] = 1
+    new_state
+end
 
-# Curiosity.update!(learner::RoundRobinPolicy, args...) = nothing
+(FP::StateAggregation)(state) = project_features(FP, state)
+Base.size(FP::StateAggregation) = 100
 
-# Base.get(π::RoundRobinPolicy; state_t, action_t, kwargs...) =
-#     get_action_probs(π, state_t, nothing)[action_t]
 
-# function Curiosity.get_action_probs(π::RoundRobinPolicy, features, state)
-#     cur_x = state[2]
-#     cur_y = state[1]
-#     # ret = zeros(4)
-
-#     # if cur_x == 0.5
-#     #     if range_check(cur_y, 0.8 - ODTMC.EPSILON, 0.8 + ODTMC.EPSILON) # Middle Junction
-#     #         ret[ODTMC.LEFT] = 0.5
-#     #         ret[ODTMC.RIGHT] = 0.5
-#     #     else # Middle Hallway
-#     #         ret[ODTMC.UP] = 1.0
-#     #     end
-#     # elseif cur_y == 0.8 && range_check(cur_x, 0.0 - ODTMC.EPSILON, 0.0 + ODTMC.EPSILON) # Left Junction
-#     #     ret[ODTMC.UP] = 0.5
-#     #     ret[ODTMC.DOWN] = 0.5
-#     # elseif cur_y == 0.8 && range_check(cur_x, 1.0 - ODTMC.EPSILON, 1.0 + ODTMC.EPSILON)
-#     #     ret[ODTMC.UP] = 0.5
-#     #     ret[ODTMC.DOWN] = 0.5
-#     # elseif cur_x == 0.0
-#     #     if cur_y > 0.8
-#     #         ret[ODTMC.UP] = 1.0
-#     #     else
-#     #         ret[ODTMC.DOWN] = 1.0
-#     #     end
-#     # elseif cur_x == 1.0
-#     #     if cur_y > 0.8
-#     #         ret[ODTMC.UP] = 1.0
-#     #     else
-#     #         ret[ODTMC.DOWN] = 1.0
-#     #     end
-#     # elseif cur_x < 0.5
-#     #     ret[ODTMC.LEFT] = 1.0
-#     # else
-#     #     ret[ODTMC.RIGHT] = 1.0
-#     # end
-#     # ret
-# end
 DrifterDistractor(parsed) = begin
     c_dist = Uniform(parsed["constant_target"][1],parsed["constant_target"][2])
     c1,c2 = rand(c_dist,2)
