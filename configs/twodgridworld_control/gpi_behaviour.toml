@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_ESARSA_Control_esp"
+save_dir = "TwoDGridWorld_ESARSA_Control_gpi"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 200000
+steps = 100000
 
 logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100

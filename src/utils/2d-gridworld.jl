@@ -312,7 +312,6 @@ function project_features(fc::StateAggregation, state)
     new_state = spzeros(Int, 100)
     idx = Int(floor(state[1] * 10) * 10 + floor(state[2] * 10) + 1)
     new_state[idx] = 1
-    @show size(new_state)
     new_state
 end
 

@@ -253,7 +253,8 @@ function construct_agent(parsed)
                                               fc,
                                               exploration_strategy)
             pred_horde = GVFHordes.Horde([bh_gvf])
-            SF_policies = [TDGWU.GoalPolicy(i, true) for i in 1:4]
+
+            SF_policies = [TDGWU.NaiveGoalPolicy(i) for i in 1:4]
             SF_discounts = [TDGWU.GoalTermination(parsed["behaviour_gamma"]) for i in 1:4]
             num_SFs = length(SF_policies)
             SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_projector, 1:action_space)
