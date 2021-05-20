@@ -21,12 +21,15 @@ LU = LabelUtils
 
 
 # data_key = :ttmaze_direct_error
-data_key = :oned_tmaze_dpi_error
+# data_key = :ttmaze_uniform_error
+data_key = :ttmaze_error
+# data_key = :oned_tmaze_dpi_error
 
 folder_name = "tmp"
+data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
 # data_home = "../data/OneDTMaze_RR_dpi"
-data_home = "../data/OneDTMaze_Control_dpi"
+# data_home = "../data/OneDTMaze_Control_dpi"
 
 
 function load_data()
@@ -60,6 +63,34 @@ function load_best(ic)
     return best_per_algo_ics
 end
 
+function plot_rmse_per_demon(algo_ics, inds_of_interest = nothing)
+    best_per_algo_ics = if inds_of_interest isa Nothing
+        deepcopy(algo_ics)
+    else
+        deepcopy(algo_ics)[inds_of_interest]
+    end
+
+    data_per_gvf = [GPU.get_stats(GPU.load_results(ic,data_key), per_gvf = true)[1] for ic in best_per_algo_ics]
+    std_per_gvf = [GPU.get_stats(GPU.load_results(ic,data_key), per_gvf = true)[2] for ic in best_per_algo_ics]
+    num_gvfs = 4
+    ps = []
+    gvf_labels = ["Distractor" "Constant" "Drifter" "Constant"]
+    num_runs = length.(best_per_algo_ics)[1]
+    for gvf_ind in 1:num_gvfs
+        p = plot()
+        for algo_ind in 1:length(data_per_gvf)
+            smooth_gvf = GPU.smooth(data_per_gvf[algo_ind][gvf_ind,:],5)
+            label = LU.get_label(best_per_algo_ics[algo_ind])[:label]
+            plot!(p,smooth_gvf, palette=:tab10, ribbon = std_per_gvf[algo_ind][gvf_ind,:] / sqrt(num_runs), size = (500,500),label = label)
+            plot!(xlabel="Steps", ylabel = "RMSE",  title = string(gvf_labels[gvf_ind], ""))
+        end
+        push!(ps,p)
+    end
+    plot(ps..., layout=(2,2), size = (1200,1200))
+    savefig("./plots/$(folder_name)/RMSE_per_Demon_$(string(data_key)).png")
+
+end
+
 function plot_rmse(algo_ics, inds_of_interest = nothing)
     best_per_algo_ics = if inds_of_interest isa Nothing
         deepcopy(algo_ics)
@@ -71,13 +102,13 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
     std = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[2],10) for ic in best_per_algo_ics]
 
     ylabel = "RMSE"
-    # title = "Hall Following in Tabular T-Maze"
+    title = "Hall Following in Tabular T-Maze"
     # title = "Control in Tabular T-Maze"
     # title = "Hall Following in 1D T-Maze"
-    title = "Control in 1D T-Maze"
+    # title = "Control in 1D T-Maze"
 
     xlabel = "Steps"
-    step_increment=100
+    step_increment=best_per_algo_ics[1].items[1].parsed_args["logger_interval"]
     num_samples = length(data[1])
     num_runs = length.(best_per_algo_ics)[1]
     plot_params = [LU.get_params(best_per_algo_ics[i]) for i in 1:length(best_per_algo_ics)]
