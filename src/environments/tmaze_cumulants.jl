@@ -79,4 +79,48 @@ get_cumulant_eval_values(cs::Constant) = [cs.c1, cs.c2, cs.c3, cs.c4]
 function update!(::Constant, pos)
 end
 
+mutable struct DrifterDrifterDistractor <: CumulantSchedule
+    constant1::Float64
+
+    drifter_1_mean::Float64
+    drifter_1_std::Float64
+    drifter_2_mean::Float64
+    drifter_2_std::Float64
+    distractor_mean::Float64
+    distractor_std::Float64
+
+end
+
+function get_cumulant(cs::DrifterDrifterDistractor, goal::String)
+    if goal == "G1"
+        clamp(MIN, rand(Normal(cs.distractor_mean, cs.distractor_std)), MAX)
+    elseif goal == "G2"
+        cs.constant1
+    elseif goal == "G3"
+        cs.drifter_1_mean
+    elseif goal == "G4"
+        cs.drifter_2_mean
+    end
+end
+
+function get_cumulant_eval_values(self::DrifterDrifterDistractor)
+    # Used for scaling the eval set based on the end values
+    num_cumulants = 4
+    cumulants = zeros(num_cumulants)
+    cumulants[1] = self.distractor_mean
+    cumulants[2] = self.constant1
+    cumulants[3] = self.drifter_1_mean
+    cumulants[4] = self.drifter_2_mean
+    return cumulants
+end
+
+# function update!(env::TabularTMaze, self::DrifterDistractor, pos)
+function update!(self::DrifterDrifterDistractor, pos)
+    self.drifter_1_mean += rand(Normal(0, self.drifter_1_std))
+    self.drifter_1_mean = clamp(MIN,self.drifter_1_mean,MAX)
+
+    self.drifter_2_mean += rand(Normal(0, self.drifter_2_std))
+    self.drifter_2_mean = clamp(MIN,self.drifter_2_mean,MAX)
+end
+
 end
