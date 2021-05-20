@@ -27,7 +27,7 @@ demon_gamma = 0.95
 demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
-demon_rep = "ideal_martha"
+demon_rep = "ideal"
 
 # Agent and Logger
 horde_type = "regular"
@@ -51,12 +51,12 @@ env_step_penalty = -0.01
 [sweep_args]
 seed = "1:10"
 
-demon_alpha_init = [0.1, 0.5] # Will be 1/tilings from sweep
+demon_alpha_init = [0.1, 0.5, 1.0] # Will be 1/tilings from sweep
 eta = "0.1 * 2.0.^(-8:0)"
 
 exploration_param = [0.1]
 demon_learner = ["Q", "SR"]
 demon_update = ["TB"]
 
-tiling_structure = [[8,8], [8,2], [1, 16]]
+tiling_structure = [[8,2], [16, 2], [1, 16]]
 start_dist = ["center"]

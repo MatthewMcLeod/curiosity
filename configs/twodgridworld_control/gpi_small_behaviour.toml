@@ -58,5 +58,5 @@ eta = "0.1 * 2.0.^(-8:0)"
 exploration_param = [0.1]
 demon_learner = ["Q", "SR"]
 
-tiling_structure = [[16,2], [8,2], [1, 16]]
+tiling_structure = [[2, 8], [4, 8], [8, 8]]
 start_dist = ["center"]
