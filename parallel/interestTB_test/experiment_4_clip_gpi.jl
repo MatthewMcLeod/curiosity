@@ -4,8 +4,8 @@
 #SBATCH -o experiment_4_clip_gpi.out # Standard output
 #SBATCH -e experiment_4_clip_gpi.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=09:30:00 #
-#SBATCH --ntasks=256
+#SBATCH --time=05:30:00 #
+#SBATCH --ntasks=64
 #SBATCH --account=def-whitem
 
 using Pkg

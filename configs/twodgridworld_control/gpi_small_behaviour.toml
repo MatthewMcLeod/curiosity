@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_GPI"
+save_dir = "TwoDGridWorld_GPI_small_brp"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
@@ -15,7 +15,7 @@ logger_interval = 100
 # Behaviour Items
 behaviour_learner = "GPI"
 behaviour_update = "TB"
-behaviour_reward_projector = "state_agg"
+behaviour_reward_projector = "small_state_agg"
 
 behaviour_opt = "Auto"
 exploration_strategy = "epsilon_greedy"

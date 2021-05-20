@@ -220,6 +220,11 @@ function construct_agent(parsed)
                 Curiosity.FeatureProjector(
                     TDGWU.StateAggregation(), false),
                 action_space)
+        elseif brp_str == "small_state_agg"
+            Curiosity.ActionValueFeatureProjector(
+                Curiosity.FeatureProjector(
+                    TDGWU.SmallStateAggregation(), false),
+                action_space)
         else
             throw(ArgumentError("Not a valid demon projection rep for GPI"))
         end
@@ -291,6 +296,8 @@ end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
+    GC.gc()
+    
     num_steps = parsed["steps"]
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
