@@ -226,7 +226,7 @@ function construct_agent(parsed)
                     TDGWU.SmallStateAggregation(), false),
                 action_space)
         else
-            throw(ArgumentError("Not a valid demon projection rep for GPI"))
+            throw(ArgumentError("$(brp_str) not a valid demon projection rep for GPI"))
         end
 
 

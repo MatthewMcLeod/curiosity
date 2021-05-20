@@ -372,10 +372,36 @@ DrifterDistractor(parsed) = begin
     end
 end
 
+DrifterDrifterDistractor(parsed) = begin
+    c_dist = Uniform(parsed["constant_target"][1],parsed["constant_target"][2])
+    c1 = rand(c_dist)
+    if "drifter_1" ∈ keys(parsed)
+        TMCS.DrifterDrifterDistractor(
+            c1,
+            parsed["drifter_1"][1],
+            parsed["drifter_1"][2],
+            parsed["drifter_2"][1],
+            parsed["drifter_2"][2],
+            parsed["distractor"][1],
+            parsed["distractor"][2])
+    else
+        TMCS.DrifterDrifterDistractor(
+            c1,
+            parsed["drifter_1_init"],
+            parsed["drifter_1_std"],
+            parsed["drifter_2_init"],
+            parsed["drifter_2_std"],
+            parsed["distractor_mean"],
+            parsed["distractor_std"])
+    end
+end
+
 function get_cumulant_schedule(parsed)
     sched = parsed["cumulant_schedule"]
     if parsed["cumulant_schedule"] == "DrifterDistractor"
         DrifterDistractor(parsed)
+    elseif sched == "DrifterDrifterDistractor"
+        DrifterDrifterDistractor(parsed)
     elseif parsed["cumulant_schedule"] == "Constant"
         if parsed["cumulant"] isa Number
             TMCS.Constant(parsed["cumulant"])

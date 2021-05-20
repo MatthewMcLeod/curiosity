@@ -1,0 +1,62 @@
+[config]
+save_dir = "TwoDGridWorld_d2_esarsa"
+exp_file = "experiments/2d-gridworld.jl"
+exp_module_name = "TwoDGridWorldExperiment"
+exp_func_name = "main_experiment"
+arg_iter_type = "iter"
+
+[static_args]
+
+steps = 100000
+
+logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
+logger_interval = 100
+
+# Behaviour Items
+behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
+
+behaviour_gamma = 0.9
+
+exploration_strategy = "epsilon_greedy"
+behaviour_lambda = 0.9
+behaviour_w_init = 4.0
+behaviour_trace = "ReplacingTraces"
+
+# Demon Attributes
+demon_gamma = 0.95
+demon_lambda = 0.9
+demon_policy_type = "greedy_to_cumulant"
+demon_trace = "AccumulatingTraces"
+demon_rep = "ideal_martha"
+
+# Agent and Logger
+horde_type = "regular"
+intrinsic_reward = "weight_change"
+use_external_reward = true
+behaviour_opt = "Auto"
+demon_opt = "Auto"
+behaviour_learner = "Q"
+behaviour_update = "ESARSA"
+
+
+# Environment Config
+cumulant_schedule = "DrifterDrifterDistractor"
+constant_target= [-10.0,10.0]
+distractor = [1.0, 5.0]
+drifter_1 = [1.0, 0.1] # drifter is the sqrt(0.01)
+drifter_2 = [1.0, 0.1] # drifter is the sqrt(0.01)
+env_step_penalty = -0.01
+
+
+[sweep_args]
+seed = "1:10"
+
+demon_alpha_init = [0.1, 0.5, 1.0] # Will be 1/tilings from sweep
+eta = "0.1 * 2.0.^(-8:0)"
+
+exploration_param = [0.1, 0.3]
+demon_learner = ["Q", "SR"]
+demon_update = ["TB"]
+
+tiling_structure = [[8,8], [8,2], [1, 16]]
+start_dist = ["center"]
