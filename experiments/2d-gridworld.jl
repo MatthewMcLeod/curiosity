@@ -218,7 +218,7 @@ function construct_agent(parsed)
         elseif brp_str == "state_agg"
             Curiosity.ActionValueFeatureProjector(
                 Curiosity.FeatureProjector(
-                    TDGWU.StateAggregation(), false),
+                    TDGWU.StateAggregation(parsed["behaviour_bpd"]), false),
                 action_space)
         elseif brp_str == "small_state_agg"
             Curiosity.ActionValueFeatureProjector(

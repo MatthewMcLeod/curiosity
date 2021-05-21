@@ -306,17 +306,33 @@ end
 (FP::MarthaIdealDemonFeatures)(state) = project_features(FP, state)
 Base.size(FP::MarthaIdealDemonFeatures) = 4
 
-struct StateAggregation <: FeatureCreator end
+struct StateAggregation <: FeatureCreator
+    bins_per_dim::Int
+end
 
-function project_features(::StateAggregation, state)
-    new_state = spzeros(Int, 100)
-    idx = Int(floor(state[1] * 10) * 10 + floor(state[2] * 10) + 1)
+function project_features(sa::StateAggregation, state)
+    bpd = sa.bins_per_dim
+    new_state = spzeros(Int, bpd*bpd)
+    y = state[1]
+    x = state[2]
+    
+    idx_y = bpd
+    idx_x = bpd
+    for i in 1:(bpd)
+        if y < i//bpd
+            idx_y = i
+        end
+        if x < i//bpd
+            idx_x = i
+        end
+    end
+    idx = (idx_x - 1) * bpd + idx_y
     new_state[idx] = 1
     new_state
 end
 
 (FP::StateAggregation)(state) = project_features(FP, state)
-Base.size(FP::StateAggregation) = 100
+Base.size(FP::StateAggregation) = begin; bpd = FP.bins_per_dim; bpd*bpd; end
 
 struct SmallStateAggregation <: FeatureCreator end
 
