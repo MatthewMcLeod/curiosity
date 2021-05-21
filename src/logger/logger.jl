@@ -51,6 +51,7 @@ module LoggerKey
     const TTMAZE_ERROR_MAP = "TTMAZE_ERROR_MAP"
     const INTRINSIC_REWARD = "INTRINSIC_REWARD"
     const TTMAZE_DIRECT_ERROR = "TTMAZE_DIRECT_ERROR"
+    const TTMAZE_ROUNDROBIN_ERROR = "TTMAZE_ROUNDROBIN_ERROR"
     const BEHAVIOUR_ACTION_VALUES = "BEHAVIOUR_ACTION_VALUES"
     const ONED_STATE_VISITATION = "ONED_STATE_VISITATION"
     const CUMULANTS = "CUMULANTS"
@@ -83,6 +84,7 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TTMAZE_UNIFORM_ERROR => TTMazeUniformError,
     LoggerKey.TTMAZE_OLD_ERROR => TTMazeOldError,
     LoggerKey.TTMAZE_ERROR_MAP => TTMazeErrorMap,
+    LoggerKey.TTMAZE_ROUNDROBIN_ERROR => TTMazeRoundRobinError,
     LoggerKey.INTRINSIC_REWARD => IntrinsicRewardLogger,
     LoggerKey.TTMAZE_DIRECT_ERROR => TTMazeDirectError,
     LoggerKey.BEHAVIOUR_ACTION_VALUES => BehaviourActionValues,

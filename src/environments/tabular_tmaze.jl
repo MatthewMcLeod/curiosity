@@ -124,6 +124,11 @@ function MinimalRLCore.reset!(environment::TabularTMaze, rng::AbstractRNG=Random
     end
 end
 
+function MinimalRLCore.reset!(environment::TabularTMaze,start_state::Int)
+    s = valid_state_mask()[start_state]
+    environment.current_state = [s[1],s[2]]
+end
+
 function MinimalRLCore.reset!(environment::TabularTMaze, start_state::CartesianIndex)
     # throw("Implement env_start with a start_state")
     # environment.current_state = [start_state[2], start_state[1]]

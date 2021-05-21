@@ -80,4 +80,65 @@ function save_data(rets,obs,actions)
     @save "./src/data/TTMazeEvalSet.jld2" TTMazeEvalSet
 end
 
+function gen_roundrobin_dataset(num_start_states = 100)
+    parsed = TabularTMazeExperiment.default_args()
+    parsed["cumulant_schedule"] = "Constant"
+    parsed["cumulant"] = 1.0
+
+    horde = TabularTMazeExperiment.get_horde(parsed, 21, 4, nothing)
+
+    cumulant_schedule = TTMU.get_cumulant_schedule(parsed)
+
+    exploring_starts = true
+    env = TabularTMaze(exploring_starts, cumulant_schedule)
+
+
+    all_states = []
+    all_actions = []
+    for gvf_i in 1:4
+        # policy = gvf.policy
+        policy = TTMU.GoalPolicy(gvf_i)
+        for i in 1:num_start_states
+            s = MinimalRLCore.start!(env)
+            a = policy(s)
+            push!(all_states, s)
+            push!(all_actions, a)
+            term = false
+            while term == false
+                s, r, term = MinimalRLCore.step!(env, a)
+                if term
+                    break
+                end
+                a = policy(s)
+                push!(all_states, s)
+                push!(all_actions, a)
+            end
+        end
+    end
+    eval_set_size = 500
+    indices = sample(1:size(all_states)[1], eval_set_size, replace=false)
+    ss_eval = all_states[indices]
+    as_eval = all_actions[indices]
+    num_returns = 2
+    γ_thresh=1e-6
+
+    horde_rets = zeros(length(horde.gvfs), length(ss_eval))
+
+    for (gvf_i,gvf) in enumerate(horde.gvfs)
+        ss_modified = [Int(s[1]) for s in ss_eval]
+        rets = monte_carlo_returns(env, gvf, ss_modified, as_eval, num_returns, γ_thresh)
+        rets_avg = mean(hcat(rets...),dims=1) # stack horizontally and then average over runs
+        horde_rets[gvf_i,:] = rets_avg
+    end
+    return horde_rets, ss_eval, as_eval
+
+end
+
+function save_data_roundrobin(rets,obs,actions)
+    TTMazeRoundRobinEvalSet = Dict()
+    TTMazeRoundRobinEvalSet["ests"] = rets
+    TTMazeRoundRobinEvalSet["actions"] = actions
+    TTMazeRoundRobinEvalSet["states"] = obs
+    @save "./src/data/TTMazeRoundRobinEvalSet.jld2" TTMazeRoundRobinEvalSet
+end
 end

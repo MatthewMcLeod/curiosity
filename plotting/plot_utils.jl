@@ -159,19 +159,23 @@ using ProgressMeter
 using JLD2
 using Plots
 
+# Demon Algorithm results in different line styles!!
 const val_matches = Dict(["GPI","TB","Q","TB"] => 1,
-    ["Q","ESARSA", "Q", "TB"] => 2,
-    ["GPI", "TB", "SR", "TB"] => 3,
+    ["GPI", "TB", "SR", "TB"] => 1,
+    ["Q","ESARSA", "Q", "TB"] => 4,
     ["Q", "ESARSA", "SR", "TB"] => 4,
-    ["Q", "TabularRoundRobin", "SR", "TB"] => 5,
-    ["Q", "TabularRoundRobin", "Q", "TB"] => 6,
-    ["RoundRobin", "TB", "SR", "TB"] => 5,
-    ["RoundRobin", "Q", "SR", "TB"] => 5,
-    ["RoundRobin", "TB", "Q", "TB"] => 6,
-    ["RoundRobin", "Q", "Q", "TB"] => 6,
-    ["Q", "TabularRoundRobin","LSTD","TB"] => 9,
-    ["Q", "TabularRoundRobin", "Q", "ESARSA"] => 8,
-    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => 7,
+    ["Q", "TabularRoundRobin", "SR", "TB"] => 1,
+    ["RoundRobin", "TB", "SR", "TB"] => 1,
+    ["RoundRobin", "Q", "SR", "TB"] => 1,
+    ["RoundRobin", "TB", "Q", "TB"] => 2,
+    ["RoundRobin", "Q", "Q", "TB"] => 2,
+    ["Q", "TabularRoundRobin", "Q", "TB"] => 2,
+    ["Q", "TabularRoundRobin", "Q", "ESARSA"] => 2,
+    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => 1,
+    ["Q", "TabularRoundRobin","LSTD","TB"] => 3,
+    ["RandomDemons", "TB","Q","TB"] => 5,
+    ["RandomDemons", "TB","SR","TB"] => 5,
+
     )
 
 const algo_labels = Dict(["GPI","TB","Q","TB"] => "GPI with TB Demons",
@@ -187,6 +191,8 @@ const algo_labels = Dict(["GPI","TB","Q","TB"] => "GPI with TB Demons",
     ["Q", "TabularRoundRobin","LSTD","TB"] => "LSTD Demons",
     ["Q", "TabularRoundRobin", "Q", "ESARSA"] => "Off-Policy ESARSA Demons",
     ["Q", "TabularRoundRobin", "SR", "ESARSA"] => "SF Demons using Off-Policy ESARSA",
+    ["RandomDemons", "TB","Q","TB"] => "Random Behaviour with TB Demons",
+    ["RandomDemons", "TB","SR","TB"] => "Random Behaviour with SF Demons",
     )
 
 const algo_keys = ["behaviour_learner", "behaviour_update", "demon_learner", "demon_update"]
@@ -237,10 +243,13 @@ function get_colour(ic)
 end
 
 function get_linestyle(ic)
-    if ic[1].parsed_args["demon_opt"] == "Descent"
-        return Dict(:linestyle => :dot)
-    else
+    #If we are in round robin  use solid linestyle
+    if ic[1].parsed_args["behaviour_update"] == "TabularRoundRobin" || ic[1].parsed_args["behaviour_learner"] == "RoundRobin"
         return Dict(:linestyle => :solid)
+    elseif ic[1].parsed_args["demon_learner"] == "SR"
+        return Dict(:linestyle => :solid)
+    elseif ic[1].parsed_args["demon_learner"] == "Q"
+        return Dict(:linestyle => :dash)
     end
 end
 

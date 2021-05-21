@@ -22,14 +22,17 @@ LU = LabelUtils
 
 # data_key = :ttmaze_direct_error
 # data_key = :ttmaze_uniform_error
-data_key = :ttmaze_error
+# data_key = :ttmaze_round_robin_error
 # data_key = :oned_tmaze_dpi_error
+# data_key = :oned_tmaze_uniform_error
+data_key = :oned_tmaze_old_error
+
 
 folder_name = "tmp"
-data_home = "../data/Experiment1"
+# data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
 # data_home = "../data/OneDTMaze_RR_dpi"
-# data_home = "../data/OneDTMaze_Control_dpi"
+data_home = "../data/OneDTMaze_Control"
 
 
 function load_data()
@@ -102,10 +105,10 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
     std = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[2],10) for ic in best_per_algo_ics]
 
     ylabel = "RMSE"
-    title = "Hall Following in Tabular T-Maze"
+    # title = "Hall Following in Tabular T-Maze"
     # title = "Control in Tabular T-Maze"
     # title = "Hall Following in 1D T-Maze"
-    # title = "Control in 1D T-Maze"
+    title = "Control in 1D T-Maze"
 
     xlabel = "Steps"
     step_increment=best_per_algo_ics[1].items[1].parsed_args["logger_interval"]
@@ -116,6 +119,7 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
     xticks=collect(1:step_increment:num_samples*step_increment)
     p = plot(ylabel=ylabel, grid=true, title=title, xlabel=xlabel)
     for i in 1:length(best_per_algo_ics)
+        @show plot_params[i]
         plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:topright; plot_params[i]...)
     end
     savefig("./plots/$(folder_name)/RMSE_$(string(data_key)).png")
@@ -149,4 +153,15 @@ function plot_goal_visitation(algo_ics, inds_of_interest = nothing)
     savefig("./plots/$(folder_name)/goal_visits_$(string(data_key)).png")
 end
 
+function load_and_plot_rmse(inds_of_interest=nothing)
+    ic = load_data()
+    algo_ic = load_best(ic)
+    plot_rmse(algo_ic,inds_of_interest)
+end
+
+function load_and_plot_goal_visits(inds_of_interest=nothing)
+    ic = load_data()
+    algo_ic = load_best(ic)
+    plot_goal_visitation(algo_ic,inds_of_interest)
+end
 end
