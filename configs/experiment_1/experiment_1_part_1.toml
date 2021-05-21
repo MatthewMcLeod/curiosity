@@ -39,10 +39,10 @@ exploring_starts=true
 horde_type = "regular"
 intrinsic_reward = "weight_change"
 logger_interval = 50
-logger_keys = ["TTMAZE_ERROR", "TTMAZE_UNIFORM_ERROR", "TTMAZE_OLD_ERROR", "TTMAZE_DIRECT_ERROR"]
+logger_keys = ["TTMAZE_ERROR", "TTMAZE_UNIFORM_ERROR", "TTMAZE_OLD_ERROR", "TTMAZE_DIRECT_ERROR","TTMAZE_ROUNDROBIN_ERROR"]
 # save_dir = "TabularTMazeExperiment"
 # seed = 1
-steps = 2000
+steps = 5000
 use_external_reward = true
 random_first_action = true
 
@@ -56,7 +56,7 @@ demon_update = ["TB"]
 demon_learner = ["SR","Q"]
 exploration_param = [0.0]
 behaviour_eta = "2.0 .^ (-1:-1)"
-alpha_init = [0.1, 1.0]
+alpha_init = [1.0]
 
 
 # demon_opt = ["Auto"]

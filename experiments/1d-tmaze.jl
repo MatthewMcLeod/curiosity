@@ -11,7 +11,7 @@ using SparseArrays
 using ProgressMeter
 
 
-
+const BU = Curiosity.BaselineUtils
 const ODTMU = Curiosity.OneDTMazeUtils
 const SRCU = Curiosity.SRCreationUtils
 
@@ -22,7 +22,7 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "GPI",
+        "behaviour_learner" => "RandomDemons",
         "behaviour_update" => "TB",
         "behaviour_reward_projector" => "maze",
         "behaviour_rp_tilings" => 1,
@@ -31,7 +31,7 @@ default_args() =
         "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.95,
         "behaviour_alpha_init" => 0.1,
-        "exploration_param" => 0.1,
+        "exploration_param" => 1.0,
         "exploration_strategy" => "epsilon_greedy",
         "ϵ_range" => (0.4,0.1),
         "decay_period" => 5000,
@@ -77,7 +77,7 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 10000,
+        "steps" => 20000,
         "use_external_reward" => true,
         "random_first_action" => false,
         "logger_keys" => [LoggerKey.ONEDTMAZEERROR,LoggerKey.ONEDTMAZEERROR_DPI,LoggerKey.ONEDTMAZEERROR_UNIFORM, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
@@ -194,6 +194,15 @@ function construct_agent(parsed)
 
     behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
         ODTMU.RoundRobinPolicy(), nothing, 0.0
+    elseif parsed["behaviour_learner"] == "RandomDemons"
+        action_set = 1:action_space
+        blearner = if parsed["demon_learner"] == "SR"
+            #We want the demons specifying the cumulants and not predicting the SF
+            BU.RandomDemons(demons.PredHorde, action_set)
+        else
+            BU.RandomDemons(demons, action_set)
+        end
+        blearner, nothing, 0.0
     else
         behaviour_num_tasks = 1
         num_SFs = 4
@@ -309,7 +318,6 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
                         f = findfirst(!iszero, goals)
                         goal_visitations[f] += 1
                     end
-
                     if progress
                         next!(prg_bar)
                     end
