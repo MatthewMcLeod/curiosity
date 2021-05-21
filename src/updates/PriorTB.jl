@@ -3,10 +3,12 @@
 Base.@kwdef mutable struct PriorTB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     lambda::Float64
     opt::O
+    clip_threshold::Float64
     trace::T = AccumulatingTraces()
     e::IdDict = IdDict()
     Ρ::IdDict = IdDict()
     prev_discounts::IdDict = IdDict()
+    rho_logging::Any = zeros(4) #I'm lazy and this is used for tracking hard to recalculate values
 end
 
 function get_demon_parameters(lu::PriorTB, learner, demons, obs, state, action, next_obs, next_state, next_action, env_reward)
@@ -64,9 +66,20 @@ function update!(lu::PriorTB,
         ρ = target_pis[:, action] / behaviour_pis[action]
     end
 
+    # if (maximum(ρ) == 0)
+    #     println("????????")
+    #     # println(ρ)
+    #     println(target_pis[:, action])
+    #     println(target_pis[:, :])
+    #     println(behaviour_pis[action])
 
+    # end
     # accumulating Ρ
     Ρ[:] .*= ρ
+    lu.rho_logging = Ρ
+
+    correction = copy(Ρ[:])
+    clamp!(correction, 0, lu.clip_threshold)
 
     # Update eligibility trace
     update_trace!(lu.trace,
@@ -76,7 +89,7 @@ function update!(lu::PriorTB,
                   repeat(discounts, inner = learner.num_actions),
                   repeat(target_pis[:,action], inner = learner.num_actions),
                   inds;
-                  emphasis=Ρ)
+                  emphasis=correction)
 
     pred = learner(next_state)
     Qs = reshape(pred, (learner.num_actions, learner.num_demons))'
@@ -158,7 +171,7 @@ function update!(lu::PriorTB,
     Ρ = get!(()->ones(learner.num_demons), lu.Ρ, weights)::typeof(ones(learner.num_demons))
 
     # Setting interest to constant ones for now for each demon
-    interest = get_interest(learner, obs)
+    # interest = get_interest(learner, obs)
     # getting IS ratio
     behaviour_pis = behaviour_pi_func(state, obs)
     if (behaviour_pis[action] == 0)
@@ -166,13 +179,15 @@ function update!(lu::PriorTB,
     else
         ρ = target_pis[:, action] / behaviour_pis[action]
     end
-    reward_ρ, SF_ρ = ρ[1:learner.num_tasks], ρ[learner.num_tasks+1:end]
 
     # accumulating Ρ
     Ρ[:] .*= ρ
 
     # Get prior correction vector - size is # demons
-    reward_Ρ, SF_Ρ = Ρ[1:learner.num_tasks], Ρ[learner.num_tasks+1:end]
+    lu.rho_logging = Ρ
+    correction = copy(Ρ[:])
+    clamp!(correction, 0, lu.clip_threshold)
+    reward_Ρ, SF_Ρ = correction[1:learner.num_tasks], Ρ[learner.num_tasks+1:end]
 
     # Update Traces: See update_utils.jl
     update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action]; emphasis=SF_Ρ)

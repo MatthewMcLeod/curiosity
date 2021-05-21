@@ -178,6 +178,7 @@ function update!(lu::ETB,
     # interest = get_interest(learner, lu, obs, action)
 
     demon_interest = lu.hdpi(obs, action)
+    # println(demon_interest)
     num_repeat = convert(Integer, (learner.num_demons - learner.num_tasks) / learner.num_tasks)
     if (rem(learner.num_demons - learner.num_tasks, learner.num_tasks) != 0)
         println("The number to repeat for SF demons aren't even with the number of tasks for SR. Something might be wrong :(")
@@ -203,6 +204,12 @@ function update!(lu::ETB,
     # Get Emphasis vector - size is # demons
     # Correcting with ρ in the beginning since it is the action-value emphasis rather than the state-value emphasis
     emphasis = ρ .* (λ * behaviour_pis[action] * interest + (1 - λ * behaviour_pis[action]) * followon)
+
+    # I'm lazy, here we're just logging the emphasis and rho as variables.
+    lu.emphasis_logging = emphasis
+    lu.rho_logging = ρ
+
+
     clamp!(emphasis, 0, lu.clip_threshold)
     reward_emphasis, SF_emphasis = emphasis[1:learner.num_tasks], emphasis[learner.num_tasks+1:end]
 

@@ -17,7 +17,7 @@ function lg_step!(self::ISRatio, env, agent, s, a, s_next, r, is_terminal, cur_s
         ind = fld(cur_step_total, self.log_interval)
         learner = agent.demon_learner
         lu = update(learner)
-        @assert lu isa ETB "Update is not ETB Please set it to ETB (or add my emphasis type here) or remove LoggerKey.EMPHASIS from logger keys"
+        @assert lu isa ETB ||  lu isa PriorTB "Update is not ETB or PriorTB Please set it to ETB or PriorTB  (or add my emphasis type here) or remove LoggerKey.IS_RATIO from logger keys"
 
         rho = lu.rho_logging
         push!(self.isRatio, copy(rho))

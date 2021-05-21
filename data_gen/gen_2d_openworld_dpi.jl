@@ -26,6 +26,8 @@ function gen_dpi(num_states=500, seed=1; start_type=:center, h_kwargs...)
     parsed["demon_learner"] = "Q"
 
     dpis = DPI[]
+
+    state_filter_func =  Curiosity.FeatureSubset(identity, 1:2)
     
     for gvf_i ∈ 1:4
         horde = Horde(
@@ -45,13 +47,13 @@ function gen_dpi(num_states=500, seed=1; start_type=:center, h_kwargs...)
         
         while length(ss) < num_states
             s = MinimalRLCore.start!(env)
-            push!(ss, s[1:2])
+            push!(ss, state_filter_func(s))
             
             a = policy(s)
             for t ∈ 1:rand(1:15)
                 s, r, term = MinimalRLCore.step!(env, a)
                 a = policy(s)
-                push!(ss, s[1:2])
+                push!(ss, state_filter_func(s))
                 if term
                     break
                 end
@@ -61,7 +63,7 @@ function gen_dpi(num_states=500, seed=1; start_type=:center, h_kwargs...)
          push!(dpis, DPI(ss, policy; h_kwargs...))
     end
         
-    return HordeDPI(dpis)
+    return HordeDPI(dpis, state_filter_func)
 end
 
 function save_dpi(num_states, seed; start_type=:center, h_kwargs...)
