@@ -166,7 +166,7 @@ function _init_learning_update(lu_type::Union{Type{TabularRoundRobin}}, args...)
     lu_type()
 end
 
-function _init_learning_update(lu_type::Union{Type{TB}, Type{PriorESARSA}, Type{PriorTB}},
+function _init_learning_update(lu_type::Union{Type{TB}},
                                opt,
                                parsed::Dict,
                                prefix)
@@ -196,6 +196,27 @@ function _init_learning_update(lu_type::Union{Type{InterestTB}},
     catch e
         throw(e)
         # throw("$(lu_type) needs: $(interest_set_str) (string)")
+    end
+end
+
+function _init_learning_update(lu_type::Union{Type{TB}, Type{PriorESARSA}, Type{PriorTB}},
+                                opt,
+                                parsed::Dict,
+                                prefix)
+    λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
+    try
+        λ = parsed[λ_str]
+
+        if haskey(parsed, "clip_threshold")
+            clip_threshold = parsed["clip_threshold"]
+        else
+            clip_threshold = Inf64
+            println("Setting clip threshold to inf")
+        end
+
+        lu_type(lambda=λ, opt=opt, clip_threshold=clip_threshold)
+    catch
+        throw("$(lu_type) needs: $(λ_str) (float).")
     end
 end
 
@@ -290,6 +311,9 @@ function get_hdpi(parsed, interest_set)
             @load "./src/data/dpi/oned_tmaze_beg.jld2" hdpi
             return hdpi
         end
+    elseif (interest_set == "2dOpenWorld_center")
+        @load "./src/data/dpi/2dOpenWorld_center.jld2" hdpi
+            return hdpi
     end
     throw("no valid hdpi for string $(interest_set)")
 end
