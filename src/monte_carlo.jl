@@ -22,7 +22,6 @@ function monte_carlo_return(env,
                             γ_thresh=1e-6,
                             max_steps=Int(1e6),
                             rng=Random.GLOBAL_RNG)
-
     returns = zeros(num_returns)
 
     for ret in 1:num_returns
@@ -37,7 +36,6 @@ function monte_carlo_return(env,
         while cumulative_gamma > γ_thresh &&
             step < max_steps &&
             term == false
-
             # Take action
             action = next_action
             next_state, r, term = MinimalRLCore.step!(env, action, rng)

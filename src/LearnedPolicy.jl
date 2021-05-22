@@ -17,6 +17,19 @@ function LearnedPolicy(loc::AbstractString)
 end
 
 Base.get(π::LearnedPolicy, state_t, action_t) = π(state_t, action_t)
+# Base.get(π::LearnedPolicy; kwargs...) = function(;kwargs...)
+#     return π(kwargs[:state_t], kwargs[:action_t])
+# end
+
+# Base.get(π::LearnedPolicy; kwargs...) = π(kwargs[:state_t], kwargs[:action_t])
+
+function Base.get(π::LearnedPolicy; kwargs...)
+    # @show π(kwargs[:state_t])
+    # @show kwargs[:action_t]
+    # @show kwargs[:state_t]
+    # @show (kwargs[:action_t], findmax(π(kwargs[:state_t]))[2])
+    return Int(kwargs[:action_t] == findmax(π(kwargs[:state_t]))[2])
+end
 
 (lp::LearnedPolicy)(s) = lp.policy(s)
 (lp::LearnedPolicy)(s, a) = lp.policy(s)[a]
@@ -56,7 +69,8 @@ function MinimalRLCore.step!(pl::PolicyLearner, o_tp1, rew, term)
     s_tp1 = pl.fc(o_tp1)
     next_action = μ(pl, s_tp1)
 
-    rew = pl.cumulant(;r=rew, o_t=pl.o_t, a_t=pl.a_t, o_tp1=o_tp1)
+    # rew = pl.cumulant(;r=rew, o_t=pl.o_t, a_t=pl.a_t, o_tp1=o_tp1)
+    # get(pl.cumulant;r=rew, state_t=pl.o_t, action_t=pl.a_t, state_tp1=o_tp1)
     # γ = if pl.discount isa Number
     #     pl.discount
     # else

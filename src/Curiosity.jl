@@ -67,7 +67,7 @@ include("utils/features.jl")
 include("utils/baseline_learners.jl")
 
 using GVFHordes
-export monte_carlo_returns
+export monte_carlo_returns,monte_carlo_return
 include("monte_carlo.jl")
 
 end # module

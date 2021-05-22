@@ -14,7 +14,7 @@ const MCU = Curiosity.MountainCarUtils
 
 default_args() =
     Dict(
-        "steps" => 50000,
+        "steps" => 300000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -24,7 +24,8 @@ default_args() =
         "behaviour_num_tiles" => 2,
         "demon_num_tilings" => 8,
         "demon_num_tiles" => 4,
-
+        "learned_policy" => true,
+        "learned_policy_names" => ["Goal","Wall"],
 
         "behaviour_update" => "ESARSA",
         "behaviour_learner" => "Q",
@@ -35,11 +36,11 @@ default_args() =
         "behaviour_lambda" => 0.95,
         "behaviour_w_init" => 0.0,
 
-        "intrinsic_reward" =>"no_reward",
+        "intrinsic_reward" =>"weight_change",
         "behaviour_trace" => "ReplacingTraces",
-        "use_external_reward" => true,
+        "use_external_reward" => false,
         "exploration_strategy" => "epsilon_greedy",
-        "exploration_param" => 0.2,
+        "exploration_param" => 0.1,
         "random_first_action" => false,
 
         "lambda" => 0.0,
@@ -176,15 +177,15 @@ function construct_agent(parsed)
           random_first_action)
 end
 
-function get_horde(parsed, feature_size, action_space, state_constructor)
-    horde = Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
-    if parsed["demon_learner"] == "SR"
-         SF_horde = MCU.make_SF_horde(parsed["behaviour_gamma"], length(state_constructor), action_space, state_constructor)
-         num_SFs = 2
-         horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, state_constructor)
-    end
-    return horde
-end
+# function get_horde(parsed, feature_size, action_space, state_constructor)
+#     horde = Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
+#     if parsed["demon_learner"] == "SR"
+#          SF_horde = MCU.make_SF_horde(parsed["behaviour_gamma"], length(state_constructor), action_space, state_constructor)
+#          num_SFs = 2
+#          horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, state_constructor)
+#     end
+#     return horde
+# end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
@@ -211,7 +212,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         while sum(steps) < max_num_steps
             is_terminal = false
 
-            max_episode_steps = min(max_num_steps - sum(steps), 2000)
+            max_episode_steps = min(max_num_steps - sum(steps), 10000)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)
