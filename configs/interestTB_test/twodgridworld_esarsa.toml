@@ -8,7 +8,7 @@ arg_iter_type = "iter"
 [static_args]
 
 steps = 100000
-# steps = 10
+# steps = 100
 
 logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
 logger_interval = 100
@@ -21,6 +21,7 @@ exploration_strategy = "epsilon_greedy"
 behaviour_lambda = 0.9
 behaviour_w_init = 4.0
 behaviour_trace = "ReplacingTraces"
+behaviour_reward_projector = "base"
 
 # Demon Attributes
 demon_gamma = 0.95
@@ -58,6 +59,6 @@ eta = "0.1 * 2.0.^(-8:0)"
 exploration_param = [0.1]
 demon_learner = ["SR"]
 demon_update = ["ETB"]
-emphasis_clip_threshold = [0.02, 0.2, 2, 20]
+emphasis_clip_threshold = [0.02, 0.2, 2.0, 20.0]
 tiling_structure = [[1, 16]]
 start_dist = ["center"]
