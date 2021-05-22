@@ -28,6 +28,7 @@ demon_lambda = 0.9
 demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
 demon_rep = "ideal"
+demon_interest_set = "2dOpenWorld_center"
 
 # Agent and Logger
 horde_type = "regular"
