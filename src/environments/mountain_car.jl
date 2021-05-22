@@ -6,8 +6,11 @@ import MinimalRLCore
 module MountainCarConst
 const vel_limit = (-0.07, 0.07)
 const pos_limit = (-1.2, 0.5)
-const pos_initial_range = (-0.2, 0.2)
-const vel_initial_range = (-0.04,0.04)
+# const pos_initial_range = (-0.2, 0.2)
+# const vel_initial_range = (-0.04,0.04)
+
+const pos_initial_range = (-1.2, 0.5)
+const vel_initial_range = (-0.07, 0.07)
 
 const Reverse=1
 const Neutral=2

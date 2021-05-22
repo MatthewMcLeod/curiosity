@@ -7,17 +7,33 @@ import Random
 const discount = 0.99
 import ..MountainCarConst
 import ..GVFSRHordes
+import ..Curiosity
 
+
+
+function load_policy(policy_name)
+    Curiosity.LearnedPolicy("/home/matthewmcleod/Documents/Masters/curiosity/src/data/MC_learned_policies/$(policy_name).bson")
+end
+
+function get_policies(parsed)
+    policies = if parsed["learned_policy"]
+        [load_policy(name) for name in parsed["learned_policy_names"]]
+    else
+        [EnergyPump(true),EnergyPump(true)]
+    end
+    return policies
+end
 
 function create_demons(parsed, fc)
     action_space = 3
+    policies = get_policies(parsed)
     demons = if parsed["demon_learner"] != "SR"
         GVFHordes.Horde(
-            [steps_to_wall_gvf(),steps_to_goal_gvf()])
+            [steps_to_wall_gvf(policies[1]),steps_to_goal_gvf(policies[2])])
     elseif parsed["demon_learner"] == "SR"
         @assert demon_projected_fc != nothing
         pred_horde =  GVFHordes.Horde(
-                [steps_to_wall_gvf(),steps_to_goal_gvf()])
+                [steps_to_wall_gvf(policies[1]),steps_to_goal_gvf(policies[2])])
 
         SF_policies = [g.policy for g in pred_horde.gvfs]
         SF_discounts = [g.discount for g in pred_horde.gvfs]
@@ -55,7 +71,7 @@ function make_behaviour_gvf(behaviour_learner, γ, fc, exploration_strategy)
         return exploration_strategy(preds)[kwargs[:action_t]]
     end
     GVF_policy = GVFParamFuncs.FunctionalPolicy((;kwargs...) -> b_π(fc, behaviour_learner, exploration_strategy; kwargs...))
-    BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), GVFParamFuncs.StateTerminationDiscount(γ, steps_to_goal_pseudoterm), GVF_policy)
+    BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), goal_pseudoterm(γ), GVF_policy)
 end
 
 function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_actions, state_constructor)
@@ -92,16 +108,38 @@ function task_gvf()
         EnergyPumpPolicy(true))
 end
 
-function steps_to_wall_gvf()
-    GVF(GVFParamFuncs.FunctionalCumulant(steps_to_wall_cumulant),
-        GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0),
-        EnergyPumpPolicy(true))
+function steps_to_wall_gvf(policy)
+    GVF(step_to_wall_cumulant(),
+        wall_pseudoterm(discount),
+        policy)
 end
 
-function steps_to_goal_gvf()
-    GVF(GVFParamFuncs.FunctionalCumulant(steps_to_goal_cumulant),
-        GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0),
-        EnergyPumpPolicy(true))
+function steps_to_goal_gvf(policy)
+    GVF(step_to_goal_cumulant(),
+        goal_pseudoterm(discount),
+        policy)
+end
+
+function leave_cumulant()
+    GVFParamFuncs.FunctionalCumulant(task_cumulant)
+end
+function step_to_goal_cumulant()
+    GVFParamFuncs.FunctionalCumulant(steps_to_goal)
+end
+function step_to_wall_cumulant()
+    GVFParamFuncs.FunctionalCumulant(steps_to_wall)
+end
+function negative_step_to_goal_cumulant()
+    GVFParamFuncs.FunctionalCumulant(negative_steps_to_goal)
+end
+function negative_step_to_wall_cumulant()
+    GVFParamFuncs.FunctionalCumulant(negative_steps_to_wall)
+end
+function wall_pseudoterm(γ)
+    GVFParamFuncs.StateTerminationDiscount(γ, is_wall, 0.0)
+end
+function goal_pseudoterm(γ)
+    GVFParamFuncs.StateTerminationDiscount(γ, is_goal, 0.0)
 end
 
 struct EnergyPumpPolicy <: GVFParamFuncs.AbstractPolicy
@@ -137,27 +175,34 @@ StatsBase.sample(π::EnergyPumpPolicy, args...) =
 # StatsBase.sample(rng::Random.AbstractRNG, π::EnergyPumpPolicy, state_t) =
 #     sample(rng, Weights([get(π; state_t = state_t, action_t=a) for a in actions]))
 
-function steps_to_wall_pseudoterm(;kwargs...)
+function is_wall(;kwargs...)
     normed_wall_pos = 0.0
     # return obs[1] <= MountainCarConst.pos_limit[1]
     return kwargs[:state_tp1][1] <= normed_wall_pos
 end
-function steps_to_wall_cumulant(;kwargs...)
+function steps_to_wall(;kwargs...)
     normed_wall_pos = 0.0
     # return obs[1] <= MountainCarConst.pos_limit[1] ? 1.0 : 0.0
     return kwargs[:state_tp1][1] <= normed_wall_pos ? 1.0 : 0.0
 end
+function negative_steps_to_wall(;kwargs...)
+    return -1
+end
 
-function steps_to_goal_pseudoterm(;kwargs...)
+
+function is_goal(;kwargs...)
     normed_goal_pos = 1.0
     # return obs[1] >= MountainCarConst.pos_limit[2]
     return kwargs[:state_tp1][1] >= normed_goal_pos
 end
 
-function steps_to_goal_cumulant(;kwargs...)
+function steps_to_goal(;kwargs...)
     normed_goal_pos = 1.0
     # return obs[1] >= MountainCarConst.pos_limit[2] ? 1.0 : 0.0
     return kwargs[:state_tp1][1] >= normed_goal_pos ? 1.0 : 0.0
+end
+function negative_steps_to_goal(;kwargs...)
+    return -1
 end
 
 function task_pseudoterm(;kwargs...)

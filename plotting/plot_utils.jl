@@ -158,6 +158,7 @@ using Statistics
 using ProgressMeter
 using JLD2
 using Plots
+# using LaTeXStrings
 
 # Demon Algorithm results in different line styles!!
 const val_matches = Dict(["GPI","TB","Q","TB"] => 1,
@@ -178,36 +179,47 @@ const val_matches = Dict(["GPI","TB","Q","TB"] => 1,
 
     )
 
-const algo_labels = Dict(["GPI","TB","Q","TB"] => "GPI with TB Demons",
-    ["Q","ESARSA", "Q", "TB"] => "ESARSA with TB Demons",
-    ["GPI", "TB", "SR", "TB"] => "GPI with SF Demons",
-    ["Q", "ESARSA", "SR", "TB"] => "ESARSA with SF Demons",
-    ["Q", "TabularRoundRobin", "SR", "TB"] => "SF Demons",
-    ["Q", "TabularRoundRobin", "Q", "TB"] => "TB Demons",
-    ["RoundRobin", "TB", "SR", "TB"] => "SF Demons",
-    ["RoundRobin", "Q", "SR", "TB"] => "SF Demons",
-    ["RoundRobin", "TB", "Q", "TB"] => "TB Demons",
-    ["RoundRobin", "Q", "Q", "TB"] => "TB Demons",
-    ["Q", "TabularRoundRobin","LSTD","TB"] => "LSTD Demons",
-    ["Q", "TabularRoundRobin", "Q", "ESARSA"] => "Off-Policy ESARSA Demons",
-    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => "SF Demons using Off-Policy ESARSA",
-    ["RandomDemons", "TB","Q","TB"] => "Random Behaviour with TB Demons",
-    ["RandomDemons", "TB","SR","TB"] => "Random Behaviour with SF Demons",
+const algo_labels = Dict(["GPI","TB","Q","TB"] => "μ(Sarsa), π(TB)",
+    ["Q","ESARSA", "Q", "TB"] => "μ(Sarsa), π(TB)",
+    ["GPI", "TB", "SR", "TB"] => "μ(GPI), π(SR)",
+    ["Q", "ESARSA", "SR", "TB"] => "μ(Sarsa), π(SR)",
+    ["Q", "TabularRoundRobin", "SR", "TB"] => "μ(Fixed), π(SR)",
+    ["Q", "TabularRoundRobin", "Q", "TB"] => "μ(Fixed), π(TB)",
+    ["RoundRobin", "TB", "SR", "TB"] => "μ(Fixed), π(SR)",
+    ["RoundRobin", "Q", "SR", "TB"] => "μ(Fixed), π(SR)",
+    ["RoundRobin", "TB", "Q", "TB"] => "μ(Fixed), π(TB)",
+    ["RoundRobin", "Q", "Q", "TB"] => "μ(Fixed), π(TB)",
+    ["Q", "TabularRoundRobin","LSTD","TB"] => "μ(Fixed), π(LSTD)",
+    ["Q", "TabularRoundRobin", "Q", "ESARSA"] => "μ(Fixed), π(TD)",
+    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => "μ(Fixed), π(SR + TD)",
+    ["RandomDemons", "TB","Q","TB"] => "μ(Random), π(TB)",
+    ["RandomDemons", "TB","SR","TB"] => "μ(Random), π(SR)",
     )
 
 const algo_keys = ["behaviour_learner", "behaviour_update", "demon_learner", "demon_update"]
+# TOL Muted Colour Scheme
+# const color_scheme = [
+#     colorant"#44AA99",
+#     colorant"#332288",
+#     colorant"#DDCC77",
+    # colorant"#999933",
+#     colorant"#CC6677",
+#     colorant"#AA4499",
+#     colorant"#DDDDDD",
+# 	colorant"#117733",
+# 	colorant"#882255",
+# 	colorant"#88CCEE",
+#     ]
+
 const color_scheme = [
-    colorant"#44AA99",
-    colorant"#332288",
-    colorant"#DDCC77",
-    colorant"#999933",
-    colorant"#CC6677",
-    colorant"#AA4499",
-    colorant"#DDDDDD",
-	colorant"#117733",
-	colorant"#882255",
-	colorant"#88CCEE",
-    ]
+colorant"#0077BB",
+colorant"#33BBEE",
+colorant"#009988",
+colorant"#EE7733",
+colorant"#CC3311",
+colorant"#EE3377",
+colorant"#BBBBBB",
+]
 
 function _is_match(ic, keys, vals)
     tst = ([ic[1].parsed_args[keys[i]] == vals[i] for i in 1:length(keys)])

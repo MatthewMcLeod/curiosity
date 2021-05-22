@@ -19,6 +19,8 @@ function lg_step!(self::MCError, env, agent, s, a, s_next, r, is_terminal, cur_s
     if rem(cur_step_total, self.log_interval) == 0
         ind = fld(cur_step_total, self.log_interval)
         Q_est = hcat([get_demon_prediction(agent, state, Int(action)) for (state, action) in zip(self.eval_set["states"], self.eval_set["actions"])]...)
+        # @show Q_est
+        # @show get_demon_prediction(agent,[0.5,0.5],1)
         err = mean((Q_est - self.eval_set["ests"]) .^ 2, dims=2)
         self.error[:,ind] = err
     end
