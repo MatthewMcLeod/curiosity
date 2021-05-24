@@ -5,6 +5,7 @@ Base.@kwdef mutable struct ETB{O, T<:AbstractTraceUpdate} <: LearningUpdate
     opt::O
     hdpi::HordeDPI
     clip_threshold::Float64
+    normalize_interest::Bool
     trace::T = AccumulatingTraces()
     e::IdDict = IdDict()
     followon::IdDict = IdDict()
@@ -63,8 +64,10 @@ function update!(lu::ETB,
     # interest = get_interest(learner, lu, obs, action)
 
     # using dpi for interest instead
-    # println(typeof(lu.hdpi))
     interest = lu.hdpi(obs, action)
+    if (lu.normalize_interest)
+        interest = [ceil(i) for i in interest]
+    end
 
     # getting IS ratio
     if (behaviour_pis[action] == 0)
@@ -178,7 +181,11 @@ function update!(lu::ETB,
     # interest = get_interest(learner, lu, obs, action)
 
     demon_interest = lu.hdpi(obs, action)
-    # println(demon_interest)
+
+    if (lu.normalize_interest)
+        demon_interest = [ceil(i) for i in demon_interest]
+    end
+
     num_repeat = convert(Integer, (learner.num_demons - learner.num_tasks) / learner.num_tasks)
     if (rem(learner.num_demons - learner.num_tasks, learner.num_tasks) != 0)
         println("The number to repeat for SF demons aren't even with the number of tasks for SR. Something might be wrong :(")

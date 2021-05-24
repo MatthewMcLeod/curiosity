@@ -185,13 +185,15 @@ function _init_learning_update(lu_type::Union{Type{InterestTB}},
                                 prefix)
     λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
     interest_set_str = prefix == "" ? "interest_set" : join([prefix, "interest_set"], "_")
+    norm_interest_str = prefix == "" ? "interest_set" : join([prefix, "normalize_interest"], "_")
 
     try
         lambda = parsed[λ_str]
         interest_set = parsed[interest_set_str]
+        norm_interest = parsed[norm_interest_str]
 
         hdpi = get_hdpi(parsed, interest_set)
-        lu_type(lambda=lambda, opt=opt, hdpi=hdpi)
+        lu_type(lambda=lambda, opt=opt, hdpi=hdpi, normalize_interest=norm_interest)
 
     catch e
         throw(e)
@@ -226,25 +228,27 @@ function _init_learning_update(lu_type::Union{Type{ETB},Type{EmphESARSA}},
                                 prefix)
     λ_str = prefix == "" ? "lambda" : join([prefix, "lambda"], "_")
     interest_set_str = prefix == "" ? "interest_set" : join([prefix, "interest_set"], "_")
+    norm_interest_str = prefix == "" ? "interest_set" : join([prefix, "normalize_interest"], "_")
 
-    try
-        lambda = parsed[λ_str]
-        interest_set = parsed[interest_set_str]
-        if haskey(parsed, "emphasis_clip_threshold")
-            clip_threshold = parsed["emphasis_clip_threshold"]
-        else
-            clip_threshold = Inf64
-            println("Setting clip threshold to inf")
-        end
-
-
-        hdpi = get_hdpi(parsed, interest_set)
-        lu_type(lambda=lambda, opt=opt, hdpi=hdpi, clip_threshold=clip_threshold)
-
-    catch e
-        throw(e)
-    # throw("$(lu_type) needs: $(interest_set_str) (string)")
+    # try
+    lambda = parsed[λ_str]
+    interest_set = parsed[interest_set_str]
+    norm_interest = parsed[norm_interest_str]
+    
+    if haskey(parsed, "emphasis_clip_threshold")
+        clip_threshold = parsed["emphasis_clip_threshold"]
+    else
+        clip_threshold = Inf64
+        println("Setting clip threshold to inf")
     end
+
+    hdpi = get_hdpi(parsed, interest_set)
+    lu_type(lambda=lambda, opt=opt, hdpi=hdpi, clip_threshold=clip_threshold, normalize_interest=norm_interest)
+
+    # catch e
+    #     throw(e)
+    # throw("$(lu_type) needs: $(interest_set_str) (string)")
+    # end
 end
 
 function _init_learning_update(lu_type::Union{Type{ESARSA}, Type{SARSA}},
@@ -313,7 +317,7 @@ function get_hdpi(parsed, interest_set)
         end
     elseif (interest_set == "2dOpenWorld_center")
         @load "./src/data/dpi/2dOpenWorld_center.jld2" hdpi
-            return hdpi
+        return hdpi
     end
     throw("no valid hdpi for string $(interest_set)")
 end
