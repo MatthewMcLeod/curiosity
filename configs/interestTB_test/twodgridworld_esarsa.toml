@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_esarsa"
+save_dir = "TwoDGridWorld_esarsa_norm"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
@@ -30,6 +30,7 @@ demon_policy_type = "greedy_to_cumulant"
 demon_trace = "AccumulatingTraces"
 demon_rep = "ideal"
 demon_interest_set = "2dOpenWorld_center"
+demon_normalize_interest = true
 
 # Agent and Logger
 horde_type = "regular"
