@@ -4,6 +4,7 @@ using Statistics
 using GVFHordes
 using StatsBase
 using JLD2
+using Plots
 const MCU = Curiosity.MountainCarUtils
 const MCC = Curiosity.MountainCarConst
 
@@ -20,7 +21,7 @@ function gen_learned_eval_set()
     # horde = MountainCarExperiment.get_horde(parsed)
     # gvfs = [MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()]
     policies = MCU.get_policies(Dict("learned_policy_names" => ["Wall","Goal"] , "learned_policy" => true))
-    gvfs = [MCU.steps_to_wall_gvf(policies[1]),MCU.steps_to_goal_gvf(policies[2])][1:1]
+    gvfs = [MCU.steps_to_wall_gvf(policies[1]),MCU.steps_to_goal_gvf(policies[2])]
 
     normalized = true
     env = MountainCar(0.0,0.0, normalized)
@@ -39,24 +40,23 @@ function gen_learned_eval_set()
             push!(states,[p,v])
         end
     end
-    states = [[0.45,0.3]]
+    # states = [[0.45,0.3]]
     actions = rand(1:3,length(states))
     gvf_rets = Array{Float64, 2}(undef, length(gvfs),length(states))
 
 
     num_returns = 1
     γ_thresh=1e-6
-    ss=[]
     for (gvf_i,gvf) in enumerate(gvfs)
         println("here in gvf loop")
-        rets,ss = monte_carlo_return(env, gvf, states[1], actions[1],num_returns, γ_thresh)
+        rets = monte_carlo_returns(env, gvf, states, actions,num_returns, γ_thresh)
         rets = mean(rets, dims = 2)
         rets = collect(Iterators.flatten(rets))
         # scatter(x,rets, legend=false, ylabel="Cumulant Val", xlabel="Starting X Pos", title = "GVF: $( gvf_i)")
         # savefig("./MC_gvf_$(gvf_i).png")
         gvf_rets[gvf_i,:] = rets
     end
-    return gvf_rets,states,actions,ss
+    return gvf_rets,states,actions
 end
 
 function plot_eval_set(states,rets)
@@ -66,6 +66,14 @@ function plot_eval_set(states,rets)
     s1 = scatter(x,y,rets[1,:], xlabel="Position", ylabel="Velocity", title = "To Back Wall")
     s2 = scatter(x,y,rets[2,:], xlabel="Position", ylabel="Velocity", title = "To Top Hill")
     plot([s1,s2]...)
+end
+
+function save_learned_policy(rets,states,actions)
+    MCLearnedEvalSet = Dict()
+    MCLearnedEvalSet["ests"] = rets
+    MCLearnedEvalSet["actions"] = actions
+    MCLearnedEvalSet["states"] = states
+    @save "./src/data/MCLearnedEvalSet.jld2" MCLearnedEvalSet
 end
 
 function gen_eval_set()

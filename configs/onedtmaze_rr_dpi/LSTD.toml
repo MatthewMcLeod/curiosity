@@ -60,12 +60,12 @@ random_first_action = true
 [sweep_args]
 seed = "1:30"
 cumulant_schedule = ["DrifterDistractor"]
-eta = "5.0.^(-3:0)"
+eta = [0.001, 0.01, 0.1]
 behaviour_opt = ["Auto"]
 behaviour_learner = ["RoundRobin"]
 behaviour_update = ["Q"]
 exploration_param = [0.1]
-demon_learner = ["Q","SR"]
+demon_learner = ["LSTD"]
 demon_update = ["TB"]
 demon_opt = ["Auto"]
 
@@ -75,4 +75,4 @@ tiling_structure = [[2,8]]
 exploring_starts= ["whole"]
 behaviour_trace = ["ReplacingTraces"]
 env_step_penalty = [-0.01]
-alpha_init = [0.01, 0.1, 0.2]
+alpha_init = [0.1]

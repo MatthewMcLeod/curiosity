@@ -22,7 +22,7 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "RandomDemons",
+        "behaviour_learner" => "RoundRobin",
         "behaviour_update" => "TB",
         "behaviour_reward_projector" => "maze",
         "behaviour_rp_tilings" => 1,
@@ -41,7 +41,7 @@ default_args() =
         # Demon Attributes
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "LSTD",
         "demon_update" => "TB",
         "demon_interest_set" => "oned_tmaze",
         "demon_policy_type" => "greedy_to_cumulant",
@@ -67,7 +67,7 @@ default_args() =
         "cumulant" => 1,
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
-        "exploring_starts"=>"beg",
+        "exploring_starts"=>"whole",
         "env_step_penalty" => -0.01,
 
 
@@ -77,10 +77,10 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 20000,
+        "steps" => 30000,
         "use_external_reward" => true,
-        "random_first_action" => false,
-        "logger_keys" => [LoggerKey.ONEDTMAZEERROR,LoggerKey.ONEDTMAZEERROR_DPI,LoggerKey.ONEDTMAZEERROR_UNIFORM, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
+        "random_first_action" => true,
+        "logger_keys" => [LoggerKey.ONEDTMAZEERROR_DMU,LoggerKey.ONEDTMAZEERROR,LoggerKey.ONEDTMAZEERROR_DPI,LoggerKey.ONEDTMAZEERROR_UNIFORM, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
     )
 
 

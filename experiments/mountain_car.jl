@@ -12,44 +12,49 @@ import Flux: Descent
 
 const MCU = Curiosity.MountainCarUtils
 
+# VERY IMPORTANT THAT LEARNED POLICY NAMES MATCHES ORDER OF EVAL SET!!!!!
 default_args() =
     Dict(
-        "steps" => 300000,
+        "steps" => 50000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
-        "num_tilings" => 3,
-        "num_tiles" => 8,
-        "behaviour_num_tilings" => 8,
-        "behaviour_num_tiles" => 2,
-        "demon_num_tilings" => 8,
-        "demon_num_tiles" => 4,
+        "num_tilings" => 1,
+        "num_tiles" => 16,
+        "behaviour_num_tilings" => 4,
+        "behaviour_num_tiles" => 4,
+        "behaviour_eta" => 0.5,
+        "demon_num_tilings" => 1,
+        "demon_num_tiles" => 8,
         "learned_policy" => true,
-        "learned_policy_names" => ["Goal","Wall"],
+        "learned_policy_names" => ["Wall","Goal"],
 
         "behaviour_update" => "ESARSA",
         "behaviour_learner" => "Q",
-        "behaviour_eta" => 0.5/8,
         "behaviour_opt" => "Descent",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
         "behaviour_lambda" => 0.95,
         "behaviour_w_init" => 0.0,
 
-        "intrinsic_reward" =>"weight_change",
+        # "eta" => 0.5,
+        "alpha_init" => 0.1,
+
+        "intrinsic_reward" =>"no_reward",
         "behaviour_trace" => "ReplacingTraces",
-        "use_external_reward" => false,
+        "use_external_reward" => true,
         "exploration_strategy" => "epsilon_greedy",
         "exploration_param" => 0.1,
         "random_first_action" => false,
 
         "lambda" => 0.0,
-        "demon_eta" => 0.1/8,
-        "demon_alpha_init" => 0.1/8,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
+        "demon_rep" => "ideal",
+        "demon_eta" => 0.1,
+
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
         "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
@@ -63,8 +68,15 @@ function construct_agent(parsed)
 
     if "eta" in keys(parsed)
         prefixes = ["behaviour","demon"]
+        @show "demon_eta being overwritten"
         for prefix in prefixes
             parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
+    end
+    if "alpha_init" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "alpha_init"], "_")] = parsed["alpha_init"]
         end
     end
     if parsed["demon_opt"] == "Descent"
@@ -77,6 +89,8 @@ function construct_agent(parsed)
             parsed["behaviour_eta"] = parsed["behaviour_eta"] / parsed["num_tilings"]
         end
     end
+
+    @show parsed["demon_eta"]
 
     behaviour_learner = parsed["behaviour_learner"]
     behaviour_lu = parsed["behaviour_update"]
@@ -91,14 +105,19 @@ function construct_agent(parsed)
         Curiosity.SparseTileCoder(parsed["num_tilings"], parsed["num_tiles"], 2),
         1:2)
 
-    demon_reward_features = Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-                    Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
-                1:2), false)
+    demon_reward_features = if parsed["demon_rep"] == "ideal"
+        MCU.IdealDemonFeatures()
+    elseif parsed["demon_rep"] == "tilecode"
+        Curiosity.FeatureProjector(
+                        Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2), true)
+    else
+        throw(ArgumentError("Invalid demon rep for SR"))
+    end
 
 
-    behaviour_reward_features =  Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-                    Curiosity.SparseTileCoder(parsed["behaviour_num_tilings"], parsed["behaviour_num_tiles"], 2),
-                1:2), false)
+
+    behaviour_reward_features =  Curiosity.ActionValueFeatureProjector(
+                    Curiosity.SparseTileCoder(parsed["behaviour_num_tilings"], parsed["behaviour_num_tiles"], 2),action_space)
 
     feature_size = size(fc)
     demon_feature_size = size(demon_reward_features)

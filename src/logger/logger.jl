@@ -42,7 +42,6 @@ module LoggerKey
     const TEMP_PRINT = "TEMP_PRINT"
     const TTMAZE_ERROR = "TTMAZE_ERROR"
     const VALUE_MAP = "VALUE_MAP"
-    const ONEDTMAZEERROR = "ONEDTMAZEERROR" # this old error metric gives true uniform distribution, but this is not reachable with no action noise
     const TWODGRIDWORLDERROR = "TWODGRIDWORLDERROR"
     const TWODGRIDWORLDERRORDPI = "TWODGRIDWORLDERRORDPI"
     const AUTOSTEP_STEPSIZE = "AUTOSTEP_STEPSIZE"
@@ -56,8 +55,10 @@ module LoggerKey
     const ONED_STATE_VISITATION = "ONED_STATE_VISITATION"
     const CUMULANTS = "CUMULANTS"
     const WC_PER_DEMON = "WC_PER_DEMON"
+    const ONEDTMAZEERROR = "ONEDTMAZEERROR" # this old error metric gives true uniform distribution, but this is not reachable with no action noise
     const ONEDTMAZEERROR_DPI = "ONEDTMAZEERROR_DPI" # error based on following d_pi for each GVF in the onedtmaze
     const ONEDTMAZEERROR_UNIFORM = "ONEDTMAZEERROR_UNIFORM" # error with states following RR but using uniform aciton weightings
+    const ONEDTMAZEERROR_DMU = "ONEDTMAZEERROR_DMU" # State weighting according to round robin with exploring starts
     const TTMAZE_STATE_VISITATION = "TTMAZE_STATE_VISITATION"
     const EMPHASIS = "EMPHASIS"
     const IS_RATIO = "IS_RATIO"
@@ -96,6 +97,7 @@ const LOGGER_KEY_MAP = Dict(
     LoggerKey.TTMAZE_STATE_VISITATION => TTMazeStateVisitation,
     LoggerKey.EMPHASIS => Emphasis,
     LoggerKey.IS_RATIO => ISRatio,
+    LoggerKey.ONEDTMAZEERROR_DMU => OneDTMazeError_dmu,
 )
 
 # Common logger for all experiments. It has multiple functionalities so pass in what you need to get started

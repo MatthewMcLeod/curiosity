@@ -164,6 +164,19 @@ function update!(lu::TB,
     # This should always be true as this is immediate next step prediction which is equivalent to having discounts of 0 for all states
     @assert sum(reward_discounts) == 0
     # TD err is applied across rows
+    #
+    # if next_obs[1] == 1.0
+    #     println()
+    #     @show reward_C, w * projected_state
+    #     @show SF_C, SF_next_discounts
+    #     @show td_err
+    # end
+    # println("Predicted termination")
+    # @show ψ, active_state_action
+    # @show ψ * active_state_action
+    # @show next_obs[1:2]
+    # println()
+
 
     if lu.opt isa Auto
         # next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)

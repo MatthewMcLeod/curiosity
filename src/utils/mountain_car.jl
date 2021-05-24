@@ -2,12 +2,18 @@ module MountainCarUtils
 using GVFHordes
 # import StatsBase
 using StatsBase
+using SparseArrays
 import Random
 
 const discount = 0.99
+import ..Curiosity
+import ..FeatureCreator
+
+
+const SRCU = Curiosity.SRCreationUtils
+
 import ..MountainCarConst
 import ..GVFSRHordes
-import ..Curiosity
 
 
 
@@ -31,16 +37,30 @@ function create_demons(parsed, fc)
         GVFHordes.Horde(
             [steps_to_wall_gvf(policies[1]),steps_to_goal_gvf(policies[2])])
     elseif parsed["demon_learner"] == "SR"
-        @assert demon_projected_fc != nothing
+        @assert fc != nothing
+        # pred_horde =  GVFHordes.Horde(
+        #         [steps_to_wall_gvf(policies[1]),steps_to_goal_gvf(policies[2])])
+
+        # pred_horde =  GVFHordes.Horde(
+        #                 [GVFHordes.GVF(GVFHordes.GVFParamFuncs.FeatureCumulant(i+2),
+        #                      GVFHordes.GVFParamFuncs.ConstantDiscount(0.0),
+        #                      GoalPolicy(i)) for i in 1:4])
+
         pred_horde =  GVFHordes.Horde(
-                [steps_to_wall_gvf(policies[1]),steps_to_goal_gvf(policies[2])])
+                    [GVFHordes.GVF(step_to_wall_cumulant(),
+                        GVFHordes.GVFParamFuncs.ConstantDiscount(0.0),
+                        policies[1]),
+                    GVFHordes.GVF(step_to_goal_cumulant(),
+                        GVFHordes.GVFParamFuncs.ConstantDiscount(0.0),
+                        policies[2],
+                        )
+                     ])
 
         SF_policies = [g.policy for g in pred_horde.gvfs]
         SF_discounts = [g.discount for g in pred_horde.gvfs]
         num_SFs = length(SF_policies)
-        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, demon_projected_fc,1:action_space)
-
-        GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, demon_projected_fc)
+        SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, fc,1:action_space)
+        GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, fc)
     else
         throw(ArgumentError("Cannot create demons"))
     end
@@ -93,7 +113,16 @@ function make_SF_horde(discount, num_features, num_actions, state_constructor)
     return SF_horde
 end
 
+struct IdealDemonFeatures <: FeatureCreator
+end
 
+function project_features(fc::IdealDemonFeatures, state,action,state_tp1)
+    new_state = sparsevec(convert(Array{Int,1},[is_wall(;state_tp1 = state_tp1), is_goal(;state_tp1 = state_tp1)] ))
+    return new_state
+end
+
+(FP::IdealDemonFeatures)(state, action, next_state) = project_features(FP, state, action, next_state)
+Base.size(FP::IdealDemonFeatures) = 2
 
 function MCNorm(obs)4
     pos_limit = MountainCarConst.pos_limit
@@ -104,7 +133,7 @@ end
 
 function task_gvf()
     GVF(GVFParamFuncs.FunctionalCumulant(task_cumulant),
-        GVFParamFuncs.StateTerminationDiscount(0.95, task_pseudoterm, 0.0),
+        GVFParamFuncs.StateTerminationDiscount(discount, task_pseudoterm, 0.0),
         EnergyPumpPolicy(true))
 end
 

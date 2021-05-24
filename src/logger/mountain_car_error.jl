@@ -7,10 +7,10 @@ mutable struct MCError <: LoggerKeyData
     log_interval::Int
 
     function MCError(logger_init_info)
-        eval_set = @load string(pwd(),"/src/data/MCEvalSet.jld2") MCEvalSet
+        eval_set = @load string(pwd(),"/src/data/MCLearnedEvalSet.jld2") MCLearnedEvalSet
         num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL])
 
-        new(zeros(2,num_logged_steps), MCEvalSet, logger_init_info[LoggerInitKey.INTERVAL])
+        new(zeros(2,num_logged_steps), MCLearnedEvalSet, logger_init_info[LoggerInitKey.INTERVAL])
     end
 end
 
@@ -22,7 +22,7 @@ function lg_step!(self::MCError, env, agent, s, a, s_next, r, is_terminal, cur_s
         # @show Q_est
         # @show get_demon_prediction(agent,[0.5,0.5],1)
         err = mean((Q_est - self.eval_set["ests"]) .^ 2, dims=2)
-        self.error[:,ind] = err
+        self.error[:,ind] = sqrt.(err)
     end
 end
 
