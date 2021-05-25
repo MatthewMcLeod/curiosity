@@ -3,9 +3,10 @@
 #SBATCH --mail-type=ALL
 #SBATCH -o onedtmaze_GPI_tilings.out # Standard output
 #SBATCH -e onedtmaze_GPI_tilings.err # Standard error
-#SBATCH --mem-per-cpu=7000M # Memory request of 3GB
-#SBATCH --time=03:30:00 #
-#SBATCH --ntasks=1
+#SBATCH --time=03:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=48
+#SBATCH --mem=0
 #SBATCH --account=def-amw8
 
 using Pkg
