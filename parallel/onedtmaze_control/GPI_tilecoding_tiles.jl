@@ -3,7 +3,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH -o onedtmaze_GPI_tiles.out # Standard output
 #SBATCH -e onedtmaze_GPI_tiles.err # Standard error
-#SBATCH --mem-per-cpu=6000M # Memory request of 3GB
+#SBATCH --mem-per-cpu=7000M # Memory request of 3GB
 #SBATCH --time=04:00:00 #
 #SBATCH --ntasks=1
 #SBATCH --account=def-amw8
