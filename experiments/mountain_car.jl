@@ -19,8 +19,8 @@ default_args() =
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
-        "num_tilings" => 1,
-        "num_tiles" => 16,
+        "num_tilings" => 2,
+        "num_tiles" => 8,
         "behaviour_num_tilings" => 4,
         "behaviour_num_tiles" => 4,
         "behaviour_eta" => 0.5,
@@ -47,8 +47,7 @@ default_args() =
         "exploration_param" => 0.1,
         "random_first_action" => false,
 
-        "lambda" => 0.0,
-        "demon_learner" => "SR",
+        "demon_learner" => "LSTD",
         "demon_update" => "TB",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
@@ -58,7 +57,6 @@ default_args() =
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
         "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
-
     )
 
 

@@ -8,13 +8,71 @@ using Plots
 const MCU = Curiosity.MountainCarUtils
 const MCC = Curiosity.MountainCarConst
 
+import ..get_normalized_state
+
 include("../experiments/mountain_car.jl")
+
+#Hacky this function should be called from environment
+function get_normalized_state(env::MountainCar,state)
+    pos_limit = MCC.pos_limit
+    vel_limit = MCC.vel_limit
+    return Float32[(state[1] - pos_limit[1])/(pos_limit[2] - pos_limit[1]),
+                   (state[2] - vel_limit[1])/(vel_limit[2] - vel_limit[1])]
+end
 
 StatsBase.sample(p::GVFHordes.GVFParamFuncs.FunctionalPolicy, s, actions) =
     sample(Weights([p.func(;state_t = s, action_t = a) for a in actions]))
 
 StatsBase.sample(rng, p::GVFHordes.GVFParamFuncs.AbstractPolicy, s, actions) =
     sample(Weights([get(p;state_t = s, action_t = a) for a in actions]))
+
+function gen_start_state_eval_set()
+    parsed = MountainCarExperiment.default_args()
+    # horde = MountainCarExperiment.get_horde(parsed)
+    # gvfs = [MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()]
+    policies = MCU.get_policies(Dict("learned_policy_names" => ["Wall","Goal"] , "learned_policy" => true))
+    gvfs = [MCU.steps_to_wall_gvf(policies[1]),MCU.steps_to_goal_gvf(policies[2])]
+
+    normalized = true
+    env = MountainCar(0.0,0.0, normalized)
+    start_states = []
+
+    pos_step_interval = 0.025
+    vel_step_interval = 0.005
+    # possible_pos = collect(0:0.05:1)
+    # possible_vels = collect(0:0.1:1)
+    possible_pos = collect(MCC.pos_initial_range[1]:pos_step_interval:MCC.pos_initial_range[2])
+    possible_vels = collect(MCC.vel_initial_range[1]:vel_step_interval:MCC.vel_initial_range[2])
+
+    states = []
+    for p in possible_pos
+        for v in possible_vels
+            push!(states,get_normalized_state(env,[p,v]))
+        end
+    end
+    # states = [[0.45,0.3]]
+    actions = rand(1:3,length(states))
+    gvf_rets = Array{Float64, 2}(undef, length(gvfs),length(states))
+
+    num_returns = 1
+    γ_thresh=1e-6
+
+    for (gvf_i,gvf) in enumerate(gvfs)
+        println("here in gvf loop")
+        rets = monte_carlo_returns(env, gvf, states, actions,num_returns, γ_thresh)
+        @show size(rets)
+        @show rets[1],rets[2],rets[3]
+        episode_lengths = [log.(0.99,r) for r in rets]
+        println("Mean Episode length: ", mean(rets))
+        rets = mean(rets, dims = 2)
+        rets = collect(Iterators.flatten(rets))
+        # scatter(x,rets, legend=false, ylabel="Cumulant Val", xlabel="Starting X Pos", title = "GVF: $( gvf_i)")
+        # savefig("./MC_gvf_$(gvf_i).png")
+        gvf_rets[gvf_i,:] = rets
+    end
+    return gvf_rets,states,actions
+end
+
 
 function gen_learned_eval_set()
     parsed = MountainCarExperiment.default_args()
@@ -44,12 +102,16 @@ function gen_learned_eval_set()
     actions = rand(1:3,length(states))
     gvf_rets = Array{Float64, 2}(undef, length(gvfs),length(states))
 
-
     num_returns = 1
     γ_thresh=1e-6
+
     for (gvf_i,gvf) in enumerate(gvfs)
         println("here in gvf loop")
         rets = monte_carlo_returns(env, gvf, states, actions,num_returns, γ_thresh)
+        @show size(rets)
+        @show rets[1],rets[2],rets[3]
+        episode_lengths = [log.(0.99,r) for r in rets]
+        println("Mean Episode length: ", mean(rets))
         rets = mean(rets, dims = 2)
         rets = collect(Iterators.flatten(rets))
         # scatter(x,rets, legend=false, ylabel="Cumulant Val", xlabel="Starting X Pos", title = "GVF: $( gvf_i)")

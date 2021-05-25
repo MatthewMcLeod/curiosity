@@ -170,6 +170,7 @@ const val_matches = Dict(["GPI","TB","Q","TB"] => 1,
     ["RoundRobin", "Q", "SR", "TB"] => 1,
     ["RoundRobin", "TB", "Q", "TB"] => 2,
     ["RoundRobin", "Q", "Q", "TB"] => 2,
+    ["RoundRobin", "Q","LSTD","TB"] => 3,
     ["Q", "TabularRoundRobin", "Q", "TB"] => 2,
     ["Q", "TabularRoundRobin", "Q", "ESARSA"] => 2,
     ["Q", "TabularRoundRobin", "SR", "ESARSA"] => 1,
@@ -189,6 +190,7 @@ const algo_labels = Dict(["GPI","TB","Q","TB"] => "μ(Sarsa), π(TB)",
     ["RoundRobin", "Q", "SR", "TB"] => "μ(Fixed), π(SR)",
     ["RoundRobin", "TB", "Q", "TB"] => "μ(Fixed), π(TB)",
     ["RoundRobin", "Q", "Q", "TB"] => "μ(Fixed), π(TB)",
+    ["RoundRobin", "Q","LSTD","TB"] => "μ(Fixed), π(LSTD)",
     ["Q", "TabularRoundRobin","LSTD","TB"] => "μ(Fixed), π(LSTD)",
     ["Q", "TabularRoundRobin", "Q", "ESARSA"] => "μ(Fixed), π(TD)",
     ["Q", "TabularRoundRobin", "SR", "ESARSA"] => "μ(Fixed), π(SR + TD)",
@@ -271,6 +273,7 @@ function get_label(ic)
             return Dict(:label => algo_labels[algo_vals])
         end
     end
+    throw(ArgumentError("No Label description!!"))
 end
 
 function get_params(ic)

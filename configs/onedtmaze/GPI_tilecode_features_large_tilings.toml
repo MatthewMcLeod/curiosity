@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_RR"
+save_dir = "OneDTMaze_GPI_Control_TileCode_P2"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -7,14 +7,16 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 30000
+steps = 200
 
 logger_keys = ["ONEDTMAZEERROR_DMU", "ONEDTMAZEERROR","ONEDTMAZEERROR_UNIFORM","ONEDTMAZEERROR_DPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
 logger_interval = 100
 # Behaviour Items
 behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
 behaviour_gamma = 0.90
-behaviour_reward_projector = "maze"
+behaviour_reward_projector = "tilecoding"
+behaviour_rp_tilings = 8
+behaviour_rp_tiles = 2
 exploration_strategy = "epsilon_greedy"
 # behaviour_trace = "AccumulatingTraces"
 behaviour_lambda = 0.95
@@ -50,7 +52,7 @@ horde_type = "regular"
 intrinsic_reward = "weight_change"
 
 use_external_reward = true
-random_first_action = true
+random_first_action = false
 
 
 # num_tilings = 8
@@ -58,12 +60,12 @@ random_first_action = true
 
 
 [sweep_args]
-seed = "1:30"
+seed = "1:6"
 cumulant_schedule = ["DrifterDistractor"]
-eta = "5.0.^(-3:0)"
+eta = "5.0.^(-3:-1)"
 behaviour_opt = ["Auto"]
-behaviour_learner = ["RoundRobin"]
-behaviour_update = ["Q"]
+behaviour_learner = ["GPI"]
+behaviour_update = ["TB"]
 exploration_param = [0.1]
 demon_learner = ["Q","SR"]
 demon_update = ["TB"]
@@ -72,7 +74,7 @@ demon_opt = ["Auto"]
 # num_tilings = [4, 8]
 # num_tiles = [2]
 tiling_structure = [[2,8]]
-exploring_starts= ["whole"]
+exploring_starts= ["beg"]
 behaviour_trace = ["ReplacingTraces"]
 env_step_penalty = [-0.01]
 alpha_init = [0.01, 0.1, 0.2]

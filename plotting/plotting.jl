@@ -24,15 +24,17 @@ LU = LabelUtils
 # data_key = :ttmaze_uniform_error
 # data_key = :ttmaze_round_robin_error
 # data_key = :oned_tmaze_dpi_error
-# data_key = :oned_tmaze_uniform_error
-data_key = :oned_tmaze_old_error
+data_key = :oned_tmaze_uniform_error
+# data_key = :oned_tmaze_dmu_error
 
 
-folder_name = "tmp"
+folder_name = "oned_rr"
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
 # data_home = "../data/OneDTMaze_RR_dpi"
-data_home = "../data/OneDTMaze_Control"
+# data_home = "../data/OneDTMaze_Control"
+data_home = "../data/OneDTMaze_RR"
+
 
 
 function load_data()
@@ -107,8 +109,8 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
     ylabel = "RMSE"
     # title = "Hall Following in Tabular T-Maze"
     # title = "Control in Tabular T-Maze"
-    # title = "Hall Following in 1D T-Maze"
-    title = "Control in 1D T-Maze"
+    title = "Fixed Behaviour in 1D T-Maze"
+    # title = "Control in 1D T-Maze"
 
     xlabel = "Steps"
     step_increment=best_per_algo_ics[1].items[1].parsed_args["logger_interval"]
@@ -156,7 +158,9 @@ end
 function load_and_plot_rmse(inds_of_interest=nothing)
     ic = load_data()
     algo_ic = load_best(ic)
-    plot_rmse(algo_ic,inds_of_interest)
+    plot_rmse_per_demon(algo_ic,inds_of_interest)
+    sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
+    [GPU.print_params(bic,["demon_learner"],["demon_eta","alpha_init"]) for bic in algo_ic]
 end
 
 function load_and_plot_goal_visits(inds_of_interest=nothing)

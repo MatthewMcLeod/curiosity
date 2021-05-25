@@ -96,6 +96,12 @@ function MinimalRLCore.get_state(env::MountainCar)
     end
 end
 
+function get_normalized_state(env::MountainCar,state)
+    pos_limit = MountainCarConst.pos_limit
+    vel_limit = MountainCarConst.vel_limit
+    return Float32[(state[1] - pos_limit[1])/(pos_limit[2] - pos_limit[1]),
+                   (state[2] - vel_limit[1])/(vel_limit[2] - vel_limit[1])]
+end
 
 function get_normalized_state(env::MountainCar)
     pos_limit = MountainCarConst.pos_limit
