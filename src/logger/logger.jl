@@ -38,7 +38,8 @@ module LoggerKey
     const GOAL_VISITATION = "GOAL_VISITATION"
     const ONED_GOAL_VISITATION = "ONED_GOAL_VISITATION"
     const EPISODE_LENGTH = "EPISODE_LENGTH"
-    const MC_ERROR = "MC_ERROR"
+    const MC_UNIFORM_ERROR = "MC_UNIFORM_ERROR"
+    const MC_START_ERROR = "MC_START_ERROR"
     const TEMP_PRINT = "TEMP_PRINT"
     const TTMAZE_ERROR = "TTMAZE_ERROR"
     const VALUE_MAP = "VALUE_MAP"
@@ -73,7 +74,8 @@ end
 const LOGGER_KEY_MAP = Dict(
     LoggerKey.GOAL_VISITATION => GoalVisitation,
     LoggerKey.EPISODE_LENGTH => EpisodeLength,
-    LoggerKey.MC_ERROR => MCError,
+    LoggerKey.MC_UNIFORM_ERROR => MCErrorUniform,
+    LoggerKey.MC_START_ERROR => MCErrorStartStates,
     LoggerKey.TTMAZE_ERROR => TTMazeError,
     LoggerKey.TEMP_PRINT => TempPrint,
     LoggerKey.VALUE_MAP => ValueMap,

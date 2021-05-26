@@ -1,5 +1,5 @@
 [config]
-save_dir = "MC_Experiments_SR_Q"
+save_dir = "MC_Experiments_GPI_SR"
 exp_file = "experiments/mountain_car.jl"
 exp_module_name = "MountainCarExperiment"
 exp_func_name = "main_experiment"
@@ -10,22 +10,25 @@ arg_iter_type = "iter"
 steps = 100000
 
 #Tile coding params used by Rich textbook for mountain car
-num_tilings = 16
-num_tiles = 2
-behaviour_num_tilings = 4
-behaviour_num_tiles = 4
+num_tilings = 8
+num_tiles = 8
+behaviour_reward_projector = "ideal"
+behaviour_num_tilings = 8
+behaviour_num_tiles = 2
 demon_num_tilings = 8
 demon_num_tiles = 4
 learned_policy = true
 learned_policy_names = ["Wall","Goal"]
 
-behaviour_update = "ESARSA"
 behaviour_learner = "Q"
+behaviour_update = "ESARSA"
+# behaviour_eta = 0.5
 behaviour_opt = "Descent"
-behaviour_reward_projector = "ideal"
+# behaviour_rew = env,
 behaviour_gamma = 0.99
 behaviour_lambda = 0.95
 behaviour_w_init = 0.0
+
 
 # intrinsic_reward = "no_reward"
 behaviour_trace = "ReplacingTraces"
@@ -34,22 +37,21 @@ exploration_strategy = "epsilon_greedy"
 # exploration_param = 1.0
 random_first_action = false
 
+lambda = 0.0
 # demon_eta = 0.1
 demon_alpha_init = 0.1
-# demon_learner = "Q"
+demon_learner = "SR"
 demon_update = "TB"
 demon_opt = "Descent"
 demon_lambda = 0.9
 demon_rep = "ideal"
-
 exploring_starts=true
 save_dir = "MountainCarExperiment"
 logger_keys = ["EPISODE_LENGTH", "MC_START_ERROR", "MC_UNIFORM_ERROR"]
 
 [sweep_args]
 seed = "1:10"
-exploration_param = [0.2]
-demon_eta = "5.0.^(-3:-1)"
-demon_learner = ["SR","Q"]
+exploration_param = [0.1]
+demon_eta = "3.0.^(-3:-1)"
 intrinsic_reward = ["no_reward"]
 behaviour_eta = "3.0.^(-1:-1)"

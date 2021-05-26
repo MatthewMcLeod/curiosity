@@ -56,6 +56,25 @@ function get_best(ic, sweep_params, metric)
 
     return search(ic, splits[low_err_ind])
 end
+function get_most_episodes(ic, sweep_params, metric)
+    splits = split_algo(ic,sweep_params)
+    lengths = -ones(length(splits)) * Inf
+    for (ind, split) in enumerate(splits)
+        candidate_best = search(ic, split)
+        if length(candidate_best.items) == 0
+            @warn "$(split) results in not a valid combination"
+            continue
+        end
+        res = load_results(candidate_best, metric, return_type = "array")
+        @show size(res)
+        num_episodes = length.(res)
+        lengths[ind] = mean(num_episodes)
+    end
+    mx,mx_ind = findmax(lengths)
+    @show lengths
+    return search(ic, splits[mx_ind])
+
+end
 function get_best_final_perf(ic, sweep_params, metric, cut_per)
     splits = split_algo(ic,sweep_params)
     errors = ones(length(splits)) * Inf

@@ -25,7 +25,7 @@ function get_policies(parsed)
     policies = if parsed["learned_policy"]
         [load_policy(name) for name in parsed["learned_policy_names"]]
     else
-        [EnergyPump(true),EnergyPump(true)]
+        [EnergyPumpPolicy(true),EnergyPumpPolicy(true)]
     end
     return policies
 end
@@ -57,7 +57,7 @@ function create_demons(parsed, fc)
                      ])
 
         SF_policies = [g.policy for g in pred_horde.gvfs]
-        SF_discounts = [g.discount for g in pred_horde.gvfs]
+        SF_discounts = [GVFParamFuncs.StateTerminationDiscount(discount, is_wall, 0.0), GVFParamFuncs.StateTerminationDiscount(discount, is_goal, 0.0)]
         num_SFs = length(SF_policies)
         SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, fc,1:action_space)
         GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, fc)
@@ -94,24 +94,24 @@ function make_behaviour_gvf(behaviour_learner, γ, fc, exploration_strategy)
     BehaviourGVF = GVF(GVFParamFuncs.RewardCumulant(), goal_pseudoterm(γ), GVF_policy)
 end
 
-function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_actions, state_constructor)
-    return GVFSRHordes.SFHorde([GVF(MountainCarStateActionCumulant(s,a,state_constructor),
-                    gvf_pseudoterm,
-                    gvf_policy) for s in 1:num_features for a in 1:num_actions])
-end
-
-function make_SF_horde(discount, num_features, num_actions, state_constructor)
-    steps_to_wall_horde = make_SF_for_policy(EnergyPumpPolicy(true),
-                GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0),
-                num_features, num_actions, state_constructor)
-
-    steps_to_goal_horde = make_SF_for_policy(EnergyPumpPolicy(true),
-                GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0),
-                num_features, num_actions, state_constructor)
-
-    SF_horde = GVFSRHordes.merge(steps_to_wall_horde,steps_to_goal_horde)
-    return SF_horde
-end
+# function make_SF_for_policy(gvf_policy, gvf_pseudoterm, num_features, num_actions, state_constructor)
+#     return GVFSRHordes.SFHorde([GVF(MountainCarStateActionCumulant(s,a,state_constructor),
+#                     gvf_pseudoterm,
+#                     gvf_policy) for s in 1:num_features for a in 1:num_actions])
+# end
+#
+# function make_SF_horde(discount, num_features, num_actions, state_constructor)
+#     steps_to_wall_horde = make_SF_for_policy(EnergyPumpPolicy(true),
+#                 GVFParamFuncs.StateTerminationDiscount(discount, steps_to_wall_pseudoterm, 0.0),
+#                 num_features, num_actions, state_constructor)
+#
+#     steps_to_goal_horde = make_SF_for_policy(EnergyPumpPolicy(true),
+#                 GVFParamFuncs.StateTerminationDiscount(discount, steps_to_goal_pseudoterm, 0.0),
+#                 num_features, num_actions, state_constructor)
+#
+#     SF_horde = GVFSRHordes.merge(steps_to_wall_horde,steps_to_goal_horde)
+#     return SF_horde
+# end
 
 struct IdealDemonFeatures <: FeatureCreator
 end
@@ -123,6 +123,7 @@ end
 
 (FP::IdealDemonFeatures)(state, action, next_state) = project_features(FP, state, action, next_state)
 Base.size(FP::IdealDemonFeatures) = 2
+Base.length(FP::IdealDemonFeatures) = 2
 
 function MCNorm(obs)4
     pos_limit = MountainCarConst.pos_limit

@@ -106,7 +106,6 @@ function lg_step!(self::OneDTMazeError_DPI, env, agent, s, a, s_next, r, is_term
     end
 end
 
-
 ####
 # Error Recording for Tabular Tmaze
 ####

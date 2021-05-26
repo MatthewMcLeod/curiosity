@@ -77,9 +77,9 @@ end
 
 function MinimalRLCore.get_reward(env::MountainCar) # -> determines if the agent_state is terminal
     if env.pos >= MountainCarConst.pos_limit[2]
-        return 0.0f0
+        return -0.01f0
     end
-    return -1.0f0
+    return -0.01f0
 end
 
 

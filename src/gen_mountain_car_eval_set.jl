@@ -58,10 +58,7 @@ function gen_start_state_eval_set()
     γ_thresh=1e-6
 
     for (gvf_i,gvf) in enumerate(gvfs)
-        println("here in gvf loop")
         rets = monte_carlo_returns(env, gvf, states, actions,num_returns, γ_thresh)
-        @show size(rets)
-        @show rets[1],rets[2],rets[3]
         episode_lengths = [log.(0.99,r) for r in rets]
         println("Mean Episode length: ", mean(rets))
         rets = mean(rets, dims = 2)

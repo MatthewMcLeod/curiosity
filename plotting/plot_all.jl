@@ -10,7 +10,7 @@ using JLD2
 # data_home = "../data/OneDTMaze_Control_dpi"
 # data_home = "../OneDTMaze_RR_dpi"
 # data_home = "../data/OneDTMaze_Control_dpi"
-data_home = "../MC_Experiments_SR"
+data_home = "../MC_Experiments_SR_Q"
 
 include("./plot_utils.jl")
 GPU = GeneralPlotUtils
@@ -23,11 +23,11 @@ folder_name = "MC_tmp"
 
 # data_key = :oned_tmaze_dpi_error
 # data_key = :ttmaze_direct_error
-data_key = :mc_error
+data_key = :mc_uniform_error
 
 ic = ItemCollection(joinpath(experiment_folders[1], "data"));
 
-algo_divisor_keys = ["demon_learner", "demon_opt", "intrinsic_reward"]
+algo_divisor_keys = ["demon_learner"]
 sweep_params = ["demon_eta"]
 # algo_divisor_keys = ["behaviour_learner", "demon_learner", "demon_opt", "demon_update", "intrinsic_reward"]
 # sweep_params = ["demon_alpha_init", "demon_eta"]
@@ -47,8 +47,8 @@ println()
 best_per_algo_ics = []
 for (i,algo_ic) in enumerate(algo_ics)
 #     push!(best_per_algo_ics, GPU.get_best(algo_ic,sweep_params, data_key))
-    push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
-
+    # push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
+    push!(best_per_algo_ics, GPU.get_most_episodes(algo_ic,sweep_params, :episode_length))
 end
 @show length.(best_per_algo_ics), "better be equal to num seeds"
 
