@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_esarsa_norm_fine"
+save_dir = "TwoDGridWorld_esarsa_TB_rr"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
@@ -10,7 +10,7 @@ arg_iter_type = "iter"
 steps = 100000
 # steps = 100
 
-logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
+logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD"]
 logger_interval = 100
 
 # Behaviour Items
@@ -21,7 +21,7 @@ exploration_strategy = "epsilon_greedy"
 behaviour_lambda = 0.9
 behaviour_w_init = 4.0
 behaviour_trace = "ReplacingTraces"
-behaviour_reward_projector = "base"
+behaviour_alpha_init = 0.1 # Will be 1/tilings from sweep
 
 # Demon Attributes
 demon_gamma = 0.95
@@ -38,7 +38,7 @@ intrinsic_reward = "weight_change"
 use_external_reward = true
 behaviour_opt = "Auto"
 demon_opt = "Auto"
-behaviour_learner = "Q"
+behaviour_learner = "RoundRobin"
 behaviour_update = "ESARSA"
 
 
@@ -53,13 +53,12 @@ env_step_penalty = -0.01
 [sweep_args]
 seed = "1:10"
 
-behaviour_alpha_init = [0.01, 0.1, 0.2, 0.5, 1.0] # Will be 1/tilings from sweep
 demon_alpha_init = [0.01, 0.1, 0.2, 0.5, 1.0] # Will be 1/tilings from sweep
 eta = [0.01, 0.05, 0.1, 0.5, 1.0]
 
 exploration_param = [0.1]
 demon_learner = ["SR"]
-demon_update = ["ETB"]
-emphasis_clip_threshold = [0.02, 0.2, 2.0, 20.0]
+demon_update = ["TB", "InterestTB"]
+# emphasis_clip_threshold = [0.02, 0.2, 2, 20]
 tiling_structure = [[16, 2]]
 start_dist = ["center"]

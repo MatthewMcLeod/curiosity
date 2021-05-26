@@ -2,6 +2,7 @@ Base.@kwdef mutable struct InterestTB{O, T<:AbstractTraceUpdate} <: LearningUpda
     lambda::Float64
     opt::O
     hdpi::HordeDPI
+    normalize_interest::Bool
     trace::T = AccumulatingTraces()
     e::IdDict = IdDict()
     prev_discounts::IdDict = IdDict()
@@ -52,6 +53,11 @@ discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(n
     inds = get_action_inds(action, learner.num_actions, learner.num_demons)
     state_action_row_ind = inds
 
+    interests = lu.hdpi(obs, action)
+    if (lu.normalize_interest)
+        interests = [ceil(i) for i in interests]
+    end
+
     update_trace!(lu.trace,
                   e,
                   state,
@@ -59,7 +65,7 @@ discounts = get!(()->zero(next_discounts), lu.prev_discounts, learner)::typeof(n
                   repeat(discounts, inner = learner.num_actions),
                   repeat(target_pis[:,action], inner = learner.num_actions),
                   inds;
-                  emphasis=lu.hdpi(obs, action))
+                  emphasis=interests)
 
 
     pred = learner(next_state)
@@ -136,6 +142,10 @@ function update!(lu::InterestTB,
     # This update might be broken if used for GPI/control since it'd only have one reward in that case. However, that should be okay
     # since InterestTB would only be used for the demon regardless.
     interests = lu.hdpi(obs, action)
+    if (lu.normalize_interest)
+        interests = [ceil(i) for i in interests]
+    end
+
     num_repeat = convert(Integer, (learner.num_demons - learner.num_tasks) / learner.num_tasks)
     if (rem(learner.num_demons - learner.num_tasks, learner.num_tasks) != 0)
         println("The number to repeat for SF demons aren't even with the number of tasks for SR. Something might be wrong :(")

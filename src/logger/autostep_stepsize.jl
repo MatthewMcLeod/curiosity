@@ -19,10 +19,12 @@ function lg_step!(self::AutostepStepSize, env, agent, s, a, s_next, r, is_termin
         opt = demon_lu.opt
         @assert demon_lu.opt isa Auto "Demon Optimizer is not Auto! Please set it to Auto or remove LoggerKey.AUTOSTEP_STEPSIZE from logger keys"
 
+        step_size = []
         for k in keys(opt.α)
             α = opt.α[k]
-            push!(self.step_sizes, copy(α))
-         end
+            push!(step_size, copy(α))
+        end
+        push!(self.step_sizes, a)
     end
 end
 
@@ -30,5 +32,5 @@ function lg_episode_end!(self::AutostepStepSize, cur_step_in_episode, cur_step_t
 end
 
 function save_log(self::AutostepStepSize, save_dict::Dict)
-    save_dict[:autostep_stepsize] = cat(self.step_sizes[2:end]..., dims=3)
+    save_dict[:autostep_stepsize] = self.step_sizes
 end
