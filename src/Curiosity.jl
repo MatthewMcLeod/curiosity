@@ -16,6 +16,7 @@ import Flux.Optimise: update!
 # Abstract type of FeatureProjector used in the learner utils
 abstract type FeatureCreator end
 # export ValueFeatureProjector, ActionValueFeatureProjector
+include("utils/replay.jl")
 include("utils/learners.jl")
 include("utils/SRHorde.jl")
 
@@ -39,8 +40,9 @@ abstract type ExplorationStrategy end
 export EpsilonGreedy, ϵGreedyDecay
 include("agent/exploration.jl")
 
-export Agent, agent_end!, step!, get_demon_prediction, μ_π, proc_input
+export Agent, AgentER, step!, get_demon_prediction, μ_π, proc_input
 include("agent/agent.jl")
+include("agent/agent_er.jl")
 
 export TileCoder, create_features
 include("./agent/tile_coder.jl")

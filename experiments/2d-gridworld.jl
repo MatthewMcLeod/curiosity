@@ -279,6 +279,8 @@ function construct_agent(parsed)
         behaviour_learner, behaviour_demons, parsed["behaviour_gamma"]
     end #end behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
 
+    @show size(behaviour_learner.ψ)
+
     Agent(demons,
           feat_size,
           behaviour_learner,
