@@ -4,7 +4,7 @@ using Curiosity
 using Curiosity: OpenWorld
 using MinimalRLCore
 const TDGWU = Curiosity.TwoDGridWorldUtils
-include("../experiments/2d-gridworld.jl")
+# include("../experiments/2d-gridworld.jl")
 using Random
 using StatsBase
 using GVFHordes
@@ -84,16 +84,18 @@ function gen_dataset_special(num_start_states=500, seed=1)
         
         ss = Vector{Float64}[]
         as = Int[]
-        policy = TDGWU.GoalPolicy(gvf_i, true)
+        policy = TDGWU.NaiveGoalPolicy(gvf_i)
         
         for i in 1:num_start_states
             # MinimalRLCore.reset!(env)
             # s = MinimalRLCore.get_state(env)
             s = MinimalRLCore.start!(env)
             a = policy(s)
-            for t ∈ 1:rand(1:15)
+            term = false
+            while term == false
                 s, r, term = MinimalRLCore.step!(env, a)
                 if term
+                    # println("term!")
                     break
                 end
                 a = policy(s)

@@ -43,18 +43,21 @@ function gen_dpi(num_states=500, seed=1; start_type=:center, h_kwargs...)
         
         ss = Vector{Float64}[]
         as = Int[]
-        policy = TDGWU.GoalPolicy(gvf_i, true)
+        policy = TDGWU.NaiveGoalPolicy(gvf_i)
         
         while length(ss) < num_states
             s = MinimalRLCore.start!(env)
             push!(ss, state_filter_func(s))
             
             a = policy(s)
-            for t ∈ 1:rand(1:15)
+            term = false
+            while term == false
+            # for t ∈ 1:rand(1:15)
                 s, r, term = MinimalRLCore.step!(env, a)
                 a = policy(s)
                 push!(ss, state_filter_func(s))
                 if term
+                    # println("termed")
                     break
                 end
             end
