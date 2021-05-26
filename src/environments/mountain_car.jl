@@ -6,11 +6,11 @@ import MinimalRLCore
 module MountainCarConst
 const vel_limit = (-0.07, 0.07)
 const pos_limit = (-1.2, 0.5)
-# const pos_initial_range = (-0.2, 0.2)
-# const vel_initial_range = (-0.04,0.04)
+const pos_initial_range = (-0.2, 0.2)
+const vel_initial_range = (-0.04,0.04)
 
-const pos_initial_range = (-1.2, 0.5)
-const vel_initial_range = (-0.07, 0.07)
+# const pos_initial_range = (-1.2, 0.5)
+# const vel_initial_range = (-0.07, 0.07)
 
 const Reverse=1
 const Neutral=2
@@ -77,9 +77,9 @@ end
 
 function MinimalRLCore.get_reward(env::MountainCar) # -> determines if the agent_state is terminal
     if env.pos >= MountainCarConst.pos_limit[2]
-        return 0.0f0
+        return -0.01f0
     end
-    return -1.0f0
+    return -0.01f0
 end
 
 
@@ -96,6 +96,12 @@ function MinimalRLCore.get_state(env::MountainCar)
     end
 end
 
+function get_normalized_state(env::MountainCar,state)
+    pos_limit = MountainCarConst.pos_limit
+    vel_limit = MountainCarConst.vel_limit
+    return Float32[(state[1] - pos_limit[1])/(pos_limit[2] - pos_limit[1]),
+                   (state[2] - vel_limit[1])/(vel_limit[2] - vel_limit[1])]
+end
 
 function get_normalized_state(env::MountainCar)
     pos_limit = MountainCarConst.pos_limit
