@@ -18,7 +18,7 @@ import ..GVFSRHordes
 
 
 function load_policy(policy_name)
-    Curiosity.LearnedPolicy("/home/matthewmcleod/Documents/Masters/curiosity/src/data/MC_learned_policies/$(policy_name).bson")
+    Curiosity.LearnedPolicy("./src/data/MC_learned_policies/$(policy_name).bson")
 end
 
 function get_policies(parsed)
