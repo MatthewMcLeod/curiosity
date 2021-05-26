@@ -4,7 +4,7 @@
 #SBATCH -o twodgridworld_rr.out # Standard output
 #SBATCH -e twodgridworld_rr.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=03:30:00 #
+#SBATCH --time=02:30:00 #
 #SBATCH --ntasks=32
 #SBATCH --account=rrg-whitem
 
