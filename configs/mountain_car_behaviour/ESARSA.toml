@@ -1,5 +1,5 @@
 [config]
-save_dir = "MC_Experiments_GPI"
+save_dir = "MC_Experiments_ESARSA"
 exp_file = "experiments/mountain_car.jl"
 exp_module_name = "MountainCarExperiment"
 exp_func_name = "main_experiment"
@@ -20,8 +20,8 @@ demon_num_tiles = 4
 learned_policy = true
 learned_policy_names = ["Wall","Goal"]
 
-behaviour_learner = "GPI"
-behaviour_update = "TB"
+behaviour_learner = "Q"
+behaviour_update = "ESARSA"
 # behaviour_eta = 0.5
 behaviour_opt = "Descent"
 # behaviour_rew = env,

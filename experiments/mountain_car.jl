@@ -29,8 +29,8 @@ default_args() =
 
         "learned_policy" => true,
         "learned_policy_names" => ["Wall","Goal"],
-        "behaviour_learner" => "GPI",
-        "behaviour_update" => "TB",
+        "behaviour_learner" => "Q",
+        "behaviour_update" => "ESARSA",
         "behaviour_opt" => "Descent",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
@@ -42,7 +42,7 @@ default_args() =
 
         "intrinsic_reward" =>"weight_change",
         "behaviour_trace" => "ReplacingTraces",
-        "use_external_reward" => false,
+        "use_external_reward" => true,
         "exploration_strategy" => "epsilon_greedy",
         "exploration_param" => 0.2,
         "random_first_action" => false,
