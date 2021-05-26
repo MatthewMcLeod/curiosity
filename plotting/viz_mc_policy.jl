@@ -12,7 +12,6 @@ end
 
 function get_q(LP,state_space)
     q = zeros(length(actions),length(state_space),length(state_space))
-
     for a in actions
         for (i,x) in enumerate(state_space)
             for (j,y) in enumerate(state_space)

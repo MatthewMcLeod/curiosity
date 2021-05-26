@@ -30,6 +30,18 @@ end
 ####
 # Error Recording for 1D Tmaze
 ####
+mutable struct OneDTMazeError_dmu <: ErrorRecorder
+    error::Array{Float64,2}
+    eval_set::Dict
+    log_interval::Int
+    save_key::Symbol
+    get_true_values::Function
+    function OneDTMazeError_dmu(logger_init_info)
+        eval_set = @load string(pwd(),"/src/data/OneDTMazeEvalSet_dmu.jld2") OneDTMazeEvalSetDMU
+        num_logged_steps = fld(logger_init_info[LoggerInitKey.TOTAL_STEPS], logger_init_info[LoggerInitKey.INTERVAL]) + 1
+        new(zeros(4,num_logged_steps), OneDTMazeEvalSetDMU, logger_init_info[LoggerInitKey.INTERVAL], :oned_tmaze_dmu_error, OneDTMazeUtils.get_true_values)
+    end
+end
 
 mutable struct OneDTMazeError <: ErrorRecorder
     error::Array{Float64,2}
@@ -93,7 +105,6 @@ function lg_step!(self::OneDTMazeError_DPI, env, agent, s, a, s_next, r, is_term
         end
     end
 end
-
 
 ####
 # Error Recording for Tabular Tmaze

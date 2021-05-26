@@ -39,7 +39,7 @@ function construct_agent(numtilings, numtiles, lu_str, α, λ, ϵ, γ, policy_na
         throw(ArgumentError("$(lu_str) Not a valid behaviour learning update"))
     end
 #     (update, num_features, num_actions, num_demons, w_init)
-    w_init = 1 / numtilings
+    w_init = 0 / numtilings
     learner = LinearQLearner(lu, feature_size, 3, 1,w_init)
     exploration = EpsilonGreedy(ϵ)
     # cumulant = Reward()
@@ -99,7 +99,7 @@ function main_experiment(policy_name="tmp";progress=true, file_name = nothing)
     lu_str = "ESARSA"
     α = 0.1/numtilings
     λ = 0.9
-    ϵ = 0.0
+    ϵ = 0.1
     γ = 0.99
 
     info = Dict(
@@ -121,14 +121,14 @@ function main_experiment(policy_name="tmp";progress=true, file_name = nothing)
 
     steps = Int[]
     ret = Float64[]
-    max_num_steps = 300000
+    max_num_steps = 500000
     eps = 0
     prg_bar = ProgressMeter.Progress(max_num_steps, "Step: ")
 
     while sum(steps) < max_num_steps
         is_terminal = false
 
-        max_episode_steps = min(max_num_steps - sum(steps), 1000)
+        max_episode_steps = min(max_num_steps - sum(steps), 2000)
         s = start!(env)
         a = start!(agent, s)
         stp = 0

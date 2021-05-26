@@ -24,7 +24,7 @@ function lg_step!(self::AutostepStepSize, env, agent, s, a, s_next, r, is_termin
             α = opt.α[k]
             push!(step_size, copy(α))
         end
-        push!(self.step_sizes, a)
+        push!(self.step_sizes, step_size)
     end
 end
 

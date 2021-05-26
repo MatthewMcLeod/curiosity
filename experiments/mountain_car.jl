@@ -9,51 +9,56 @@ using SparseArrays
 using ProgressMeter
 
 import Flux: Descent
+const SRCU = Curiosity.SRCreationUtils
 
 const MCU = Curiosity.MountainCarUtils
 
+# VERY IMPORTANT THAT LEARNED POLICY NAMES MATCHES ORDER OF EVAL SET!!!!!
 default_args() =
     Dict(
-        "steps" => 300000,
+        "steps" => 200000,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
-        "num_tilings" => 3,
-        "num_tiles" => 8,
+        "num_tilings" => 16,
+        "num_tiles" => 2,
         "behaviour_num_tilings" => 8,
         "behaviour_num_tiles" => 2,
-        "demon_num_tilings" => 8,
-        "demon_num_tiles" => 4,
-        "learned_policy" => true,
-        "learned_policy_names" => ["Goal","Wall"],
+        "behaviour_reward_projector" => "ideal",
+        "behaviour_eta" => 0.1,
 
-        "behaviour_update" => "ESARSA",
+        "learned_policy" => true,
+        "learned_policy_names" => ["Wall","Goal"],
         "behaviour_learner" => "Q",
-        "behaviour_eta" => 0.5/8,
+        "behaviour_update" => "ESARSA",
         "behaviour_opt" => "Descent",
         # "behaviour_rew" => "env",
         "behaviour_gamma" => 0.99,
         "behaviour_lambda" => 0.95,
         "behaviour_w_init" => 0.0,
 
+        # "eta" => 0.5,
+        "alpha_init" => 0.1,
+
         "intrinsic_reward" =>"weight_change",
         "behaviour_trace" => "ReplacingTraces",
-        "use_external_reward" => false,
+        "use_external_reward" => true,
         "exploration_strategy" => "epsilon_greedy",
-        "exploration_param" => 0.1,
+        "exploration_param" => 0.2,
         "random_first_action" => false,
 
-        "lambda" => 0.0,
-        "demon_eta" => 0.1/8,
-        "demon_alpha_init" => 0.1/8,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
+        "demon_rep" => "ideal",
+        "demon_eta" => 0.1,
+        "demon_num_tilings" => 4,
+        "demon_num_tiles" => 4,
+
         "exploring_starts"=>true,
         "save_dir" => "MountainCarExperiment",
-        "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_ERROR],
-
+        "logger_keys" => [LoggerKey.EPISODE_LENGTH, LoggerKey.MC_UNIFORM_ERROR, LoggerKey.MC_START_ERROR],
     )
 
 
@@ -63,8 +68,15 @@ function construct_agent(parsed)
 
     if "eta" in keys(parsed)
         prefixes = ["behaviour","demon"]
+        @show "demon_eta being overwritten"
         for prefix in prefixes
             parsed[join([prefix, "eta"], "_")] = parsed["eta"]
+        end
+    end
+    if "alpha_init" in keys(parsed)
+        prefixes = ["behaviour","demon"]
+        for prefix in prefixes
+            parsed[join([prefix, "alpha_init"], "_")] = parsed["alpha_init"]
         end
     end
     if parsed["demon_opt"] == "Descent"
@@ -91,14 +103,35 @@ function construct_agent(parsed)
         Curiosity.SparseTileCoder(parsed["num_tilings"], parsed["num_tiles"], 2),
         1:2)
 
-    demon_reward_features = Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-                    Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
-                1:2), false)
+    demon_reward_features = if parsed["demon_rep"] == "ideal"
+        # Curiosity.ActionValueFeatureProjector(
+            MCU.IdealDemonFeatures()
+            # action_space)
+    elseif parsed["demon_rep"] == "tilecoding"
+        Curiosity.FeatureProjector(
+                        Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2), true)
+    else
+        throw(ArgumentError("Invalid demon rep for SR"))
+    end
 
 
-    behaviour_reward_features =  Curiosity.FeatureProjector(Curiosity.FeatureSubset(
-                    Curiosity.SparseTileCoder(parsed["behaviour_num_tilings"], parsed["behaviour_num_tiles"], 2),
-                1:2), false)
+
+    behaviour_reward_features =
+    if parsed["behaviour_reward_projector"] == "ideal"
+        Curiosity.ActionValueFeatureProjector(
+            MCU.IdealDemonFeatures(),
+            action_space)
+    elseif parsed["behaviour_reward_projector"] == "tilecoding"
+        Curiosity.ActionValueFeatureProjector(
+                        Curiosity.FeatureProjector(
+                        Curiosity.SparseTileCoder(parsed["behaviour_num_tilings"], parsed["behaviour_num_tiles"], 2),
+                        false),
+                    action_space)
+    elseif parsed["behaviour_reward_projector"] == "ideal_state"
+        MCU.IdealDemonFeatures()
+    else
+        throw(ArgumentError("SAD"))
+    end
 
     feature_size = size(fc)
     demon_feature_size = size(demon_reward_features)
@@ -117,10 +150,10 @@ function construct_agent(parsed)
     exploration_strategy = Curiosity.get_exploration_strategy(parsed, 1:action_space)
 
     behaviour_num_tasks = 1
-    num_SFs = 4
+    num_SFs = 2
     num_demons = if parsed["behaviour_learner"] ∈ ["GPI"]
         # num_SFs * size(behaviour_reward_projector) * action_space + behaviour_num_tasks
-        num_SFs * size(behaviour_reward_projector) + behaviour_num_tasks
+        num_SFs * size(behaviour_reward_features) + behaviour_num_tasks
 
     elseif parsed["behaviour_learner"] ∈ ["Q"]
         behaviour_num_tasks
@@ -140,14 +173,18 @@ function construct_agent(parsed)
 
 
     behaviour_demons = if behaviour_learner isa GPI
-        @assert !(behaviour_reward_projector isa Nothing)
+        @assert !(behaviour_reward_features isa Nothing)
         bh_gvf = MCU.make_behaviour_gvf(behaviour_learner,
                                           0.0,
                                           fc,
                                           exploration_strategy)
         pred_horde = GVFHordes.Horde([bh_gvf])
-        SF_policies = [MCU.steps_to_wall_gvf().policy, MCU.steps_to_goal_gvf().policy]
-        SF_discounts = [MCU.steps_to_wall_gvf().discount, MCU.steps_to_goal_gvf().discount]
+        policies = MCU.get_policies(parsed)
+
+        gvfs = [MCU.steps_to_wall_gvf(policies[1]), MCU.steps_to_goal_gvf(policies[2])]
+
+        SF_policies = [gvfs[1].policy, gvfs[2].policy]
+        SF_discounts = [gvfs[1].discount, gvfs[2].discount]
         num_SFs = length(SF_policies)
         SF_horde = SRCU.create_SF_horde(SF_policies, SF_discounts, behaviour_reward_features, 1:action_space)
         Curiosity.GVFSRHordes.SRHorde(pred_horde, SF_horde, num_SFs, behaviour_reward_features)
@@ -177,16 +214,6 @@ function construct_agent(parsed)
           random_first_action)
 end
 
-# function get_horde(parsed, feature_size, action_space, state_constructor)
-#     horde = Horde([MCU.steps_to_wall_gvf(), MCU.steps_to_goal_gvf()])
-#     if parsed["demon_learner"] == "SR"
-#          SF_horde = MCU.make_SF_horde(parsed["behaviour_gamma"], length(state_constructor), action_space, state_constructor)
-#          num_SFs = 2
-#          horde = Curiosity.GVFSRHordes.SRHorde(horde, SF_horde, num_SFs, state_constructor)
-#     end
-#     return horde
-# end
-
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     num_steps = parsed["steps"]
@@ -212,7 +239,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         while sum(steps) < max_num_steps
             is_terminal = false
 
-            max_episode_steps = min(max_num_steps - sum(steps), 10000)
+            max_episode_steps = min(max_num_steps - sum(steps), 5000)
             tr, stp =
                 run_episode!(env, agent, max_episode_steps) do (s, a, s_next, r, t)
                     logger_step!(logger, env, agent, s, a, s_next, r, t)

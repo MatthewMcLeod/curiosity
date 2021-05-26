@@ -135,6 +135,14 @@ function update!(lu::TB,
     (reward_target_pis, SF_target_pis) = target_pis[1:learner.num_tasks,:], target_pis[learner.num_tasks+1:end,:]
     (reward_next_target_pis, SF_next_target_pis) = next_target_pis[1:learner.num_tasks,:], next_target_pis[learner.num_tasks+1:end, :]
 
+    # @show sum(SF_discounts)
+    # if sum(SF_discounts) == 0
+    #     @show obs
+    # end
+    # if sum(SF_next_discounts) == 0
+    #     @show next_obs
+    # end
+
     # Update Traces: See update_utils.jl
     update_trace!(lu.trace, e_ψ, active_state_action, λ, SF_discounts, SF_target_pis[:, action])
     update_trace!(lu.trace, e_w, projected_state, λ, reward_discounts, reward_target_pis[:, action])
@@ -164,6 +172,19 @@ function update!(lu::TB,
     # This should always be true as this is immediate next step prediction which is equivalent to having discounts of 0 for all states
     @assert sum(reward_discounts) == 0
     # TD err is applied across rows
+    #
+    # if next_obs[1] == 1.0
+    #     println()
+    #     @show reward_C, w * projected_state
+    #     @show SF_C, SF_next_discounts
+    #     @show td_err
+    # end
+    # println("Predicted termination")
+    # @show ψ, active_state_action
+    # @show ψ * active_state_action
+    # @show next_obs[1:2]
+    # println()
+
 
     if lu.opt isa Auto
         # next_state_action_row_ind = get_action_inds(next_action, learner.num_actions, learner.num_demons)
