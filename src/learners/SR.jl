@@ -23,7 +23,6 @@ end
 function SRLearner{F}(lu, feature_size, num_demons, num_actions, num_tasks, fp, w_init) where {F<:Number}
     ψ_init = if w_init == 0 0 else 1 end
     SRLearner(ones(F, num_demons-num_tasks, feature_size * num_actions)*ψ_init,
-              # ones(F, num_tasks, size(fp) * num_actions)*w_init,
               ones(F, num_tasks, size(fp))*w_init,
               lu,
               num_demons,

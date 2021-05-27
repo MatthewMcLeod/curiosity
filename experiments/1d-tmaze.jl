@@ -22,11 +22,11 @@ default_args() =
         # Behaviour Items
         # "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.9,
-        "behaviour_learner" => "RandomDemons",
+        "behaviour_learner" => "GPI",
         "behaviour_update" => "TB",
-        "behaviour_reward_projector" => "maze",
-        "behaviour_rp_tilings" => 1,
-        "behaviour_rp_tiles" => 16,
+        "behaviour_reward_projector" => "tilecoding",
+        "behaviour_rp_tilings" => 2,
+        "behaviour_rp_tiles" => 8,
         "behaviour_trace" => "ReplacingTraces",
         "behaviour_opt" => "Auto",
         "behaviour_lambda" => 0.95,
@@ -41,7 +41,7 @@ default_args() =
         # Demon Attributes
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "SR",
+        "demon_learner" => "Q",
         "demon_update" => "TB",
         "demon_interest_set" => "oned_tmaze",
         "demon_policy_type" => "greedy_to_cumulant",
@@ -67,7 +67,7 @@ default_args() =
         "cumulant" => 1,
         "distractor" => (1.0, 5.0),
         "drifter" => (1.0, sqrt(0.01)),
-        "exploring_starts"=>"beg",
+        "exploring_starts"=>"whole",
         "env_step_penalty" => -0.01,
 
 
@@ -77,10 +77,10 @@ default_args() =
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "OneDTMazeExperiment",
         "seed" => 1,
-        "steps" => 20000,
+        "steps" => 30000,
         "use_external_reward" => true,
-        "random_first_action" => false,
-        "logger_keys" => [LoggerKey.ONEDTMAZEERROR,LoggerKey.ONEDTMAZEERROR_DPI,LoggerKey.ONEDTMAZEERROR_UNIFORM, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
+        "random_first_action" => true,
+        "logger_keys" => [LoggerKey.ONEDTMAZEERROR_DMU,LoggerKey.ONEDTMAZEERROR,LoggerKey.ONEDTMAZEERROR_DPI,LoggerKey.ONEDTMAZEERROR_UNIFORM, LoggerKey.ONED_GOAL_VISITATION, LoggerKey.EPISODE_LENGTH, LoggerKey.INTRINSIC_REWARD]
     )
 
 
@@ -144,9 +144,10 @@ function construct_agent(parsed)
     demon_projected_fc = if "demon_rep" ∉ keys(parsed)
         nothing
     elseif parsed["demon_rep"] == "tilecoding"
-        Curiosity.FeatureProjector(Curiosity.FeatureSubset(
+        Curiosity.ActionValueFeatureProjector(
+            Curiosity.FeatureProjector(Curiosity.FeatureSubset(
                 Curiosity.SparseTileCoder(parsed["demon_num_tilings"], parsed["demon_num_tiles"], 2),
-            1:2), false)
+            1:2), false),action_space)
     elseif parsed["demon_rep"] == "ideal"
         Curiosity.FeatureSubset(ODTMU.IdealDemonFeatures(), 1:2)
     elseif parsed["demon_rep"] == "ideal_state_action"
@@ -173,9 +174,10 @@ function construct_agent(parsed)
     behaviour_reward_projector = if "behaviour_reward_projector" ∉ keys(parsed)
         nothing
     elseif parsed["behaviour_reward_projector"] == "tilecoding"
+        Curiosity.ActionValueFeatureProjector(
         Curiosity.FeatureProjector(Curiosity.FeatureSubset(
             Curiosity.SparseTileCoder(parsed["behaviour_rp_tilings"], parsed["behaviour_rp_tiles"], 2),
-            1:2), false)
+            1:2), false),action_space)
     elseif parsed["behaviour_reward_projector"] == "base"
         Curiosity.FeatureProjector(fc, false)
     elseif parsed["behaviour_reward_projector"] == "identity"

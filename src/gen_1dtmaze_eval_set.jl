@@ -171,6 +171,69 @@ function gen_dataset_dpi(num_start_states=500, seed=1; action_noise = 0.0,eval_s
     return rets, start_states, actions
 end
 
+function gen_dataset_dmu(num_start_states=500, seed=1; action_noise = 0.01, eval_set_size = 500)
+    Random.seed!(seed)
+    parsed = OneDTmazeExperiment.default_args()
+    parsed["cumulant_schedule"] = "Constant"
+    parsed["cumulant"] = 1.0
+    parsed["demon_learner"] = "Q"
+    parsed["exploring_starts"] = "whole"
+
+    horde_rets = zeros(4,eval_set_size)
+    possible_states = []
+    possible_actions = []
+    cumulant_schedule = ODTMU.get_cumulant_schedule(parsed)
+
+    env = OneDTMaze(cumulant_schedule, parsed["exploring_starts"], parsed["env_step_penalty"], action_noise)
+
+    for gvf_i ∈ 1:4
+        GVF_of_interest = GVF(GVFParamFuncs.FeatureCumulant(gvf_i+2),
+             ODTMU.GoalTermination(parsed["demon_discounts"]),
+             ODTMU.GoalPolicy(gvf_i))
+
+
+
+        policy = ODTMU.GoalPolicy(gvf_i)
+
+        for i in 1:num_start_states
+            s = MinimalRLCore.start!(env)
+            a = policy(s)
+            push!(possible_states, s[1:2])
+            push!(possible_actions, a)
+
+            term = false
+
+            while term == false
+                s, r, term = MinimalRLCore.step!(env, a)
+                if term
+                    break
+                end
+                a = policy(s)
+                push!(possible_states, s[1:2])
+                push!(possible_actions, a)
+            end
+        end
+        #subsample all states in ss for evaluation subset
+        # @show start_states
+    end
+    indices = sample(1:size(possible_states)[1], eval_set_size, replace=false)
+    ss_eval = possible_states[indices]
+    as_eval = possible_actions[indices]
+
+    num_returns = 1000
+    γ_thresh=1e-6
+    for gvf_i ∈ 1:4
+        GVF_of_interest = GVF(GVFParamFuncs.FeatureCumulant(gvf_i+2),
+             ODTMU.GoalTermination(parsed["demon_discounts"]),
+             ODTMU.GoalPolicy(gvf_i))
+
+        rets = monte_carlo_returns(env, GVF_of_interest, ss_eval, as_eval, num_returns, γ_thresh)
+        rets_avg = mean(hcat(rets...),dims=1) # stack horizontally and then average over runs
+        horde_rets[gvf_i,:] = rets_avg
+    end
+    return horde_rets, ss_eval, as_eval
+end
+
 function save_data_dpi(rets,states,actions)
     eval_set = Dict(
         "ests" => rets,
@@ -186,6 +249,16 @@ function save_data_uniform(rets,states,actions)
     OneDTMazeEvalSetUniform["actions"] = actions
     OneDTMazeEvalSetUniform["states"] = states
     @save "./src/data/OneDTMazeEvalSet_Uniform.jld2" OneDTMazeEvalSetUniform
+
+end
+
+function save_data_dmu(rets,states,actions)
+    OneDTMazeEvalSetDMU = Dict(
+        "ests" => rets,
+        "actions" => actions,
+        "states" => states
+    )
+    @save "./src/data/OneDTMazeEvalSet_dmu.jld2" OneDTMazeEvalSetDMU
 
 end
 
