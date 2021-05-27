@@ -4,8 +4,8 @@
 #SBATCH -o twodgridworld_esarsa_tb.out # Standard output
 #SBATCH -e twodgridworld_esarsa_tb.err # Standard error
 #SBATCH --mem-per-cpu=4000M # Memory request of 3 GB
-#SBATCH --time=04:00:00 #
-#SBATCH --ntasks=64
+#SBATCH --time=03:00:00 #
+#SBATCH --ntasks=128
 #SBATCH --account=rrg-whitem
 
 using Pkg
