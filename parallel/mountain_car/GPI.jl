@@ -3,8 +3,8 @@
 #SBATCH --mail-type=ALL
 #SBATCH -o MC_GPI.out # Standard output
 #SBATCH -e MC_GPI.err # Standard error
-#SBATCH --time=02:00:00
-#SBATCH --nodes=1
+#SBATCH --time=03:00:00
+#SBATCH --nodes=3
 #SBATCH --ntasks-per-node=48
 #SBATCH --mem=0
 #SBATCH --account=def-amw8
