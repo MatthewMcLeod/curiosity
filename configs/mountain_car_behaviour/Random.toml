@@ -1,5 +1,5 @@
 [config]
-save_dir = "MC_Experiments_ESARSA"
+save_dir = "MC_Experiments_Random"
 exp_file = "experiments/mountain_car.jl"
 exp_module_name = "MountainCarExperiment"
 exp_func_name = "main_experiment"
@@ -21,7 +21,7 @@ learned_policy = true
 learned_policy_names = ["Wall","Goal"]
 
 behaviour_learner = "Q"
-behaviour_update = "ESARSA"
+behaviour_update = "TB"
 # behaviour_eta = 0.5
 behaviour_opt = "Descent"
 # behaviour_rew = env,
@@ -50,8 +50,8 @@ logger_keys = ["EPISODE_LENGTH", "MC_START_ERROR", "MC_UNIFORM_ERROR"]
 
 [sweep_args]
 seed = "1:30"
-exploration_param = [0.1,0.3,0.5]
-demon_eta = "3.0.^(-2:0)"
-behaviour_eta = "3.0.^(-2:0)"
+exploration_param = [1.0]
+demon_eta = "3.0.^(-3:-1)"
+behaviour_eta = "3.0.^(-3:-3)"
 intrinsic_reward = ["weight_change"]
 demon_learner = ["SR"]

@@ -24,7 +24,7 @@ default_args() =
         "behaviour_gamma" => 0.9,
         "behaviour_learner" => "GPI",
         "behaviour_update" => "TB",
-        "behaviour_reward_projector" => "tilecoding",
+        "behaviour_reward_projector" => "maze",
         "behaviour_rp_tilings" => 2,
         "behaviour_rp_tiles" => 8,
         "behaviour_trace" => "ReplacingTraces",
@@ -41,7 +41,7 @@ default_args() =
         # Demon Attributes
         # "demon_eta" => 0.1/8,
         "demon_discounts" => 0.9,
-        "demon_learner" => "Q",
+        "demon_learner" => "SR",
         "demon_update" => "TB",
         "demon_interest_set" => "oned_tmaze",
         "demon_policy_type" => "greedy_to_cumulant",

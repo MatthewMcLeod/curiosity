@@ -8,8 +8,13 @@ function load_results(ic, logger_key; return_type = "tensor")
     num_results = length(ic)
     results = []
     for itm in ic.items
+        crap = false
         data = FileIO.load(joinpath(itm.folder_str, "results.jld2"))["results"]
-        push!(results,data[logger_key])
+        if crap == true
+            push!(results,data[logger_key][:,2:end])
+        else
+            push!(results,data[logger_key])
+        end
     end
 
     if return_type == "tensor"
@@ -102,11 +107,15 @@ function get_stats(data;per_gvf=false)
         mean_per_gvf, std_per_gvf
     else
 
-        error_tot = sum(data,dims=1)[1,:,:]
+        # error_tot = sum(data,dims=1)[1,:,:]
         # sum(mean_per_gvf,dims=1)[1,:], sum(std_per_gvf,dims=1)[1,:]
         # @show size(std(error_tot,dims=2))
         # @show size(std(error_tot,dims=1))
-        sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=2)[:,1]
+        # sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=1)[:,1]
+
+        # sum(mean_per_gvf,dims=1)[1,:], std(error_tot,dims=1)[:,1]
+        # @show size(std(data, dims=[1,3]))
+        vec(sum(mean(data,dims=3)[:,:,1], dims = 1)), vec( std(sum(data, dims=1),dims=3) )
     end
 end
 
@@ -138,6 +147,7 @@ function get_label(ic, params)
             label = string(label, " ", ic[1].parsed_args[p])
         end
     end
+
     return label
 end
 
@@ -177,34 +187,34 @@ using Statistics
 using ProgressMeter
 using JLD2
 using Plots
-# using LaTeXStrings
+using LaTeXStrings
 
 # Demon Algorithm results in different line styles!!
-const val_matches = Dict(["GPI","TB","Q","TB"] => 1,
-    ["GPI", "TB", "SR", "TB"] => 1,
-    ["Q","ESARSA", "Q", "TB"] => 4,
-    ["Q", "ESARSA", "SR", "TB"] => 4,
-    ["Q", "TabularRoundRobin", "SR", "TB"] => 1,
-    ["RoundRobin", "TB", "SR", "TB"] => 1,
-    ["RoundRobin", "Q", "SR", "TB"] => 1,
-    ["RoundRobin", "TB", "Q", "TB"] => 2,
-    ["RoundRobin", "Q", "Q", "TB"] => 2,
+const val_matches = Dict(["GPI","TB","Q","TB"] => 6,
+    ["GPI", "TB", "SR", "TB"] => 6,
+    ["Q","ESARSA", "Q", "TB"] => 1,
+    ["Q", "ESARSA", "SR", "TB"] => 1,
+    ["Q", "TabularRoundRobin", "SR", "TB"] => 6,
+    ["RoundRobin", "TB", "SR", "TB"] => 6,
+    ["RoundRobin", "Q", "SR", "TB"] => 6,
+    ["RoundRobin", "TB", "Q", "TB"] => 1,
+    ["RoundRobin", "Q", "Q", "TB"] => 1,
     ["RoundRobin", "Q","LSTD","TB"] => 3,
-    ["Q", "TabularRoundRobin", "Q", "TB"] => 2,
+    ["Q", "TabularRoundRobin", "Q", "TB"] => 1,
     ["Q", "TabularRoundRobin", "Q", "ESARSA"] => 2,
-    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => 1,
+    ["Q", "TabularRoundRobin", "SR", "ESARSA"] => 6,
     ["Q", "TabularRoundRobin","LSTD","TB"] => 3,
     ["RandomDemons", "TB","Q","TB"] => 5,
     ["RandomDemons", "TB","SR","TB"] => 5,
 
     )
 
-const algo_labels = Dict(["GPI","TB","Q","TB"] => "μ(Sarsa), π(TB)",
-    ["Q","ESARSA", "Q", "TB"] => "μ(Sarsa), π(TB)",
-    ["GPI", "TB", "SR", "TB"] => "μ(GPI), π(SR)",
-    ["Q", "ESARSA", "SR", "TB"] => "μ(Sarsa), π(SR)",
-    ["Q", "TabularRoundRobin", "SR", "TB"] => "μ(Fixed), π(SR)",
-    ["Q", "TabularRoundRobin", "Q", "TB"] => "μ(Fixed), π(TB)",
+const algo_labels = Dict(["GPI","TB","Q","TB"] => L"μ(GPI), π(TB)",
+    ["Q","ESARSA", "Q", "TB"] => L"μ(Sarsa), π(TB)",
+    ["GPI", "TB", "SR", "TB"] => L"μ(GPI), π(SR)",
+    ["Q", "ESARSA", "SR", "TB"] => L"μ(Sarsa), π(SR)",
+    ["Q", "TabularRoundRobin", "SR", "TB"] => L"μ(Fixed), π(SR)",
+    ["Q", "TabularRoundRobin", "Q", "TB"] => L"μ(Fixed), π(TB)",
     ["RoundRobin", "TB", "SR", "TB"] => "μ(Fixed), π(SR)",
     ["RoundRobin", "Q", "SR", "TB"] => "μ(Fixed), π(SR)",
     ["RoundRobin", "TB", "Q", "TB"] => "μ(Fixed), π(TB)",
@@ -299,6 +309,12 @@ function get_params(ic)
     color = get_colour(ic)
     ls = get_linestyle(ic)
     label = get_label(ic)
+    # label[:label] = string(label[:label], " ", ic.items[1].parsed_args["exploration_param"])
+    # if ic.items[1].parsed_args["exploration_param"] == 1.0
+    #     label = Dict(:label => "μ(Random), π(SR)")
+    #     color = Dict(:color => colorant"#BBBBBB")
+    # end
+
     return merge(color,ls,label)
 end
 

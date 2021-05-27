@@ -10,7 +10,7 @@ using JLD2
 # data_home = "../data/OneDTMaze_Control_dpi"
 # data_home = "../OneDTMaze_RR_dpi"
 # data_home = "../data/OneDTMaze_Control_dpi"
-data_home = "../MC_Experiments_SR_Q"
+data_home = "../data/MC_Experiments"
 
 include("./plot_utils.jl")
 GPU = GeneralPlotUtils
@@ -24,11 +24,13 @@ folder_name = "MC_tmp"
 # data_key = :oned_tmaze_dpi_error
 # data_key = :ttmaze_direct_error
 data_key = :mc_uniform_error
+# data_key = :mc_starts_error
 
 ic = ItemCollection(joinpath(experiment_folders[1], "data"));
+ic = search(ic, Dict("demon_learner" => "SR"))
 
-algo_divisor_keys = ["demon_learner"]
-sweep_params = ["demon_eta"]
+algo_divisor_keys = ["behaviour_learner", "demon_learner"]
+sweep_params = ["demon_eta","behaviour_eta","exploration_param"]
 # algo_divisor_keys = ["behaviour_learner", "demon_learner", "demon_opt", "demon_update", "intrinsic_reward"]
 # sweep_params = ["demon_alpha_init", "demon_eta"]
 #
@@ -47,19 +49,22 @@ println()
 best_per_algo_ics = []
 for (i,algo_ic) in enumerate(algo_ics)
 #     push!(best_per_algo_ics, GPU.get_best(algo_ic,sweep_params, data_key))
-    # push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
-    push!(best_per_algo_ics, GPU.get_most_episodes(algo_ic,sweep_params, :episode_length))
+    push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
+    # push!(best_per_algo_ics, GPU.get_most_episodes(algo_ic,sweep_params, :episode_length))
 end
 @show length.(best_per_algo_ics), "better be equal to num seeds"
 
 # color = LU.get_colour(algo_ics[1])
 # style = LU.get_linestyle(algo_ics[1])
 
-plot_params = [LU.get_params(algo_ics[i]) for i in 1:length(algo_ics)]
+plot_params = [LU.get_params(best_per_algo_ics[i]) for i in 1:length(best_per_algo_ics)]
 # plot(rand(10); plot_params...)
 #
 num_runs = length.(best_per_algo_ics)[1]
 @show num_runs
+
+# data = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[1],10) for ic in best_per_algo_ics]
+# std = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[2],10) for ic in best_per_algo_ics]
 
 data = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[1],10) for ic in best_per_algo_ics]
 std = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[2],10) for ic in best_per_algo_ics]
@@ -80,8 +85,8 @@ step_increment=1000
 num_samples = length(data[1])
 xticks=collect(1:step_increment:num_samples*step_increment)
 p = plot(ylabel=ylabel, grid=true, title=title, xlabel=xlabel)
-for i in 1:length(algo_ics)
-    l = GPU.get_label(algo_ics[i],cat(algo_divisor_keys, sweep_params, dims = 1))
+for i in 1:length(best_per_algo_ics)
+    l = GPU.get_label(best_per_algo_ics[i],cat(algo_divisor_keys, sweep_params, dims = 1))
     plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:topright, label = l)
 end
 savefig("./plots/$(folder_name)/RMSE_$(string(data_key)).png")
@@ -102,7 +107,7 @@ for gvf_ind in 1:num_gvfs
     p = plot()
     for algo_ind in 1:length(data_per_gvf)
         smooth_gvf = GPU.smooth(data_per_gvf[algo_ind][gvf_ind,:],5)
-        label = GPU.get_label(algo_ics[algo_ind],algo_divisor_keys)
+        label = GPU.get_label(best_per_algo_ics[algo_ind],algo_divisor_keys)
 
         plot!(p,smooth_gvf, palette=:tab10, ribbon = std_per_gvf[algo_ind][gvf_ind,:] / sqrt(num_runs), size = (500,500),label = label)
         plot!(xlabel="Steps", ylabel = "RMSE",  title = string(gvf_labels[gvf_ind], ""))
@@ -131,10 +136,12 @@ episode_lengths = [GPU.load_results(ic,:episode_length, return_type = "array") f
 #
 # #### Generate
 max_lengths = [GPU.get_min_length(arrs)-1 for arrs in episode_lengths]
+@show max_lengths
+@show episode_lengths
 p = plot(xlabel = "Episode Count", ylabel = "Step Length")
 for (ind,episode_lengths) in enumerate(episode_lengths)
     l = hcat([epi[1:max_lengths[ind]] for epi in episode_lengths]...)
-    label = GPU.get_label(algo_ics[ind],algo_divisor_keys)
+    label = GPU.get_label(best_per_algo_ics[ind],algo_divisor_keys)
     plot!(p,mean(l,dims=2), label = label)
 end
 title!("Step Length for Best Performing Algos Last 10 %")

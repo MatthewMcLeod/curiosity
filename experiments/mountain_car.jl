@@ -16,7 +16,7 @@ const MCU = Curiosity.MountainCarUtils
 # VERY IMPORTANT THAT LEARNED POLICY NAMES MATCHES ORDER OF EVAL SET!!!!!
 default_args() =
     Dict(
-        "steps" => 200000,
+        "steps" => 10,
         "seed" => 1,
 
         #Tile coding params used by Rich textbook for mountain car
@@ -24,8 +24,8 @@ default_args() =
         "num_tiles" => 2,
         "behaviour_num_tilings" => 8,
         "behaviour_num_tiles" => 2,
-        "behaviour_reward_projector" => "ideal",
-        "behaviour_eta" => 0.1,
+        "behaviour_reward_projector" => "tilecoding",
+        "behaviour_eta" => 3^-1,
 
         "learned_policy" => true,
         "learned_policy_names" => ["Wall","Goal"],
@@ -44,7 +44,7 @@ default_args() =
         "behaviour_trace" => "ReplacingTraces",
         "use_external_reward" => true,
         "exploration_strategy" => "epsilon_greedy",
-        "exploration_param" => 0.2,
+        "exploration_param" => 1.0,
         "random_first_action" => false,
 
         "demon_learner" => "SR",
@@ -52,7 +52,7 @@ default_args() =
         "demon_opt" => "Descent",
         "demon_lambda" => 0.9,
         "demon_rep" => "ideal",
-        "demon_eta" => 0.1,
+        "demon_eta" => 3^-1,
         "demon_num_tilings" => 4,
         "demon_num_tiles" => 4,
 
@@ -234,6 +234,7 @@ function main_experiment(parsed=default_args(); progress=false, working=false)
         eps = 1
         max_num_steps = num_steps
         steps = Int[]
+        logger_start!(logger, env, agent)
 
         prg_bar = ProgressMeter.Progress(num_steps, "Step: ")
         while sum(steps) < max_num_steps
