@@ -14,6 +14,7 @@ using Statistics
 using ProgressMeter
 using JLD2
 using LaTeXStrings
+using StatsPlots
 # Plots.scalefontsizes(2)
 # import ..GeneralPlotUtils
 # import ..LabelUtils
@@ -26,12 +27,12 @@ LU = LabelUtils
  default(titlefont = (20, "times"), legendfontsize = 10, guidefont = (18, :black), tickfont = 12)
 
 
-data_key = :ttmaze_direct_error
+# data_key = :ttmaze_direct_error
 # data_key = :ttmaze_uniform_error
 # data_key = :ttmaze_round_robin_error
 # data_key = :oned_tmaze_dpi_error
 # data_key = :oned_tmaze_old_error
-# data_key = :oned_tmaze_dmu_error
+data_key = :oned_tmaze_dmu_error
 # data_key = :mc_uniform_error
 # data_key = :mc_starts_error
 
@@ -39,17 +40,19 @@ data_key = :ttmaze_direct_error
 # folder_name = "oned_rr"
 # folder_name = "GPI_Sensitivity"
 # folder_name = "tabular_rr"
-folder_name = "tabular_control"
+# folder_name = "tabular_control"
 # folder_name = "MC_tmp"
 
 
 # data_home = "../data/Experiment1"
-data_home = "../data/Experiment2_d_pi"
+# data_home = "../data/Experiment2_d_pi"
 # data_home = "../data/OneDTMaze_Control"
 # data_home = "../data/OneDTMaze_RR"
 # data_home = "../data/GPI_Sensitivity"
 # data_home = "../data/OneDTMaze_GPI_Sensitivity"
 # data_home = "../data/MC_Experiments"
+# data_home = "../data/MC_Experiments_Final"
+
 
 function load_data()
     experiment_folders = [data_home]
@@ -103,13 +106,15 @@ function plot_rmse_per_demon(algo_ics, inds_of_interest = nothing)
         p = plot()
         for algo_ind in 1:length(data_per_gvf)
             smooth_gvf = GPU.smooth(data_per_gvf[algo_ind][gvf_ind,:],5)
-            label = LU.get_label(best_per_algo_ics[algo_ind])[:label]
+            # label = LU.get_label(best_per_algo_ics[algo_ind])[:label]
+            label = LU.get_params(best_per_algo_ics[algo_ind])[:label]
             plot!(p,smooth_gvf, palette=:tab10, ribbon = std_per_gvf[algo_ind][gvf_ind,:] / sqrt(num_runs), size = (500,500),label = label)
             plot!(xlabel="Steps", ylabel = "RMSE",  title = string(gvf_labels[gvf_ind], ""))
         end
         push!(ps,p)
     end
-    plot(ps..., layout=(2,2), size = (1200,1200))
+    allp = plot(ps..., layout=(2,2), size = (1200,1200))
+    display(allp)
     savefig("./plots/$(folder_name)/RMSE_per_Demon_$(string(data_key)).png")
 
 end
@@ -158,6 +163,7 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
         # end
         plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:topright; plot_params[i]...)
     end
+    display(p)
     savefig("./plots/$(folder_name)/RMSE_$(string(data_key)).pdf")
 end
 
@@ -196,7 +202,7 @@ function load_and_plot_rmse(inds_of_interest=nothing)
     # plot_rmse_per_demon(algo_ic,inds_of_interest)
     plot_rmse(algo_ic,inds_of_interest)
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
-    # [GPU.print_params(bic,["demon_learner"],["demon_eta","alpha_init"]) for bic in algo_ic]
+    [GPU.print_params(bic,["behaviour_learner"],["demon_eta","alpha_init","exploration_param"]) for bic in algo_ic]
 end
 
 function load_and_plot_goal_visits(inds_of_interest=nothing)
@@ -204,12 +210,30 @@ function load_and_plot_goal_visits(inds_of_interest=nothing)
     algo_ic = load_best(ic)
     plot_goal_visitation(algo_ic,inds_of_interest)
 end
+function load_and_plot_states(inds_of_interest=nothing)
+    ic = load_data()
+    algo_ic = load_best(ic)
+    plot_states(algo_ic,inds_of_interest)
+end
 function load_and_plot_episode_lengths(inds_of_interest=nothing)
     ic = load_data()
     ic = search(ic, Dict("demon_learner" => "SR"))
     algo_ic = load_best(ic)
     # [GPU.print_params(c,["demon_eta", "behaviour_eta"],[]) for c in algo_ic[inds_of_interest]]
     plot_episode_lengths(algo_ic,inds_of_interest)
+end
+
+function load_and_box_plot(inds_of_interest=nothing)
+    ic = load_data()
+    algo_ic = load_best(ic)
+    # [GPU.print_params(c,["demon_eta", "behaviour_eta"],[]) for c in algo_ic[inds_of_interest]]
+    boxplot(algo_ic;inds_of_interest=inds_of_interest)
+end
+function load_and_box_plot_back_wall(inds_of_interest=nothing)
+    ic = load_data()
+    algo_ic = load_best(ic)
+    # [GPU.print_params(c,["demon_eta", "behaviour_eta"],[]) for c in algo_ic[inds_of_interest]]
+    boxplot_backwall(algo_ic;inds_of_interest=inds_of_interest)
 end
 
 function plot_episode_lengths(algo_ic, inds_of_interest)
@@ -319,4 +343,68 @@ function load_and_plot_init_ss(inds_of_interest=nothing; sensitivity_param = "al
     savefig("./plots/$(folder_name)/init_ss_$(string(data_key)).pdf")
 end
 
+function plot_states(algo_ic, inds_of_interest=nothing)
+    best_per_algo_ics = if inds_of_interest isa Nothing
+        deepcopy(algo_ic)
+    else
+        deepcopy(algo_ic)[inds_of_interest]
+    end
+
+    ps = []
+    for algo in best_per_algo_ics
+        states = hcat(GPU.load_results(algo,:states, return_type = "array")...)
+        @show size(states)
+        #states is 2x length of states
+        p = marginalhist(states[1,:],states[2,:])
+        push!(ps,p)
+    end
+    fullp = plot(ps...)
+    display(fullp)
+    savefig("./plots/$(folder_name)/marginal_hists_$(string(data_key)).png")
+end
+
+function boxplot(algo_ic; inds_of_interest = nothing)
+    best_per_algo_ics = if inds_of_interest isa Nothing
+        deepcopy(algo_ic)
+    else
+        deepcopy(algo_ic)[inds_of_interest]
+    end
+    p = plot(ylabel="Right Hill Pseudotermination")
+    xticklabels = []
+    for (i,algo) in enumerate(best_per_algo_ics)
+        # episode_lengths = GPU.load_results(algo,:episode_length, return_type = "array")
+        # num_episodes_per_run = [length(e) for e in episode_lengths]
+        states_per_run = GPU.load_results(algo,:states, return_type = "array")
+        pseudoterm_episodes_per_run = [length(findall(isone,states[1,:])) for states in states_per_run]
+        num_episodes_per_run = pseudoterm_episodes_per_run
+        plot_params = LU.get_params(algo)
+        @show plot_params
+        boxplot!(p,num_episodes_per_run; plot_params...)
+        push!(xticklabels, plot_params[:label])
+    end
+    plot!(xticks=([1,2,3],xticklabels),legend=false,formatter=:plain)
+    display(p)
+    savefig("./plots/$(folder_name)/boxplot_$(string(data_key)).pdf")
+end
+
+function boxplot_backwall(algo_ic; inds_of_interest = nothing)
+    best_per_algo_ics = if inds_of_interest isa Nothing
+        deepcopy(algo_ic)
+    else
+        deepcopy(algo_ic)[inds_of_interest]
+    end
+    p = plot(ylabel="Left Hill Pseudotermination")
+    xticklabels = []
+    for (i,algo) in enumerate(best_per_algo_ics)
+        states_per_run = GPU.load_results(algo,:states, return_type = "array")
+        pseudoterm_episodes_per_run = [length(findall(iszero,states[1,:])) for states in states_per_run]
+        @show pseudoterm_episodes_per_run
+        plot_params = LU.get_params(algo)
+        boxplot!(p,pseudoterm_episodes_per_run; plot_params...)
+        push!(xticklabels, plot_params[:label])
+    end
+    plot!(xticks=([1,2,3],xticklabels),legend=false,formatter=:plain)
+    display(p)
+    savefig("./plots/$(folder_name)/boxplot_backwall_$(string(data_key)).pdf")
+end
 end

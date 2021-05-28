@@ -93,10 +93,13 @@ function get_best_final_perf(ic, sweep_params, metric, cut_per)
         num_steps = size(res)[2]
         cut_ind = Int(floor(num_steps * (1-cut_per)))
         error = mean(res[:,cut_ind:end,:])
-        errors[ind] = error
+        if isfinite(error)
+            errors[ind] = error
+        end
     end
+    @show errors
     low_err, low_err_ind = findmin(errors)
-    println(errors)
+
 
     return search(ic, splits[low_err_ind])
 end
@@ -306,15 +309,22 @@ function get_label(ic)
 end
 
 function get_params(ic)
+    if ic.items[1].parsed_args["exploration_param"] == 1.0
+        label = Dict(:label => "μ(Random), π(SR)")
+        color = Dict(:color => colorant"#BBBBBB")
+        ls = get_linestyle(ic)
+        return  merge(color,ls,label)
+    end
     color = get_colour(ic)
     ls = get_linestyle(ic)
     label = get_label(ic)
     # label[:label] = string(label[:label], " ", ic.items[1].parsed_args["exploration_param"])
-    # if ic.items[1].parsed_args["exploration_param"] == 1.0
-    #     label = Dict(:label => "μ(Random), π(SR)")
-    #     color = Dict(:color => colorant"#BBBBBB")
-    # end
 
+    #Hacking thing to do for ER
+    if "batch_size" in keys(ic.items[1].parsed_args)
+        label[:label] =  string(label[:label], " ", ic.items[1].parsed_args["batch_size"])
+        ls[:linestyle] = :dot
+    end
     return merge(color,ls,label)
 end
 
