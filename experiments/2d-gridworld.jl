@@ -26,7 +26,7 @@ default_args() =
         "behaviour_gamma" => 0.0,
         "behaviour_learner" => "GPI",
         "behaviour_update" => "TB",
-        "behaviour_reward_projector" => "tilecoding",
+        "behaviour_reward_projector" => "state_agg",
         "behaviour_rp_tilings" => 2,
         "behaviour_rp_tiles" => 2,
         "behaviour_trace" => "AccumulatingTraces",
@@ -38,7 +38,7 @@ default_args() =
         "ϵ_range" => (0.4,0.1),
         "decay_period" => 5000,
         "warmup_steps" => 1000,
-
+        "behaviour_bpd" => 5,
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
@@ -53,13 +53,16 @@ default_args() =
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.99,
         "demon_beta_v" => 0.99,
+        "demon_interest_set" => "2dOpenWorld_center",
+        "demon_normalize_interest" => true,
 
         #shared
-        "num_tiles" => 4,
-        "num_tilings" => 8,
+        "num_tiles" => 2,
+        "num_tilings" => 16,
         "demon_rep" => "ideal",
         "demon_num_tiles" => 6,
         "demon_num_tilings" => 1,
+
 
         # Environment Config
         "constant_target"=> 1.0,
@@ -297,7 +300,7 @@ end
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     GC.gc()
-    
+
     num_steps = parsed["steps"]
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
