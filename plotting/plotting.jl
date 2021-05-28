@@ -40,10 +40,10 @@ data_key = :twod_grid_world_error_center_dpi
 # folder_name = "oned_control"
 # folder_name = "oned_rr"
 # folder_name = "GPI_Sensitivity"
-# folder_name = "tabular_rr"
+folder_name = "NoLegend"
 # folder_name = "tabular_control"
 # folder_name = "MC_tmp"
-folder_name = "twod_gpi"
+# folder_name = "twod_gpi"
 
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
@@ -53,7 +53,8 @@ folder_name = "twod_gpi"
 # data_home = "../data/OneDTMaze_GPI_Sensitivity"
 # data_home = "../data/MC_Experiments"
 # data_home = "../data/MC_Experiments_Final"
-data_home = "../data/TwoDGridWorld_gpi"
+# data_home = "../data/TwoDGridWorld_gpi"
+data_home = "../data/TwoDGridWorld_gpi_Rev_2"
 
 
 function load_data()
@@ -132,6 +133,7 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
 
     data = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[1],10) for ic in best_per_algo_ics]
     std = [GPU.smooth(GPU.get_stats(GPU.load_results(ic,data_key))[2],10) for ic in best_per_algo_ics]
+    # std = [GPU.get_stats(GPU.load_results(ic,data_key))[2] for ic in best_per_algo_ics]
 
     ylabel = "RMSE"
     # title = "Hall Following in Tabular T-Maze"
@@ -191,7 +193,7 @@ function plot_goal_visitation(algo_ics, inds_of_interest = nothing)
         tmp = [GPU.smooth(visit_perc[i,:],20) for i in 1:4]
         title = LU.get_label(best_per_algo_ics[i])[:label]
 
-        p = plot(tmp, labels = gvf_labels, xlabel="Episode Count", ylabel="Fraction of Goal Visits", ylim=(0.0,1.0), title = title, size = (800,1000), legend=:right)
+        p = plot(tmp, labels = gvf_labels, xlabel="Episode Count", ylabel="Fraction of Goal Visits", ylim=(0.0,1.0), title = title, size = (800,1000), legend=:none)
         push!(ps,p)
     end
     println()
