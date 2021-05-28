@@ -24,19 +24,19 @@ GPU = GeneralPlotUtils
 LU = LabelUtils
 
  # default(titlefont = (20, "times"), legendfontsize = 18, guidefont = (18, :darkgreen), tickfont = (12, :orange), guide = "x", framestyle = :zerolines, yminorgrid = true)
- default(titlefont = (20, "times"), legendfontsize = 10, guidefont = (18, :black), tickfont = 12)
+ default(titlefont = (20, "times"), legendfontsize = 10, guidefont = (18, :black), tickfont = 12, foreground_color_legend = nothing)
 
 
 # data_key = :ttmaze_direct_error
 # data_key = :ttmaze_uniform_error
 # data_key = :ttmaze_round_robin_error
 # data_key = :oned_tmaze_dpi_error
-# data_key = :oned_tmaze_old_error
-data_key = :oned_tmaze_dmu_error
+data_key = :oned_tmaze_old_error
+# data_key = :oned_tmaze_dmu_error
 # data_key = :mc_uniform_error
 # data_key = :mc_starts_error
 
-# folder_name = "oned_control"
+folder_name = "oned_control"
 # folder_name = "oned_rr"
 # folder_name = "GPI_Sensitivity"
 # folder_name = "tabular_rr"
@@ -46,7 +46,7 @@ data_key = :oned_tmaze_dmu_error
 
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
-# data_home = "../data/OneDTMaze_Control"
+data_home = "../data/OneDTMaze_Control"
 # data_home = "../data/OneDTMaze_RR"
 # data_home = "../data/GPI_Sensitivity"
 # data_home = "../data/OneDTMaze_GPI_Sensitivity"
@@ -107,8 +107,10 @@ function plot_rmse_per_demon(algo_ics, inds_of_interest = nothing)
         for algo_ind in 1:length(data_per_gvf)
             smooth_gvf = GPU.smooth(data_per_gvf[algo_ind][gvf_ind,:],5)
             # label = LU.get_label(best_per_algo_ics[algo_ind])[:label]
-            label = LU.get_params(best_per_algo_ics[algo_ind])[:label]
-            plot!(p,smooth_gvf, palette=:tab10, ribbon = std_per_gvf[algo_ind][gvf_ind,:] / sqrt(num_runs), size = (500,500),label = label)
+            # label = LU.get_params(best_per_algo_ics[algo_ind])[:label]
+            # color = LU.get_params(best_per_algo_ics[algo_ind])[:color]
+            plot_params = LU.get_params(best_per_algo_ics[algo_ind])
+            plot!(p,smooth_gvf, ribbon = std_per_gvf[algo_ind][gvf_ind,:] / sqrt(num_runs), size = (500,500); plot_params...)
             plot!(xlabel="Steps", ylabel = "RMSE",  title = string(gvf_labels[gvf_ind], ""))
         end
         push!(ps,p)
@@ -161,7 +163,7 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
         #         plot_params[i][:color] =  colorant"#BBBBBB"
         #     end
         # end
-        plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:topright; plot_params[i]...)
+        plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:top; plot_params[i]...)
     end
     display(p)
     savefig("./plots/$(folder_name)/RMSE_$(string(data_key)).pdf")
@@ -186,7 +188,8 @@ function plot_goal_visitation(algo_ics, inds_of_interest = nothing)
         @show size(visit_perc)
         tmp = [GPU.smooth(visit_perc[i,:],20) for i in 1:4]
         title = LU.get_label(best_per_algo_ics[i])[:label]
-        p = plot(tmp, labels = gvf_labels, xlabel="Episode Count", ylabel="Fraction of Goal Visits", ylim=(0.0,1.0), title = title, size = (800,1000), legend=:topleft)
+
+        p = plot(tmp, labels = gvf_labels, xlabel="Episode Count", ylabel="Fraction of Goal Visits", ylim=(0.0,1.0), title = title, size = (800,1000), legend=:right)
         push!(ps,p)
     end
     println()

@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_RR"
+save_dir = "OneDTMaze_RR_LSTD"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -60,7 +60,7 @@ random_first_action = true
 [sweep_args]
 seed = "1:30"
 cumulant_schedule = ["DrifterDistractor"]
-eta = [0.001, 0.01, 0.1]
+eta = [1.0]
 behaviour_opt = ["Auto"]
 behaviour_learner = ["RoundRobin"]
 behaviour_update = ["Q"]
