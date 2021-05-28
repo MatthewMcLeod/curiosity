@@ -31,27 +31,29 @@ LU = LabelUtils
 # data_key = :ttmaze_uniform_error
 # data_key = :ttmaze_round_robin_error
 # data_key = :oned_tmaze_dpi_error
-data_key = :oned_tmaze_old_error
+# data_key = :oned_tmaze_old_error
 # data_key = :oned_tmaze_dmu_error
 # data_key = :mc_uniform_error
 # data_key = :mc_starts_error
+data_key = :twod_grid_world_error_center_dpi
 
-folder_name = "oned_control"
+# folder_name = "oned_control"
 # folder_name = "oned_rr"
 # folder_name = "GPI_Sensitivity"
 # folder_name = "tabular_rr"
 # folder_name = "tabular_control"
 # folder_name = "MC_tmp"
-
+folder_name = "twod_gpi"
 
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
-data_home = "../data/OneDTMaze_Control"
+# data_home = "../data/OneDTMaze_Control"
 # data_home = "../data/OneDTMaze_RR"
 # data_home = "../data/GPI_Sensitivity"
 # data_home = "../data/OneDTMaze_GPI_Sensitivity"
 # data_home = "../data/MC_Experiments"
 # data_home = "../data/MC_Experiments_Final"
+data_home = "../data/TwoDGridWorld_gpi"
 
 
 function load_data()
@@ -70,7 +72,7 @@ function load_best(ic)
     # algo_divisor_keys = ["behaviour_learner", "demon_learner", "demon_opt", "demon_update","behaviour_reward_projector","behaviour_rp_tilings"]
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
 
-    sweep_params = ["behaviour_eta", "demon_eta", "alpha_init"]
+    sweep_params = ["behaviour_eta", "demon_eta", "alpha_init", "eta"]
 
     algo_specs_full = GPU.split_algo(ic, algo_divisor_keys)
 
@@ -194,7 +196,9 @@ function plot_goal_visitation(algo_ics, inds_of_interest = nothing)
     end
     println()
     @show length(visit_orders)
-    plot(ps..., layout=(Int(length(best_per_algo_ics)/2),2))
+    # plot(ps..., layout=(Int(length(best_per_algo_ics)/2),2))
+    plot(ps...)
+
     savefig("./plots/$(folder_name)/goal_visits_$(string(data_key)).png")
 end
 
@@ -206,6 +210,16 @@ function load_and_plot_rmse(inds_of_interest=nothing)
     plot_rmse(algo_ic,inds_of_interest)
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
     [GPU.print_params(bic,["behaviour_learner"],["demon_eta","alpha_init","exploration_param"]) for bic in algo_ic]
+end
+
+function load_and_plot_rmse_per_demon(inds_of_interest=nothing)
+    ic = load_data()
+    # ic = search(ic, Dict("demon_learner" => "SR"))
+    algo_ic = load_best(ic)
+    # plot_rmse_per_demon(algo_ic,inds_of_interest)
+    plot_rmse_per_demon(algo_ic,inds_of_interest)
+    # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
+    [GPU.print_params(bic,["demon_update"],["demon_eta","alpha_init","exploration_param"]) for bic in algo_ic]
 end
 
 function load_and_plot_goal_visits(inds_of_interest=nothing)
@@ -220,7 +234,6 @@ function load_and_plot_states(inds_of_interest=nothing)
 end
 function load_and_plot_episode_lengths(inds_of_interest=nothing)
     ic = load_data()
-    ic = search(ic, Dict("demon_learner" => "SR"))
     algo_ic = load_best(ic)
     # [GPU.print_params(c,["demon_eta", "behaviour_eta"],[]) for c in algo_ic[inds_of_interest]]
     plot_episode_lengths(algo_ic,inds_of_interest)
@@ -238,7 +251,31 @@ function load_and_box_plot_back_wall(inds_of_interest=nothing)
     # [GPU.print_params(c,["demon_eta", "behaviour_eta"],[]) for c in algo_ic[inds_of_interest]]
     boxplot_backwall(algo_ic;inds_of_interest=inds_of_interest)
 end
+function load_and_plot_max_q(inds_of_interest=nothing)
+    ic = load_data()
+    algo_ic = load_best(ic)
+    # [GPU.print_params(c,["demon_eta", "behaviour_eta"],[]) for c in algo_ic[inds_of_interest]]
+    plot_max_q(algo_ic,inds_of_interest)
+end
+function plot_max_q(algo_ic, inds_of_interest)
+    best_per_algo_ics = if inds_of_interest isa Nothing
+        deepcopy(algo_ic)
+    else
+        deepcopy(algo_ic)[inds_of_interest]
+    end
 
+    max_qs = [GPU.load_results(ic,:max_behaviour_q, return_type = "array") for ic in best_per_algo_ics]
+    # #### Generate
+    p = plot(xlabel = "Episode Count", ylabel = "Max Q", ylim=(-0.5,0.5))
+    for (ind,max_q) in enumerate(max_qs)
+        l = hcat([q_run for q_run in max_q]...)
+        # label = LU.get_label(best_per_algo_ics[i])[:label]
+        plot_params = LU.get_params(best_per_algo_ics[ind])
+        plot!(p,mean(l,dims=2); plot_params...)
+    end
+    savefig("./plots/$(folder_name)/max_qs_zoom$(string(data_key)).png")
+    # title!("Step Length for Best Performing Algos Last 10 %")
+end
 function plot_episode_lengths(algo_ic, inds_of_interest)
     best_per_algo_ics = if inds_of_interest isa Nothing
         deepcopy(algo_ic)
