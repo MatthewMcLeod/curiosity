@@ -13,4 +13,4 @@ using Pkg
 Pkg.activate(".")
 
 include(joinpath(ENV["SLURM_SUBMIT_DIR"], "parallel/parallel_config.jl"))
-reproduce_config_experiment("configs/twodgridworld_hailmary/GPI.toml", save_path="~/scratch/curiosity")
+reproduce_config_experiment("configs/twodgridworld_hailmary/twodgridworld_gpi.toml", save_path="~/scratch/curiosity")
