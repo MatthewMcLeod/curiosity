@@ -3,8 +3,8 @@
 #SBATCH --mail-type=ALL
 #SBATCH -o twod_hail.out # Standard output
 #SBATCH -e twod_hail.err # Standard error
-#SBATCH --time=02:00:00
-#SBATCH --nodes=1
+#SBATCH --time=02:30:00
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --mem=0
 #SBATCH --account=def-amw8
