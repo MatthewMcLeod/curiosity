@@ -117,6 +117,10 @@ function construct_agent(parsed)
         end
     end
 
+    if parsed["demon_opt"] == "Auto+Descent"
+        parsed["demon_auto_alpha_init"] = parsed["demon_auto_alpha_init"] / parsed["num_tilings"]
+    end
+    
     # Unpack Auto Init
     if parsed["demon_opt"] == "Auto"
         parsed["demon_alpha_init"] =

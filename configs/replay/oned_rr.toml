@@ -31,7 +31,10 @@ demon_trace = "AccumulatingTraces"
 demon_learner = "SR"
 demon_rep = "ideal"
 
-demon_opt = "Auto+ADAM"
+demon_opt = "Auto+Descent"
+demon_auto_alpha_init = 0.1
+demon_auto_eta = 0.1
+
 demon_beta_m = 0.99
 demon_beta_v = 0.999
 # demon_update = "TB"
