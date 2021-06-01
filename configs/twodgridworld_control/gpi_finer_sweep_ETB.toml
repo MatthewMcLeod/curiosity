@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_gpi_TB"
+save_dir = "TwoDGridWorld_gpi"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
@@ -52,14 +52,15 @@ env_step_penalty = -0.1
 
 
 [sweep_args]
-seed = "1:15"
+seed = "1:30"
 
 alpha_init = [0.1]
-eta = "5.0.^(-4:-1)"
-emphasis_clip_threshold = [1.0, 10]
+demon_eta = "5.0.^(-4:-1)"
+behaviour_eta = "5.0.^(-4:-1)"
 
+emphasis_clip_threshold = [1.0, 10.0]
 exploration_param = [0.1]
-demon_learner = ["Q"]
-demon_update = ["TB", "InterestTB"]
+demon_learner = ["SR"]
+demon_update = ["ETB"]
 tiling_structure = [[16, 2]]
 start_dist = ["center"]

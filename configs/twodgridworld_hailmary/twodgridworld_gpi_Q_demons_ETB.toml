@@ -60,6 +60,6 @@ emphasis_clip_threshold = [1.0, 10]
 
 exploration_param = [0.1]
 demon_learner = ["Q"]
-demon_update = ["TB", "InterestTB"]
+demon_update = ["ETB"]
 tiling_structure = [[16, 2]]
 start_dist = ["center"]
