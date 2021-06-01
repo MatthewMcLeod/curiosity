@@ -40,10 +40,10 @@ data_key = :twod_grid_world_error_center_dpi
 # folder_name = "oned_control"
 # folder_name = "oned_rr"
 # folder_name = "GPI_Sensitivity"
-folder_name = "NoLegend"
+# folder_name = "NoLegend"
 # folder_name = "tabular_control"
 # folder_name = "MC_tmp"
-# folder_name = "twod_gpi"
+folder_name = "twod_gpi"
 
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
@@ -54,7 +54,7 @@ folder_name = "NoLegend"
 # data_home = "../data/MC_Experiments"
 # data_home = "../data/MC_Experiments_Final"
 # data_home = "../data/TwoDGridWorld_gpi"
-data_home = "../data/TwoDGridWorld_gpi_Rev_2"
+data_home = "../data/TwoDGridWorld_gpi_Rev_3"
 
 
 function load_data()
