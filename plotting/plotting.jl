@@ -73,7 +73,7 @@ function load_best(ic)
     # algo_divisor_keys = ["behaviour_learner", "demon_learner", "demon_opt", "demon_update","behaviour_reward_projector","behaviour_rp_tilings"]
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
 
-    sweep_params = ["behaviour_eta", "demon_eta", "alpha_init", "eta"]
+    sweep_params = ["behaviour_eta", "demon_eta", "alpha_init", "eta","emphasis_clip_threshold"]
 
     algo_specs_full = GPU.split_algo(ic, algo_divisor_keys)
 
@@ -211,7 +211,8 @@ function load_and_plot_rmse(inds_of_interest=nothing)
     # plot_rmse_per_demon(algo_ic,inds_of_interest)
     plot_rmse(algo_ic,inds_of_interest)
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
-    [GPU.print_params(bic,["behaviour_learner"],["demon_eta","alpha_init","exploration_param"]) for bic in algo_ic]
+    @show "here"
+    [GPU.print_params(bic,["behaviour_learner"],["eta","demon_update","emphasis_clip_threshold"]) for bic in algo_ic]
 end
 
 function load_and_plot_rmse_per_demon(inds_of_interest=nothing)
@@ -221,7 +222,7 @@ function load_and_plot_rmse_per_demon(inds_of_interest=nothing)
     # plot_rmse_per_demon(algo_ic,inds_of_interest)
     plot_rmse_per_demon(algo_ic,inds_of_interest)
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
-    [GPU.print_params(bic,["demon_update"],["demon_eta","alpha_init","exploration_param"]) for bic in algo_ic]
+    [GPU.print_params(bic,["demon_update"],["demon_eta","alpha_init","exploration_param","emphasis_clip_threshold"]) for bic in algo_ic]
 end
 
 function load_and_plot_goal_visits(inds_of_interest=nothing)
