@@ -43,7 +43,8 @@ data_key = :twod_grid_world_error_center_dpi
 # folder_name = "NoLegend"
 # folder_name = "tabular_control"
 # folder_name = "MC_tmp"
-folder_name = "twod_gpi"
+# folder_name = "twod_gpi_tb"
+folder_name = "twod_gpi_no_optimism"
 
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
@@ -54,7 +55,8 @@ folder_name = "twod_gpi"
 # data_home = "../data/MC_Experiments"
 # data_home = "../data/MC_Experiments_Final"
 # data_home = "../data/TwoDGridWorld_gpi"
-data_home = "../data/TwoDGridWorld_gpi_Rev_3"
+# data_home = "../data/TwoDGridWorld_gpi_TB"
+data_home = "../data/TwoDGridWorld_gpi_no_optimism"
 
 
 function load_data()
@@ -269,7 +271,7 @@ function plot_max_q(algo_ic, inds_of_interest)
 
     max_qs = [GPU.load_results(ic,:max_behaviour_q, return_type = "array") for ic in best_per_algo_ics]
     # #### Generate
-    p = plot(xlabel = "Episode Count", ylabel = "Max Q", ylim=(-0.5,0.5))
+    p = plot(xlabel = "Episode Count", ylabel = "Max Q", ylim=(-3,3))
     for (ind,max_q) in enumerate(max_qs)
         l = hcat([q_run for q_run in max_q]...)
         # label = LU.get_label(best_per_algo_ics[i])[:label]

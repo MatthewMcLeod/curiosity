@@ -8,16 +8,20 @@ function load_results(ic, logger_key; return_type = "tensor")
     num_results = length(ic)
     results = []
     for itm in ic.items
-        crap = false
-        data = FileIO.load(joinpath(itm.folder_str, "results.jld2"))["results"]
-        if crap == true
-            push!(results,data[logger_key][:,2:end])
+        if !isfile(joinpath(itm.folder_str, "results.jld2"))
+            println(joinpath(itm.folder_str, "results.jld2"))
+            @warn "Check yo sweep. It is missing runs!!!!"
         else
+            data = FileIO.load(joinpath(itm.folder_str, "results.jld2"))["results"]
             push!(results,data[logger_key])
         end
     end
 
     if return_type == "tensor"
+        if isempty(results)
+            @warn "Empty IC. Yo should really check your sweep!!"
+            return []
+        end
         return cat(results..., dims = 3)
     elseif return_type == "array"
         return results
@@ -90,6 +94,10 @@ function get_best_final_perf(ic, sweep_params, metric, cut_per)
             continue
         end
         res = load_results(candidate_best, metric)
+        if isempty(res)
+            @warn "Selecting over empty IC. This is not good and is likely not what you want"
+            continue
+        end
         num_steps = size(res)[2]
         cut_ind = Int(floor(num_steps * (1-cut_per)))
         error = mean(res[:,cut_ind:end,:])
@@ -197,6 +205,9 @@ const val_matches = Dict(["GPI","TB","Q","TB"] => 6,
     ["GPI", "TB", "SR", "TB"] => 6,
     ["GPI", "TB", "SR", "ETB"] => 2,
     ["GPI", "TB", "SR", "InterestTB"] => 4,
+    ["GPI", "TB", "Q", "InterestTB"] => 4,
+    ["GPI", "TB", "Q", "ETB"] => 2,
+    ["GPI", "TB", "Q", "TB"] => 6,
     ["Q","ESARSA", "Q", "TB"] => 1,
     ["Q", "ESARSA", "SR", "TB"] => 1,
     ["Q", "TabularRoundRobin", "SR", "TB"] => 6,
@@ -219,6 +230,9 @@ const algo_labels = Dict(["GPI","TB","Q","TB"] => L"μ(GPI), π(TB)",
     ["GPI", "TB", "SR", "TB"] => L"μ(GPI), π(SR)",
     ["GPI", "TB", "SR", "ETB"] => L"μ(GPI), π(SR with ETB)",
     ["GPI", "TB", "SR", "InterestTB"] => L"μ(GPI), π(SR with Interest)",
+    ["GPI", "TB", "Q", "InterestTB"] => L"μ(GPI), π(TB with Interest)",
+    ["GPI", "TB", "Q", "ETB"] => L"μ(GPI), π(ETB)",
+    ["GPI", "TB", "Q", "TB"] => L"μ(GPI), π(TB)",
     ["Q", "ESARSA", "SR", "TB"] => L"μ(Sarsa), π(SR)",
     ["Q", "TabularRoundRobin", "SR", "TB"] => L"μ(Fixed), π(SR)",
     ["Q", "TabularRoundRobin", "Q", "TB"] => L"μ(Fixed), π(TB)",
