@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_gpi_no_optimism"
+save_dir = "TwoDGridWorld_gpi_no_optimism_Rev_2"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
@@ -52,10 +52,13 @@ env_step_penalty = -0.05
 
 
 [sweep_args]
-seed = "1:15"
+seed = "1:20"
 
 alpha_init = [0.1]
-eta = "5.0.^(-4:-1)"
+# eta = "5.0.^(-4:-1)"
+demon_eta = "5.0.^(-2:-1)"
+behaviour_eta = "5.0.^(-4:-1)"
+
 emphasis_clip_threshold = [1.0]
 
 exploration_param = [0.2]

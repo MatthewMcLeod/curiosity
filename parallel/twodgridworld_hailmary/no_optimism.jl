@@ -3,7 +3,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH -o twod_no_optimism.out # Standard output
 #SBATCH -e twod_no_optimism.err # Standard error
-#SBATCH --time=01:30:00
+#SBATCH --time=02:45:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=48
 #SBATCH --mem=0
