@@ -52,10 +52,12 @@ env_step_penalty = -1.0
 
 
 [sweep_args]
-seed = "1:2"
+seed = "1:5"
 
 alpha_init = [0.1]
-eta = [0.04, 0.2]
+demon_eta = [0.2]
+behaviour_eta = "5.0.^(-4:-1)"
+
 emphasis_clip_threshold = [10.0]
 
 exploration_param = [0.1]
