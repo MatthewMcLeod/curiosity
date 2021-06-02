@@ -44,7 +44,7 @@ data_key = :twod_grid_world_error_center_dpi
 # folder_name = "tabular_control"
 # folder_name = "MC_tmp"
 # folder_name = "twod_gpi_tb"
-folder_name = "twod_gpi_no_optimism"
+folder_name = "twod_gpi_fine"
 
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
@@ -56,7 +56,7 @@ folder_name = "twod_gpi_no_optimism"
 # data_home = "../data/MC_Experiments_Final"
 # data_home = "../data/TwoDGridWorld_gpi"
 # data_home = "../data/TwoDGridWorld_gpi_TB"
-data_home = "../data/TwoDGridWorld_gpi_no_optimism"
+data_home = "../data/TwoDGridWorld_finegrained"
 
 
 function load_data()
@@ -88,7 +88,9 @@ function load_best(ic)
     algo_ics = all_algos_ics[valid_algos_ind]
     best_per_algo_ics = []
     for (i,algo_ic) in enumerate(algo_ics)
-        push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
+        # push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
+        push!(best_per_algo_ics, GPU.get_best(algo_ic,sweep_params, data_key))
+
     end
     @show length.(best_per_algo_ics)
     return best_per_algo_ics
@@ -214,7 +216,7 @@ function load_and_plot_rmse(inds_of_interest=nothing)
     plot_rmse(algo_ic,inds_of_interest)
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
     @show "here"
-    [GPU.print_params(bic,["behaviour_learner"],["eta","demon_update","emphasis_clip_threshold"]) for bic in algo_ic]
+    [GPU.print_params(bic,["behaviour_learner"],["behaviour_eta","demon_eta","demon_update","emphasis_clip_threshold"]) for bic in algo_ic]
 end
 
 function load_and_plot_rmse_per_demon(inds_of_interest=nothing)
@@ -305,8 +307,10 @@ end
 function load_and_plot_meta_ss(inds_of_interest = nothing; sensitivity_param = "eta")
 
     ic = load_data()
-    algo_divisor_keys = ["behaviour_learner", "demon_learner"]
-    sweep_params = ["eta"]
+    # algo_divisor_keys = ["behaviour_learner", "demon_learner"]
+    algo_divisor_keys = ["behaviour_learner", "demon_update"]
+
+    # sweep_params = ["eta"]
 
     algo_specs_full = GPU.split_algo(ic, algo_divisor_keys)
     all_algos_ics = [search(ic,algo_spec) for algo_spec in algo_specs_full]
@@ -319,7 +323,7 @@ function load_and_plot_meta_ss(inds_of_interest = nothing; sensitivity_param = "
     #Plot Sensitivity of eta.
     p = plot(ylabel="RMSE", xlabel = "Meta Step Size", xaxis=:log, legend=:topleft)
     for algo in all_algos_ics
-        eta_vals = diff(algo)["eta"]
+        eta_vals = diff(algo)[sensitivity_param]
         line = []
         err_bars = []
         for eta in eta_vals
