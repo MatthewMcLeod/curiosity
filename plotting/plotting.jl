@@ -33,9 +33,9 @@ LU = LabelUtils
 # data_key = :oned_tmaze_dpi_error
 # data_key = :oned_tmaze_old_error
 # data_key = :oned_tmaze_dmu_error
-# data_key = :mc_uniform_error
+data_key = :mc_uniform_error
 # data_key = :mc_starts_error
-data_key = :twod_grid_world_error_center_dpi
+# data_key = :twod_grid_world_error_center_dpi
 
 # folder_name = "oned_control"
 # folder_name = "oned_rr"
@@ -44,7 +44,12 @@ data_key = :twod_grid_world_error_center_dpi
 # folder_name = "tabular_control"
 # folder_name = "MC_tmp"
 # folder_name = "twod_gpi_tb"
-folder_name = "twod_gpi_fine"
+# folder_name = "twod_gpi_fine"
+# folder_name = "twod_gpi_no_optimism"
+# folder_name = "twod_gpi_simple"
+# folder_name = "twod_gpi_nstate"
+folder_name = "tmp"
+
 
 # data_home = "../data/Experiment1"
 # data_home = "../data/Experiment2_d_pi"
@@ -53,10 +58,13 @@ folder_name = "twod_gpi_fine"
 # data_home = "../data/GPI_Sensitivity"
 # data_home = "../data/OneDTMaze_GPI_Sensitivity"
 # data_home = "../data/MC_Experiments"
-# data_home = "../data/MC_Experiments_Final"
+data_home = "../data/MC_Experiments_Final"
 # data_home = "../data/TwoDGridWorld_gpi"
 # data_home = "../data/TwoDGridWorld_gpi_TB"
-data_home = "../data/TwoDGridWorld_finegrained"
+# data_home = "../data/TwoDGridWorld_finegrained"
+# data_home = "../data/TwoDGridWorld_gpi_no_optimism_Rev_2"
+# data_home = "../data/TwoDGridWorld_gpi_simple"
+# data_home = "../data/TwoDGridWorld_gpi_nstate"
 
 
 function load_data()
@@ -64,14 +72,13 @@ function load_data()
     # folder_name = "oned_rr_dpi"
     # folder_name = "oned_control_dpi"
     ic = ItemCollection(joinpath(experiment_folders[1], "data"))
-    # ic = search(ic,Dict("behaviour_learner" => "GPI", "demon_learner" => "SR"))
     return ic
 end
 
 function load_best(ic)
 # data_key = :oned_tmaze_dpi_error
 
-    algo_divisor_keys = ["behaviour_learner", "demon_learner", "demon_opt", "demon_update", "exploration_param"]
+    algo_divisor_keys = ["behaviour_learner", "demon_learner", "demon_opt", "demon_update","exploration_param"]
     # algo_divisor_keys = ["behaviour_learner", "demon_learner", "demon_opt", "demon_update","behaviour_reward_projector","behaviour_rp_tilings"]
     # sweep_params = ["demon_alpha_init", "demon_eta", "alpha_init"]
 
@@ -88,11 +95,14 @@ function load_best(ic)
     algo_ics = all_algos_ics[valid_algos_ind]
     best_per_algo_ics = []
     for (i,algo_ic) in enumerate(algo_ics)
-        # push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
-        push!(best_per_algo_ics, GPU.get_best(algo_ic,sweep_params, data_key))
+        push!(best_per_algo_ics, GPU.get_best_final_perf(algo_ic,sweep_params, data_key, 0.1))
+        # push!(best_per_algo_ics, GPU.get_best(algo_ic,sweep_params, data_key))
+        # push!(best_per_algo_ics, GPU.get_most_episodes(algo_ic,sweep_params, data_key))
 
     end
     @show length.(best_per_algo_ics)
+    [GPU.print_params(bic,["behaviour_learner","alpha_init"],["behaviour_eta","demon_eta","demon_learner","demon_update","emphasis_clip_threshold","exploration_param"]) for bic in best_per_algo_ics]
+
     return best_per_algo_ics
 end
 
@@ -291,6 +301,11 @@ function plot_episode_lengths(algo_ic, inds_of_interest)
     end
 
     episode_lengths = [GPU.load_results(ic,:episode_length, return_type = "array") for ic in best_per_algo_ics]
+    for arr in episode_lengths
+        for a in arr
+            @show length(a)
+        end
+    end
     # #### Generate
     max_lengths = [GPU.get_min_length(arrs)-1 for arrs in episode_lengths]
     p = plot(xlabel = "Episode Count", ylabel = "Step Length")
