@@ -232,7 +232,7 @@ function _init_learning_update(lu_type::Union{Type{TB}, Type{PriorESARSA}, Type{
     end
 end
 
-function _init_learning_update(lu_type::Union{Type{ETB},Type{EmphESARSA}},
+function _init_learning_update(lu_type::Union{Type{ETB},Type{EmphESARSA},Type{StateETB}},
                                 opt,
                                 parsed::Dict,
                                 prefix)

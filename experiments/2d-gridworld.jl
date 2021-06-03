@@ -19,26 +19,26 @@ const SRCU = Curiosity.SRCreationUtils
 default_args() =
     Dict(
         "logger_interval" => 100,
-        "start_dist" => "center",
+        "start_dist" => "uniform",
 
         # Behaviour Items
         "behaviour_eta" => 0.1/8,
         "behaviour_gamma" => 0.0,
         "behaviour_learner" => "GPI",
         "behaviour_update" => "TB",
-        "behaviour_reward_projector" => "tilecoding",
+        "behaviour_reward_projector" => "state_agg",
         "behaviour_rp_tilings" => 2,
         "behaviour_rp_tiles" => 2,
         "behaviour_trace" => "AccumulatingTraces",
         "behaviour_opt" => "Descent",
         "behaviour_lambda" => 0.9,
-        "behaviour_w_init" => 4.0,
-        "exploration_param" => 0.2,
+        "behaviour_w_init" => 0.0,
+        "exploration_param" => 0.0,
         "exploration_strategy" => "epsilon_greedy",
         "ϵ_range" => (0.4,0.1),
         "decay_period" => 5000,
         "warmup_steps" => 1000,
-
+        "behaviour_bpd" => 5,
 
         # Demon Attributes
         "demon_alpha_init" => 0.1,
@@ -53,13 +53,16 @@ default_args() =
         "demon_trace"=> "AccumulatingTraces",
         "demon_beta_m" => 0.99,
         "demon_beta_v" => 0.99,
+        "demon_interest_set" => "2dOpenWorld_center",
+        "demon_normalize_interest" => true,
 
         #shared
-        "num_tiles" => 4,
-        "num_tilings" => 8,
+        "num_tiles" => 2,
+        "num_tilings" => 16,
         "demon_rep" => "ideal",
         "demon_num_tiles" => 6,
         "demon_num_tilings" => 1,
+
 
         # Environment Config
         "constant_target"=> 1.0,
@@ -68,17 +71,19 @@ default_args() =
         "distractor" => (1.0, 1.0),
         "drifter" => (1.0, sqrt(0.01)),
         "exploring_starts"=>"whole",
+        "env_step_penalty" => -1.0,
 
         # Agent and Logger
         "horde_type" => "regular",
-        "intrinsic_reward" => "weight_change",
+        "intrinsic_reward" => "no_reward",
         # "logger_keys" => [LoggerKey.TTMAZE_ERROR],
         "save_dir" => "TwoDGridWorldExperiment",
         "seed" => 1,
         "steps" => 10000,
         "use_external_reward" => true,
+        "random_first_action" => true,
 
-        "logger_keys" => ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
+        "logger_keys" => ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES", "AUTOSTEP_STEPSIZE"]
     )
 
 
@@ -279,7 +284,11 @@ function construct_agent(parsed)
         behaviour_learner, behaviour_demons, parsed["behaviour_gamma"]
     end #end behaviour_learner, behaviour_demons, behaviour_discount = if parsed["behaviour_learner"] == "RoundRobin"
 
-    @show size(behaviour_learner.ψ)
+    random_first_action = if "random_first_action" in keys(parsed) && parsed["random_first_action"]
+        true
+    else
+        false
+    end
 
     Agent(demons,
           feat_size,
@@ -293,13 +302,13 @@ function construct_agent(parsed)
           fc,
           use_external_reward,
           exploration_strategy,
-          false)
+          random_first_action)
 end
 
 function main_experiment(parsed=default_args(); progress=false, working=false)
 
     GC.gc()
-    
+
     num_steps = parsed["steps"]
     logger_init_dict = Dict(
         LoggerInitKey.TOTAL_STEPS => num_steps,
