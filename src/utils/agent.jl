@@ -8,12 +8,22 @@ function get_optimizer(parsed::Dict, prefix="")
 end
 
 function get_optimizer(opt_string, parsed::Dict, prefix)
-    opt_type = if opt_string == "Auto"
-        Auto
+
+    if opt_string == "Auto+Descent"
+        auto = _init_optimizer(Auto, parsed, "$(prefix)_auto")
+        sgd = get_optimizer("Descent", parsed, prefix)
+        (auto, sgd)
+    elseif contains(opt_string, '+')
+        opt_1_str, opt_2_str = split(opt_string, '+')
+        (get_optimizer(opt_1_str, parsed, prefix), get_optimizer(opt_2_str, parsed, prefix))
     else
-        getproperty(Flux, Symbol(opt_string))
+        opt_type = if opt_string == "Auto"
+            Auto
+        else
+            getproperty(Flux, Symbol(opt_string))
+        end
+        _init_optimizer(opt_type, parsed, prefix)
     end
-    _init_optimizer(opt_type, parsed, prefix)
 end
 
 _init_optimizer(opt, ::Dict) =
@@ -69,7 +79,7 @@ function _init_optimizer(opt_type::Union{Type{ADAM},
 end
 
 function _init_optimizer(opt_type::Union{Type{Auto}}, parsed::Dict, prefix="")
-    α_str = prefix == "" ? "alpha" : join([prefix, "eta"], "_")
+    α_str = prefix == "" ? "eta" : join([prefix, "eta"], "_")
     α_init_str = prefix == "" ?  "alpha_init" : join([prefix, "alpha_init"], "_")
     try
         α = parsed[α_str]

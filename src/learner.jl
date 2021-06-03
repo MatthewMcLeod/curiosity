@@ -32,3 +32,5 @@ include("updates/PriorESARSA.jl")
 include("updates/PriorTB.jl")
 include("updates/InterestTB.jl")
 
+
+include("updates/SR_TB_Replay.jl")

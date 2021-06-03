@@ -289,6 +289,7 @@ function construct_agent(parsed)
     else
         false
     end
+
     Agent(demons,
           feat_size,
           behaviour_learner,
