@@ -35,11 +35,21 @@ If one was able to run the code as is, the `parallel/toml_parallel.jl` file is t
 
 ### Config Files Mapped to Experiments:
 - Figure 2:
+  - a): `./configs/experiment_1/FixedBehaviour.toml`
+  - b) & c): `./curiosity/configs/tmaze_control/ESARSA.toml` and `./curiosity/configs/tmaze_control/GPI.toml`
 - Figure 3:
+  - a): `./configs/onedtmaze_rr/Auto.toml` and `./configs/onedtmaze_rr/LSTD.toml`
+  - b) & c) `./configs/continuous_control/GPI_Auto.toml` and `./continuous_control/ESARSA_Auto.toml`
 - Figure 4:
+  - GPI with PCG: `./configs/mountain_car_behaviour/GPI.toml`
+  - Sarsa: `./configs/mountain_car_behaviour/ESARSA.toml`
+  - Random Behaviour `./configs/mountain_car_behaviour/RandomBehaviour.toml`
 
 ### Appendix empirical results:
 - Figure 5:
+  - GPI: `./configs/continuous_control/GPI_Auto.toml`
+  - Sarsa: `./continuous_control/ESARSA_Auto.toml`
 - Figure 6:
-- Figure 7:
-- Figure 8:
+  - `./curiosity/configs/tmaze_control/ESARSA.toml`
+- Figure 7: `./configs/twodgridworld_control/twodgrid_world_prior_corrections.toml`
+- Figure 8: `./configs/continuous_control/GPI_Tilecoded_Reward_Features.toml`
