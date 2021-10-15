@@ -5,7 +5,7 @@ This repo contains the code for reproducing the results published in **Continual
 
 ## Authors
 - Matthew McLeod
-- Chunlok Lo
+- [Chunlok Lo](https://chunloklo.github.io)
 - Andrew Jacobsen 
 - [Matthew Schlegel](https://mkschleg.github.io)
 - [Raksha Kumaraswamy](https://webdocs.cs.ualberta.ca/~kumarasw/)
