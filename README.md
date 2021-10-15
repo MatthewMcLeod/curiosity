@@ -8,7 +8,7 @@ This repo contains the code for reproducing the results published in **Continual
 - Chunlok Lo
 - Andrew Jacobsen 
 - [Matthew Schlegel](https://mkschleg.github.io)
-- Raksha Kumaraswamy
+- [Raksha Kumaraswamy](https://webdocs.cs.ualberta.ca/~kumarasw/)
 - [Adam White](https://sites.ualberta.ca/~amw8/)
 - [Martha White](https://webdocs.cs.ualberta.ca/~whitem/)
 
