@@ -1,7 +1,7 @@
 # Continual Auxiliary Task Learning
 
 
-This repo contains the code for reproducing the results published in **Continual Auxiliary Task Learning**. This paper was published in NeurIPS2021.
+This repo contains the code for reproducing the results published in **Continual Auxiliary Task Learning**. This paper was published in [NeurIPS2021](link).
 
 ## Authors
 - Matthew McLeod
@@ -23,7 +23,30 @@ If one was able to run the code as is, the `parallel/toml_parallel.jl` file is t
 
 ### Downloading and installing Julia
 
+Julia can be found and downloaded [here](julialang.org). You can also find details on the language in the [documentation](https://docs.julialang.org/en/v1/). We only guarantee this code works for versions up-to v1.5.x. 
+
+
+
 ### Reproducing results
+
+1. Install julia version 1.5.x from https://julialang.org/downloads/
+2. Add to path
+3. `cd` to the `curiosity` directory
+4. Instantiate the project:
+
+```julia
+%> julia --project
+julia> ]instantiate
+```
+
+5. To run an experiment from its config:
+
+```bash
+julia --project parallel/toml_parallel.jl <<config_file.toml>> 
+```
+
+This will run the experiment and place the results in the folder defined in the toml. To run on a larger cluster is possible, but requires more details. You should see [Reproduce.jl](https://github.com/mkschleg/Reproduce.jl/blob/master/Project.toml) for an example/details.
+
 
 #### Config Files Mapped to Experiments:
 - Figure 2:
