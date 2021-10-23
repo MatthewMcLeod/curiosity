@@ -1,5 +1,5 @@
 [config]
-save_dir = "TwoDGridWorld_gpi_no_optimism_Rev_2"
+save_dir = "TwoDGridWorld_gpi_no_optimism_FINAL"
 exp_file = "experiments/2d-gridworld.jl"
 exp_module_name = "TwoDGridWorldExperiment"
 exp_func_name = "main_experiment"
@@ -7,7 +7,7 @@ arg_iter_type = "iter"
 
 [static_args]
 
-steps = 40000
+steps = 1000
 # steps = 10
 
 logger_keys = ["TWODGRIDWORLDERROR", "TWODGRIDWORLDERRORDPI", "ONED_GOAL_VISITATION", "EPISODE_LENGTH", "INTRINSIC_REWARD", "BEHAVIOUR_ACTION_VALUES"]
@@ -52,7 +52,7 @@ env_step_penalty = -0.05
 
 
 [sweep_args]
-seed = "1:20"
+seed = "1:1"
 
 alpha_init = [0.1]
 # eta = "5.0.^(-4:-1)"
