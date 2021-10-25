@@ -33,9 +33,9 @@ LU = LabelUtils
 # data_key = :oned_tmaze_dpi_error
 # data_key = :oned_tmaze_old_error
 # data_key = :oned_tmaze_dmu_error
-data_key = :mc_uniform_error
+# data_key = :mc_uniform_error
 # data_key = :mc_starts_error
-# data_key = :twod_grid_world_error_center_dpi
+data_key = :twod_grid_world_error_center_dpi
 
 # folder_name = "oned_control"
 # folder_name = "oned_rr"
@@ -58,20 +58,28 @@ folder_name = "tmp"
 # data_home = "../data/GPI_Sensitivity"
 # data_home = "../data/OneDTMaze_GPI_Sensitivity"
 # data_home = "../data/MC_Experiments"
-data_home = "../data/MC_Experiments_Final"
+# data_home = "../data/MC_Experiments_Final"
 # data_home = "../data/TwoDGridWorld_gpi"
 # data_home = "../data/TwoDGridWorld_gpi_TB"
 # data_home = "../data/TwoDGridWorld_finegrained"
 # data_home = "../data/TwoDGridWorld_gpi_no_optimism_Rev_2"
 # data_home = "../data/TwoDGridWorld_gpi_simple"
 # data_home = "../data/TwoDGridWorld_gpi_nstate"
-
+# data_home = "../data/TwoD"
+# data_home = "../data/TwoDGridWorld_GPI_No_Opt_Final_P2"
+# data_home = "../data/TwoDFinal"
+# data_home = "../data/TwoDGridWorld_GPI_No_Opt_Final"
+data_home = "../data/TwoD_All"
 
 function load_data()
     experiment_folders = [data_home]
     # folder_name = "oned_rr_dpi"
     # folder_name = "oned_control_dpi"
     ic = ItemCollection(joinpath(experiment_folders[1], "data"))
+    function f(itm)
+        itm.parsed_args["seed"] < 31
+    end
+    ic = search(f, ic)
     return ic
 end
 
@@ -181,7 +189,8 @@ function plot_rmse(algo_ics, inds_of_interest = nothing)
         #         plot_params[i][:color] =  colorant"#BBBBBB"
         #     end
         # end
-        plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:top; plot_params[i]...)
+        # plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:top; plot_params[i]...)
+        plot!(p, xticks, data[i], ribbon = std[i]/sqrt(num_runs), legend=:none; plot_params[i]...)
     end
     display(p)
     savefig("./plots/$(folder_name)/RMSE_$(string(data_key)).pdf")
@@ -320,7 +329,7 @@ function plot_episode_lengths(algo_ic, inds_of_interest)
 end
 
 function load_and_plot_meta_ss(inds_of_interest = nothing; sensitivity_param = "eta")
-
+    other_param = "demon_eta"
     ic = load_data()
     # algo_divisor_keys = ["behaviour_learner", "demon_learner"]
     algo_divisor_keys = ["behaviour_learner", "demon_update"]
@@ -336,14 +345,14 @@ function load_and_plot_meta_ss(inds_of_interest = nothing; sensitivity_param = "
     end
 
     #Plot Sensitivity of eta.
-    p = plot(ylabel="RMSE", xlabel = "Meta Step Size", xaxis=:log, legend=:topleft)
+    p = plot(ylabel="RMSE", xlabel = string("Meta Step Size ", sensitivity_param), xaxis=:log, legend=:topleft)
     for algo in all_algos_ics
         eta_vals = diff(algo)[sensitivity_param]
         line = []
         err_bars = []
         for eta in eta_vals
-            algo_for_eta = search(algo, Dict("eta" => eta))
-            best_algo_for_eta = GPU.get_best_final_perf(algo_for_eta, ["alpha_init"], data_key,0.1)
+            algo_for_eta = search(algo, Dict(sensitivity_param => eta))
+            best_algo_for_eta = GPU.get_best_final_perf(algo_for_eta, other_param, data_key,0.1)
 
             data = GPU.load_results(best_algo_for_eta,data_key)
 
