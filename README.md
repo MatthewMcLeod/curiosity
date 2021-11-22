@@ -61,4 +61,11 @@ This will run the experiment and place the results in the folder defined in the 
 
 ### Analyzing data with [Reproduce.jl](https://github.com/mkschleg/Reproduce.jl/blob/master/Project.toml) and [ReproducePlotUtils.jl](https://github.com/mkschleg/ReproducePlotUtils.jl/tree/master/src).
 
+You can see details on how to analyze data with [Reproduce.jl](https://github.com/mkschleg/Reproduce.jl/blob/master/Project.toml) and [ReproducePlotUtils.jl](https://github.com/mkschleg/ReproducePlotUtils.jl/tree/master/src) in the plotting directory. The overall procedure is to:
+- Construct an `ItemCollection` from the experiment directory. This is all the settings run in the experiment
+- search for the subset of the settings you want using `search`
+- then plotting this subset
+
+There are various utilities to find the best parameter setting given a set of sweep arguments.
+
 ## Acknoledgements
