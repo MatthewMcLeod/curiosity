@@ -1,5 +1,5 @@
 [config]
-save_dir = "OneDTMaze_RR_LSTD"
+save_dir = "OneDTMaze_RR"
 exp_file = "experiments/1d-tmaze.jl"
 exp_module_name = "OneDTmazeExperiment"
 exp_func_name = "main_experiment"
@@ -30,7 +30,9 @@ demon_trace = "AccumulatingTraces"
 
 # demon_learner = "SR"
 # demon_rep = "ideal_martha"
-demon_rep = "ideal"
+demon_rep = "tilecoding"
+demon_num_tiles = 2
+demon_num_tilings = 8
 
 # demon_update = "TB"
 # demon_eta = 0.15
@@ -58,14 +60,14 @@ random_first_action = true
 
 
 [sweep_args]
-seed = "1:30"
+seed = "1:6"
 cumulant_schedule = ["DrifterDistractor"]
-eta = [1.0]
+eta = "5.0.^(-3:0)"
 behaviour_opt = ["Auto"]
 behaviour_learner = ["RoundRobin"]
 behaviour_update = ["Q"]
 exploration_param = [0.1]
-demon_learner = ["LSTD"]
+demon_learner = ["SR"]
 demon_update = ["TB"]
 demon_opt = ["Auto"]
 
@@ -75,4 +77,4 @@ tiling_structure = [[2,8]]
 exploring_starts= ["whole"]
 behaviour_trace = ["ReplacingTraces"]
 env_step_penalty = [-0.01]
-alpha_init = [0.1]
+alpha_init = [0.1, 0.2]

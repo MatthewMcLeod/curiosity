@@ -49,9 +49,9 @@ save_dir = "MountainCarExperiment"
 logger_keys = ["EPISODE_LENGTH", "MC_START_ERROR", "MC_UNIFORM_ERROR"]
 
 [sweep_args]
-seed = "1:20"
+seed = "1:30"
 exploration_param = [0.1,0.3,0.5]
-demon_eta = "3.0.^(-3:-1)"
-behaviour_eta = "3.0.^(-3:-1)"
+demon_eta = "3.0.^(-2:0)"
+behaviour_eta = "3.0.^(-2:0)"
 intrinsic_reward = ["weight_change"]
-demon_learner = ["Q","SR"]
+demon_learner = ["SR"]
