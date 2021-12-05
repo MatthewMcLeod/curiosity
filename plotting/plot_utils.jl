@@ -10,7 +10,7 @@ function load_results(ic, logger_key; return_type = "tensor")
     for itm in ic.items
         if !isfile(joinpath(itm.folder_str, "results.jld2"))
             println(joinpath(itm.folder_str, "results.jld2"))
-            @warn "Check yo sweep. It is missing runs!!!!"
+            @warn "Check your sweep. It began run but did not save final results!"
         else
             data = FileIO.load(joinpath(itm.folder_str, "results.jld2"))["results"]
             push!(results,data[logger_key])
@@ -19,7 +19,7 @@ function load_results(ic, logger_key; return_type = "tensor")
 
     if return_type == "tensor"
         if isempty(results)
-            @warn "Empty IC. Yo should really check your sweep!!"
+            @warn "Empty IC. Check your sweep!"
             return []
         end
         return cat(results..., dims = 3)
@@ -41,7 +41,6 @@ function combine(dict_arr, key, vals)
 end
 
 function split_algo(algo_ic, swept_params)
-    println(swept_params)
     dicts = [Dict()]
     for k in swept_params
         if k in keys(diff(algo_ic))
@@ -61,8 +60,6 @@ function get_best(ic, sweep_params, metric)
         errors[ind] = error
     end
     low_err, low_err_ind = findmin(errors)
-    println(errors)
-
     return search(ic, splits[low_err_ind])
 end
 function get_most_episodes(ic, sweep_params, metric)
@@ -105,10 +102,7 @@ function get_best_final_perf(ic, sweep_params, metric, cut_per)
             errors[ind] = error
         end
     end
-    @show errors
     low_err, low_err_ind = findmin(errors)
-
-
     return search(ic, splits[low_err_ind])
 end
 
