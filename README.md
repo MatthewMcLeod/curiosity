@@ -29,10 +29,11 @@ Julia can be found and downloaded [here](julialang.org). You can also find detai
 
 ### Reproducing results
 
-1. Install julia version 1.5.x from https://julialang.org/downloads/
+1. Install julia version 1.6.x from https://julialang.org/downloads/
 2. Add to path
 3. `cd` to the `curiosity` directory
-4. Instantiate the project:
+4. Change branch to NeurIPS2021
+5. Instantiate the project:
 
 ```julia
 %> julia --project
